@@ -1,0 +1,12 @@
+#!/bin/sh
+# @description re-initialise the agent to make it be seen as a new node on the server
+
+# - replace ppkeys
+/bin/rm -f /var/rudder/cfengine-community/ppkeys/localhost*
+/var/rudder/cfengine-community/bin/cf-key
+
+# - generate a new uuid
+uuidgen > /opt/rudder/etc/uuid.hive
+
+# - resend inventory
+rudder agent inventory

@@ -1,0 +1,3 @@
+#!/bin/sh
+# @description forbid rudder-agent to be run by cron or service
+touch /opt/rudder/etc/disable-agent

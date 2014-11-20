@@ -1,0 +1,110 @@
+#!/bin/sh
+#
+# Wrapper to call rudder commands.
+# 
+# All commands are taken from $BASEDIR (/opt/rudder/share/commands).
+#
+# To add a new command, just drop it in this directory with the name <role>-<command>
+#  where <role> can be 'agent' or 'server' and <command> is your command name.
+# The command file is executed with remaining arguments and can be written in any executable form.
+# The command file should contain a line with a description of the form "# @description <your description>"
+#
+
+
+set -e
+BASEDIR="/opt/rudder/share/commands"
+
+role_list() {
+  ls "${BASEDIR}" | sed 's/\([A-Za-z_]*\)-.*/\1/' | uniq
+}
+
+usage() {
+  echo ""
+  echo "Usage: rudder help"
+  for role in `role_list`
+  do
+    echo "       rudder ${role} <command> [parameters ...]"
+  done
+  echo ""
+  echo "  This is rudder generic command line interface."
+  echo ""
+  echo "  help: this help"
+  for role in `role_list`
+  do
+    echo "  ${role}: rudder ${role} related commands"
+  done
+  echo ""
+}
+
+role_usage() {
+  role="$1"
+  echo ""
+  echo "Usage: rudder ${role} help"
+  echo "       rudder ${role} <command> [parameters ...]"
+  echo ""
+  echo "  Run commands on ${role}."
+  echo ""
+  echo "  Available commands:"
+  for file in `cd "${BASEDIR}"; find . -type f -name "${role}-*" | sort`
+  do
+    doc=`sed -ne "/#[ \t]*@description[ \t]*/s/#[ \t]*@description[ \t]*//p" "${BASEDIR}/${file}"`
+    name=`echo "${file}" | sed -e "s/\.\/${role}-//"`
+    printf "    %-10s\t%s\n" "${name}" "${doc}"
+  done
+  echo ""
+}
+
+# first parameter is role parameter
+role=`echo "$1" | tr -C -d 'A-Za-z_'`
+if [ "${role}" = "help" ] || [ -z "${role}" ]
+then
+  if [ -z "$2" ]
+  then
+    usage
+  else
+    role=`echo "$2" | tr -C -d 'A-Za-z_'`
+    role_usage "${role}"
+  fi
+  exit 0
+fi
+shift
+
+# test validity of role parameter
+for installed_role in `role_list`
+do
+  if [ "${role}" = "${installed_role}" ]
+  then
+    role_ok="y"
+  fi
+done
+
+if [ "${role_ok}" != "y" ]
+then
+  echo "Unknown role '${role}'"
+  echo ""
+  usage
+  exit 1
+fi
+
+# second parameter is command parameter
+command=`echo "$1" | tr -C -d 'A-Za-z_-'`
+if [ "${command}" = "help" ] || [ "${command}" = "" ]
+then
+  role_usage "${role}"
+  exit 3
+fi
+shift
+
+# test validity of command parameter
+if [ ! -f "${BASEDIR}/${role}-${command}" ]
+then
+  echo "Command ${command} on ${role} not found"
+  echo ""
+  role_usage "${role}"
+  exit 3
+fi
+
+
+# OK GO !
+exec "${BASEDIR}/${role}-${command}" "$@"
+

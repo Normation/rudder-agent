@@ -1,0 +1,19 @@
+#!/bin/sh
+# @description re-enable a disabled rudder-agent
+
+while getopts "s" opt; do
+  case $opt in
+    s)
+      START=y
+      ;;
+  esac
+done
+
+rm -f /opt/rudder/etc/disable-agent
+if [ "${START}" = "y" ]
+then
+  service rudder-agent start
+else
+  echo "rudder-agent has been enabled but not started, use 'service rudder-agent start' or wait for next cron run"
+  echo "Next time, use -s option to automatically start it"
+fi

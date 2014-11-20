@@ -1,0 +1,3 @@
+#!/bin/sh
+# @description force the agent to create and send a new inventory
+/var/rudder/cfengine-community/bin/cf-agent -KC -D force_inventory
