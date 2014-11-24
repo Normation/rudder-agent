@@ -1,0 +1,14 @@
+#!/bin/sh
+# @description reset agent status and cache
+
+# Try to remove everything that can block
+# - restore initial promises
+rsync --delete -r /opt/rudder/share/initial-promises/ /var/rudder/cfengine-community/inputs/
+
+# - remove state
+/bin/rm -rf /var/rudder/cfengine-community/state/*
+/bin/rm -f /var/rudder/cfengine-community/*.lmdb
+
+# - remove locks
+/bin/rm -f /var/rudder/cfengine-community/*lock
+

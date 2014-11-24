@@ -1,0 +1,3 @@
+#!/bin/sh
+# @description update promises on agent
+/var/rudder/cfengine-community/bin/cf-agent -KC -f failsafe.cf 
