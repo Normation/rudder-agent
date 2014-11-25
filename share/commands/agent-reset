@@ -3,7 +3,7 @@
 
 # Try to remove everything that can block
 # - restore initial promises
-rsync --delete -r /opt/rudder/share/initial-promises/ /var/rudder/cfengine-community/inputs/
+cp -r /opt/rudder/share/initial-promises/* /var/rudder/cfengine-community/inputs
 
 # - remove state
 /bin/rm -rf /var/rudder/cfengine-community/state/*
