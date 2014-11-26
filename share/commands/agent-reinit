@@ -2,11 +2,19 @@
 # @description re-initialise the agent to make it be seen as a new node on the server
 
 # - replace ppkeys
-/bin/rm -f /var/rudder/cfengine-community/ppkeys/localhost*
+rm -f /var/rudder/cfengine-community/ppkeys/localhost*
 /var/rudder/cfengine-community/bin/cf-key
 
 # - generate a new uuid
-uuidgen > /opt/rudder/etc/uuid.hive
+if [ -x /opt/rudder/bin/uuidgen ]
+then
+  /opt/rudder/bin/uuidgen > /opt/rudder/etc/uuid.hive
+else
+  uuidgen > /opt/rudder/etc/uuid.hive
+fi
+
+# - remove old inventory
+rm -rf /opt/rudder/var/fusioninventory/*
 
 # - resend inventory
 rudder agent inventory
