@@ -3,12 +3,13 @@
 
 # Try to remove everything that can block
 # - restore initial promises
+rm -rf /var/rudder/cfengine-community/inputs/*
 cp -r /opt/rudder/share/initial-promises/* /var/rudder/cfengine-community/inputs
 
 # - remove state
-/bin/rm -rf /var/rudder/cfengine-community/state/*
-/bin/rm -f /var/rudder/cfengine-community/*.lmdb
+rm -rf /var/rudder/cfengine-community/state/*
+rm -f /var/rudder/cfengine-community/*.lmdb
 
 # - remove locks
-/bin/rm -f /var/rudder/cfengine-community/*lock
+rm -f /var/rudder/cfengine-community/*lock
 
