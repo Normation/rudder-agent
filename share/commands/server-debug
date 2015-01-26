@@ -1,0 +1,33 @@
+#!/bin/bash
+
+DEBUG_PORT=5310
+
+set -e
+
+# necessary to manage iptables removal on error or on ctrl-c
+function anomaly_handler() {
+  iptables -t nat -D PREROUTING -p tcp -s ${NODE} --dport 5309 -j DNAT --to-destination :${DEBUG_PORT}
+  echo ""
+  echo "Debug has been stopped on step: ${STEP}"
+}
+
+trap anomaly_handler ERR INT TERM
+
+# Parameter
+STEP="INIT"
+NODE="$1"
+if [ -z "${NODE}" ]
+then
+  echo "Usage rudder server debug <node_ip>"
+  exit 1
+fi
+
+STEP="Creating redirect iptables rule"
+iptables -t nat -I PREROUTING -p tcp -s ${NODE} --dport 5309 -j DNAT --to-destination :${DEBUG_PORT}
+
+STEP="Running debug server"
+/var/rudder/cfengine-community/bin/cf-serverd -v --no-fork -D debug_port
+
+STEP="Removing iptables rule"
+iptables -t nat -D PREROUTING -p tcp -s ${NODE} --dport 5309 -j DNAT --to-destination :${DEBUG_PORT}
+
