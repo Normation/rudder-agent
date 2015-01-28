@@ -1,5 +1,5 @@
 #!/bin/bash
-
+# @description run a debug cf-serverd intended for a specific node
 DEBUG_PORT=5310
 
 set -e
