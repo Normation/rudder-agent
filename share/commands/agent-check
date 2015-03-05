@@ -1,0 +1,3 @@
+#!/bin/sh
+# @description check if rudder agent has no problem and is running properly
+/opt/rudder/bin/check-rudder-agent
