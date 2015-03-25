@@ -1,0 +1,36 @@
+#!/bin/sh
+# @description Display a summary of agent informations
+
+HOSTNAME=$(hostname)
+[ $? -ne 0 ] && HOSTNAME="not found"
+
+UUID=$(cat /opt/rudder/etc/uuid.hive 2>/dev/null)
+[ $? -ne 0 ] && UUID="Not yet configured"
+
+HASH=$(openssl dgst -sha1 /var/rudder/cfengine-community/ppkeys/localhost.pub 2>/dev/null)
+[ $? -ne 0 ] && HASH="Not yet configured"
+HASH=$(echo "${HASH}" | sed -e 's/.*= //')
+
+POLICY=$(cat /var/rudder/cfengine-community/policy_server.dat 2>/dev/null)
+[ $? -ne 0 ] && POLICY="Not yet configured"
+
+ROLES=$(ls -m /opt/rudder/etc/server-roles.d/ 2>/dev/null)
+if [ $? -ne 0 ]; then
+  ROLES="rudder-agent"
+else
+  ROLES=", rudder-agent"
+fi
+
+if [ -e /opt/rudder/etc/disable-agent ]; then
+  ENABLED="disabled"
+else
+  ENABLED="enabled"
+fi
+
+echo "Hostname: ${HOSTNAME}"
+echo "UUID: ${UUID}"
+echo "Key Hash: ${HASH}"
+echo "Policy server: ${POLICY}"
+echo "Roles: ${ROLES}"
+echo "Agent is ${ENABLED}"
+
