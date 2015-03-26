@@ -16,5 +16,8 @@ fi
 # - remove old inventory
 rm -rf /opt/rudder/var/fusioninventory/*
 
+# - reset cfengine status
+rudder agent reset
+
 # - resend inventory
 rudder agent inventory
