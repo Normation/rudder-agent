@@ -1,0 +1,12 @@
+#!/bin/sh
+# @description trigger the execution of a remote agent
+
+PORT=5309
+NODE="$1"
+if [ -z "${NODE}" ]
+then
+  echo "Usage rudder remote run <node_ip_or_name>"
+  exit 1
+fi
+
+/var/rudder/cfengine-community/bin/cf-runagent -H "${NODE}:${PORT}" -IC
