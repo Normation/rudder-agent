@@ -1,4 +1,6 @@
 #!/bin/sh
 # @description forbid rudder-agent to be run by cron or service
+# @man This is useful when you want to temporarily prevent your Rudder agent
+# @man from doing any modification to your system.
 
 touch /opt/rudder/etc/disable-agent

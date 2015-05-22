@@ -1,5 +1,9 @@
 #!/bin/sh
 # @description reset agent status and cache
+# @man Remove all locks and state cache of the agent, and restore initial promises.
+# @man This won't affect the desired state of the node, but will only
+# @man reset the internal state of the agent. It is useful to test a rule
+# @man without caching interference or when you have trouble with the promises updates.
 
 # Try to remove everything that can block
 # - restore initial promises
@@ -12,4 +16,3 @@ rm -f /var/rudder/cfengine-community/*.lmdb
 
 # - remove locks
 rm -f /var/rudder/cfengine-community/*lock
-

@@ -1,3 +1,6 @@
 #!/bin/sh
 # @description force run agent promises
+# @man This command will force the agent to enforce current policies.
+# @man You can run *rudder agent update* before to update the promises.
+
 /var/rudder/cfengine-community/bin/cf-agent -KC

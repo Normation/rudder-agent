@@ -1,5 +1,11 @@
 #!/bin/bash
-# @description run a debug cf-serverd intended for a specific node
+# @description run a debug _cf-serverd_ intended for a specific node
+# @man This command targets a specific node and does not affect the running
+# @man infrastructure. It uses _iptables_ to redirect the specific node communications
+# @man to the port the debug server is listening on (5310 by default).
+# @man +
+# @man Use Ctrl+C to stop the debug server.
+
 DEBUG_PORT=5310
 
 set -e
@@ -30,4 +36,3 @@ STEP="Running debug server"
 
 STEP="Removing iptables rule"
 iptables -t nat -D PREROUTING -p tcp -s ${NODE} --dport 5309 -j DNAT --to-destination :${DEBUG_PORT}
-
