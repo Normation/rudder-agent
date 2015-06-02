@@ -1,3 +1,8 @@
 #!/bin/sh
 # @description force the agent to create and send a new inventory
+# @man This will trigger a new inventory creation and send it to the policy server.
+# @man Even if the agent will do it regularly, it can be used to force the update
+# @man after a modification on the node.
+# @man This won't affect the node state, but only update server-side information.
+
 /var/rudder/cfengine-community/bin/cf-agent -KC -D force_inventory
