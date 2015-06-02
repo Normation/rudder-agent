@@ -1,3 +1,6 @@
 #!/bin/sh
 # @description update promises on agent
-/var/rudder/cfengine-community/bin/cf-agent -KC -f failsafe.cf 
+# @man The agent will fetch the last version of its promises from its configured
+# @man policy server.
+
+/var/rudder/cfengine-community/bin/cf-agent -KC -f failsafe.cf
