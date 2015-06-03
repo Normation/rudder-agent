@@ -1,5 +1,10 @@
 #!/bin/sh
 # @description re-enable a disabled rudder-agent
+# @man +
+# @man +
+# @man *Options*:
+# @man +
+# @man *-s*: start rudder-agent in addition to enabling it
 
 while getopts "s" opt; do
   case $opt in
@@ -38,4 +43,3 @@ else
     echo "rudder-agent has been enabled but not started, wait for next cron run"
   fi
 fi
-
