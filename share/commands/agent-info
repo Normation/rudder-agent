@@ -1,5 +1,8 @@
 #!/bin/sh
-# @description Display a summary of agent informations
+# @description display a summary of agent information
+# @man Outputs detailed information about the agent configuration, especially
+# @man what defines the node (hostname, uuid and key hash) and its
+# @man policy server.
 
 HOSTNAME=$(hostname)
 [ $? -ne 0 ] && HOSTNAME="not found"
@@ -33,4 +36,3 @@ echo "Key Hash: ${HASH}"
 echo "Policy server: ${POLICY}"
 echo "Roles: ${ROLES}"
 echo "Agent is ${ENABLED}"
-

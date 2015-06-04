@@ -1,5 +1,12 @@
 #!/bin/sh
 # @description trigger the execution of a remote agent
+# @man This command allows to override the agent run schedule and to immediately
+# @man update the promises and enforce them on th specified node.
+# @man This command is currently only allowed from the policy server of the target node.
+# @man +
+# @man *Arguments*:
+# @man +
+# @man *node*: IP or hostname of the target node
 
 PORT=5309
 NODE="$1"
