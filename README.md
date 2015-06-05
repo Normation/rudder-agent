@@ -22,11 +22,13 @@ a new pull request to add it to share/command in this repository.
 A command must have the following properties :
 - be called agent-<command> or server-<command>
 - parameters will not include the 'agent', 'server' or <command> given in the command line
-- the executable must contain a string with a single line of the form
+- the executable must contain a string with a single line of the form:
+
 
     # @description <brief command description>
 
-- the executable may also contain a single or multi-line string of the form
+- the executable may also contain a single or multi-line string of the form:
+
 
     # @man <detailed command description>
 

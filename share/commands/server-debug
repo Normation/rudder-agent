@@ -5,6 +5,10 @@
 # @man to the port the debug server is listening on (5310 by default).
 # @man +
 # @man Use Ctrl+C to stop the debug server.
+# @man +
+# @man *Arguments*:
+# @man +
+# @man *node*: IP or hostname of the host you want to debug
 
 DEBUG_PORT=5310
 
