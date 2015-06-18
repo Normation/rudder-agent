@@ -1,0 +1,10 @@
+#!/bin/sh
+# @description check if rudder agent has no problem and is running properly
+# @man Check that rudder agent is working properly.
+# @man - generate missing UUID
+# @man - kill cfengine if there are too many processes
+# @man - run cfengine if its daemon is missing
+# @man - clean lock file if it is too big
+# @man - check and restore init files 
+# @man - check that promises have been properly copied
+/opt/rudder/bin/check-rudder-agent
