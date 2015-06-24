@@ -1,0 +1,9 @@
+#!/bin/bash
+# @description enable client access to Policy downloads
+
+set -e
+
+STEP="INIT"
+
+STEP="Blocking cf-serverd/cf-execd network access on eth0"
+iptables -D INPUT -j DROP -p tcp --destination-port 5309 -i eth0

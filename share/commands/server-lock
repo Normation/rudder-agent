@@ -1,0 +1,12 @@
+#!/bin/bash
+# @description disable client access to Policy downloads
+
+set -e
+
+STEP="INIT"
+
+STEP="Terminating cf-serverd to stop new connections"
+pkill cf-serverd
+
+STEP="Blocking cf-serverd network access on eth0"
+iptables -A INPUT -j DROP -p tcp --destination-port 5309 -i eth0
