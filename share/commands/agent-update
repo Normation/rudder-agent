@@ -2,5 +2,29 @@
 # @description update promises on agent
 # @man The agent will fetch the last version of its promises from its configured
 # @man policy server.
+# @man +
+# @man *Options*:
+# @man +
+# @man *-i*: run the agent in information mode, prints basic information
+# @man +
+# @man *-v*: run the agent in verbose mode, prints detailed information
+# @man +
+# @man *-d*: run the agent in debug mode, prints low-level information
 
-/var/rudder/cfengine-community/bin/cf-agent -KC -f failsafe.cf
+VERBOSITY=""
+
+while getopts "ivd" opt; do
+  case $opt in
+    i)
+      VERBOSITY="-I"
+      ;;
+    v)
+      VERBOSITY="-v"
+      ;;
+    d)
+      VERBOSITY="-d"
+      ;;
+  esac
+done
+
+/var/rudder/cfengine-community/bin/cf-agent ${VERBOSITY} -KC -f failsafe.cf
