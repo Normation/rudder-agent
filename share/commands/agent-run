@@ -5,16 +5,26 @@
 # @man +
 # @man *Options*:
 # @man +
-# @man *-v*: run the agent in verbose mode
+# @man *-i*: run the agent in information mode, prints basic information
+# @man +
+# @man *-v*: run the agent in verbose mode, prints detailed information
+# @man +
+# @man *-d*: run the agent in debug mode, prints low-level information
 
-VERBOSE=""
+VERBOSITY=""
 
-while getopts "v" opt; do
+while getopts "ivd" opt; do
   case $opt in
+    i)
+      VERBOSITY="-I"
+      ;;
     v)
-      VERBOSE="-v"
+      VERBOSITY="-v"
+      ;;
+    d)
+      VERBOSITY="-d"
       ;;
   esac
 done
 
-/var/rudder/cfengine-community/bin/cf-agent ${VERBOSE} -KC
+/var/rudder/cfengine-community/bin/cf-agent ${VERBOSITY} -KC
