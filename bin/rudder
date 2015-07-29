@@ -55,14 +55,14 @@ role_usage() {
 }
 
 # first parameter is role parameter
-role=`echo "$1" | tr -C -d 'A-Za-z_'`
+role=`echo "$1" | sed 's/[^A-Za-z_-]*//g'`
 if [ "${role}" = "help" ] || [ -z "${role}" ]
 then
   if [ -z "$2" ]
   then
     usage
   else
-    role=`echo "$2" | tr -C -d 'A-Za-z_'`
+    role=`echo "$2" | sed 's/[^A-Za-z_-]*//g'`
     role_usage "${role}"
   fi
   exit 0
@@ -87,7 +87,7 @@ then
 fi
 
 # second parameter is command parameter
-command=`echo "$1" | tr -C -d 'A-Za-z_-'`
+command=`echo "$1" | sed 's/[^A-Za-z_-]*//g'`
 if [ "${command}" = "help" ] || [ "${command}" = "" ]
 then
   role_usage "${role}"
