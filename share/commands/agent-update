@@ -10,10 +10,13 @@
 # @man *-v*: run the agent in verbose mode, prints detailed information
 # @man +
 # @man *-d*: run the agent in debug mode, prints low-level information
+# @man +
+# @man *-c*: run the agent without color output
 
 VERBOSITY=""
+COLOR="-C"
 
-while getopts "ivd" opt; do
+while getopts "ivdic" opt; do
   case $opt in
     i)
       VERBOSITY="-I"
@@ -24,7 +27,10 @@ while getopts "ivd" opt; do
     d)
       VERBOSITY="-d"
       ;;
+    c)
+      COLOR=""
+      ;;
   esac
 done
 
-/var/rudder/cfengine-community/bin/cf-agent ${VERBOSITY} -KC -f failsafe.cf
+/var/rudder/cfengine-community/bin/cf-agent ${VERBOSITY} ${COLOR} -K -f failsafe.cf
