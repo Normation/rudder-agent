@@ -12,10 +12,14 @@
 # @man *-v*: run the agent in verbose mode, prints detailed information
 # @man +
 # @man *-d*: run the agent in debug mode, prints low-level information
+# @man +
+# @man *-c*: run the agent without color output
 
+# rudder agent run -b force_inventory
 VERBOSITY=""
+COLOR="-C"
 
-while getopts "ivd" opt; do
+while getopts "ivdc" opt; do
   case $opt in
     i)
       VERBOSITY="-I"
@@ -26,7 +30,10 @@ while getopts "ivd" opt; do
     d)
       VERBOSITY="-d"
       ;;
+    c)
+      COLOR=""
+      ;;
   esac
 done
 
-/var/rudder/cfengine-community/bin/cf-agent ${VERBOSITY} -KC -D force_inventory
+/var/rudder/cfengine-community/bin/cf-agent ${VERBOSITY} ${COLOR} -K -D force_inventory
