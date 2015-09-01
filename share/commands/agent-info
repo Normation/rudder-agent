@@ -21,7 +21,7 @@ ROLES=$(ls -m /opt/rudder/etc/server-roles.d/ 2>/dev/null)
 if [ $? -ne 0 ]; then
   ROLES="rudder-agent"
 else
-  ROLES=", rudder-agent"
+  ROLES="${ROLES}, rudder-agent"
 fi
 
 if [ -e /opt/rudder/etc/disable-agent ]; then
