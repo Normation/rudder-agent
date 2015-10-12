@@ -4,7 +4,7 @@
 # @man what defines the node (hostname, uuid and key hash) and its
 # @man policy server.
 
-HOSTNAME=$(hostname)
+HOSTNAME=$(hostname -f)
 [ $? -ne 0 ] && HOSTNAME="not found"
 
 UUID=$(cat /opt/rudder/etc/uuid.hive 2>/dev/null)
