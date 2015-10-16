@@ -17,6 +17,12 @@ HASH=$(echo "${HASH}" | sed -e 's/.*= //')
 POLICY=$(cat /var/rudder/cfengine-community/policy_server.dat 2>/dev/null)
 [ $? -ne 0 ] && POLICY="Not yet configured"
 
+POLICY_FETCHED=$(stat -c %y /var/rudder/cfengine-community/last_successful_inputs_update 2> /dev/null)
+[ $? -ne 0 ] && POLICY_FETCHED="Not yet updated" || POLICY_FETCHED=$(echo "${POLICY_FETCHED}" | cut -d'.' -f1)
+
+INVENTORY_SENT=$(stat -c %y /var/rudder/tmp/inventory_sent 2> /dev/null)
+[ $? -ne 0 ] && INVENTORY_SENT="Not yet sent" || INVENTORY_SENT=$(echo "${INVENTORY_SENT}" | cut -d'.' -f1)
+
 ROLES=$(ls -m /opt/rudder/etc/server-roles.d/ 2>/dev/null)
 if [ $? -ne 0 ]; then
   ROLES="rudder-agent"
@@ -36,3 +42,5 @@ echo "Key Hash: ${HASH}"
 echo "Policy server: ${POLICY}"
 echo "Roles: ${ROLES}"
 echo "Agent is ${ENABLED}"
+echo "Policy updated: ${POLICY_FETCHED}"
+echo "Inventory sent: ${INVENTORY_SENT}"
