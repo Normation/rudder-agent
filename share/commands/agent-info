@@ -4,7 +4,13 @@
 # @man what defines the node (hostname, uuid and key hash) and its
 # @man policy server.
 
-HOSTNAME=$(hostname -f)
+OS=$(uname -s)
+
+if [ "${OS}" = "Linux" ]; then
+  HOSTNAME=$(hostname --fqdn)
+else
+  HOSTNAME=$(hostname)
+fi
 [ $? -ne 0 ] && HOSTNAME="not found"
 
 UUID=$(cat /opt/rudder/etc/uuid.hive 2>/dev/null)
