@@ -42,6 +42,8 @@ else
   ENABLED="enabled"
 fi
 
+VERSION=$(rudder agent version)
+
 echo "Hostname: ${HOSTNAME}"
 echo "UUID: ${UUID}"
 echo "Key Hash: ${HASH}"
@@ -50,3 +52,4 @@ echo "Roles: ${ROLES}"
 echo "Agent is ${ENABLED}"
 echo "Policy updated: ${POLICY_FETCHED}"
 echo "Inventory sent: ${INVENTORY_SENT}"
+echo "Version: ${VERSION}"
