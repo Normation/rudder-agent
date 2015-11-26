@@ -17,9 +17,9 @@ VERBOSITY=""
 COLOR="-C"
 BUNDLE=""
 
-while getopts "ivdcb:" opt; do
+while getopts "iIvdcb:" opt; do
   case $opt in
-    i)
+    i|I)
       VERBOSITY="-I"
       ;;
     v)
