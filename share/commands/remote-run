@@ -22,7 +22,7 @@ COLOR="-C"
 while getopts "iIvdc" opt; do
   case $opt in
     i|I)
-      VERBOSITY="-I"
+      VERBOSITY="-I -D debug"
       ;;
     v)
       VERBOSITY="-v"

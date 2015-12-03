@@ -20,7 +20,7 @@ BUNDLE=""
 while getopts "iIvdcb:" opt; do
   case $opt in
     i|I)
-      VERBOSITY="-I"
+      VERBOSITY="-I -D debug"
       ;;
     v)
       VERBOSITY="-v"
