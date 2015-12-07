@@ -7,6 +7,36 @@
 # @man *Arguments*:
 # @man +
 # @man *node*: IP or hostname of the target node
+# @man +
+# @man *Options*:
+# @man +
+# @man *-i*: run the agent in information mode, prints basic information
+# @man +
+# @man *-v*: run the agent in verbose mode, prints detailed information
+# @man +
+# @man *-c*: run the agent without color output
+
+VERBOSITY=""
+COLOR="-C"
+
+while getopts "iIvdc" opt; do
+  case $opt in
+    i|I)
+      VERBOSITY="-I -D debug"
+      ;;
+    v)
+      VERBOSITY="-v"
+      ;;
+    d)
+      VERBOSITY="-d"
+      ;;
+    c)
+      COLOR=""
+      ;;
+  esac
+  # to keep the argument as $1
+  shift `expr ${OPTIND} - 1`
+done
 
 PORT=5309
 NODE="$1"
@@ -16,4 +46,4 @@ then
   exit 1
 fi
 
-/var/rudder/cfengine-community/bin/cf-runagent -H "${NODE}:${PORT}" -IC
+/var/rudder/cfengine-community/bin/cf-runagent -H "${NODE}:${PORT}" ${VERBOSITY} ${COLOR}

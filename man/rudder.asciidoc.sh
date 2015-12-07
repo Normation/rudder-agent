@@ -13,7 +13,7 @@ rudder - execute commands to control the Rudder configuration management tool.
 
 == SYNOPSIS
 
-*rudder* _component_ [_option_] _command_
+*rudder* _component_ [-h] [-i|-v|-d] _command_
 
 *rudder* _component_ help
 
@@ -27,6 +27,8 @@ node configuration tasks you can use the rudder-cli tool.
 
 *-h*::
   Print command-line syntax and command options.
+*-i*::
+  Print general information.
 *-v*::
   Print detailed information.
 *-d*::

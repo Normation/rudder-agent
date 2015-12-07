@@ -4,5 +4,36 @@
 # @man Even if the agent will do it regularly, it can be used to force the update
 # @man after a modification on the node.
 # @man This won't affect the node state, but only update server-side information.
+# @man +
+# @man *Options*:
+# @man +
+# @man *-i*: run the agent in information mode, prints basic information
+# @man +
+# @man *-v*: run the agent in verbose mode, prints detailed information
+# @man +
+# @man *-d*: run the agent in debug mode, prints low-level information
+# @man +
+# @man *-c*: run the agent without color output
 
-/var/rudder/cfengine-community/bin/cf-agent -KC -D force_inventory
+# rudder agent run -b force_inventory
+VERBOSITY=""
+COLOR="-C"
+
+while getopts "iIvdc" opt; do
+  case $opt in
+    i|I)
+      VERBOSITY="-I -D debug"
+      ;;
+    v)
+      VERBOSITY="-v"
+      ;;
+    d)
+      VERBOSITY="-d"
+      ;;
+    c)
+      COLOR=""
+      ;;
+  esac
+done
+
+/var/rudder/cfengine-community/bin/cf-agent ${VERBOSITY} ${COLOR} -K -D force_inventory
