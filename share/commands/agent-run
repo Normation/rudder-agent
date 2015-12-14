@@ -12,10 +12,13 @@
 # @man *-c*: run the agent without color output
 # @man +
 # @man *-b*: run the agent on a specific bundle
+# @man +
+# @man *-q*: run the agent in quiet mode (display only error messages)
 
 VERBOSITY=""
-COLOR="-C"
+COLOR="-Calways"
 BUNDLE=""
+FILTER="cat"
 
 while getopts "iIvdcb:" opt; do
   case $opt in
@@ -33,7 +36,10 @@ while getopts "iIvdcb:" opt; do
       ;;
     b)
       BUNDLE="-b ${OPTARG}"
+    q)
+      FILTER="egrep -v @@result_success@@|@@result_na@@|@@log_info@@"
+      ;;
   esac
 done
 
-/var/rudder/cfengine-community/bin/cf-agent ${VERBOSITY} ${COLOR} -K ${BUNDLE}
+/var/rudder/cfengine-community/bin/cf-agent ${VERBOSITY} ${COLOR} -K ${BUNDLE} | ${FILTER}
