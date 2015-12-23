@@ -6,15 +6,21 @@
 # @man *Options*:
 # @man +
 # @man *-v*: run the agent in verbose mode
+# @man +
+# @man *-q*: run the agent in quiet mode (display only error messages)
 
 VERBOSE=""
+FILTER="cat"
 
-while getopts "v" opt; do
+while getopts "vq" opt; do
   case $opt in
     v)
       VERBOSE="-v"
       ;;
+    q)
+      FILTER="egrep -v @@result_success@@|@@result_na@@|@@log_info@@|@@log_debug@@|\[info\]|notice:"
+      ;;
   esac
 done
 
-/var/rudder/cfengine-community/bin/cf-agent ${VERBOSE} -KC
+/var/rudder/cfengine-community/bin/cf-agent ${VERBOSE} -Calways -K | ${FILTER}

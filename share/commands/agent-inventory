@@ -4,5 +4,21 @@
 # @man Even if the agent will do it regularly, it can be used to force the update
 # @man after a modification on the node.
 # @man This won't affect the node state, but only update server-side information.
+# @man +
+# @man *Options*:
+# @man +
+# @man *-q*: run the agent in quiet mode (display only error messages)
 
-/var/rudder/cfengine-community/bin/cf-agent -KC -D force_inventory
+
+
+FILTER="cat"
+
+while getopts "q" opt; do
+  case $opt in
+    q)
+      FILTER="egrep -v @@result_success@@|@@result_na@@|@@log_info@@|@@log_debug@@|\[info\]|notice:"
+      ;;
+  esac
+done
+
+/var/rudder/cfengine-community/bin/cf-agent -Calways -K -D force_inventory | ${FILTER}
