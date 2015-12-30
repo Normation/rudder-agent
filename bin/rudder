@@ -13,6 +13,7 @@
 
 set -e
 BASEDIR="/opt/rudder/share/commands"
+export BASEDIR
 
 role_list() {
   ls "${BASEDIR}" | sed 's/\([A-Za-z_]*\)-.*/\1/' | uniq
