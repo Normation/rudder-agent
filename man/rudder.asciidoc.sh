@@ -4,7 +4,7 @@ set -e
 BASEDIR="../share/commands"
 OUTPUT="rudder.asciidoc"
 
-echo "= rudder(1)
+echo "= rudder(8)
 :doctype: manpage
 
 == NAME
