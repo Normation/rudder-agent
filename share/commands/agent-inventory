@@ -13,13 +13,16 @@
 # @man +
 # @man *-d*: run the agent in debug mode, prints low-level information
 # @man +
+# @man *-q*: run the agent in quiet mode (display only error messages)
+# @man +
 # @man *-c*: run the agent without color output
 
 # rudder agent run -b force_inventory
 VERBOSITY=""
 COLOR="-C"
+FILTER="cat"
 
-while getopts "iIvdc" opt; do
+while getopts "iIvdqc" opt; do
   case $opt in
     i|I)
       VERBOSITY="-I -D debug"
@@ -30,10 +33,14 @@ while getopts "iIvdc" opt; do
     d)
       VERBOSITY="-d"
       ;;
+    q)
+      FILTER="egrep -v @@result_success@@|@@result_na@@|@@log_info@@|@@log_debug@@|\[info\]|notice:"
+      ;;
     c)
       COLOR=""
       ;;
   esac
 done
 
-/var/rudder/cfengine-community/bin/cf-agent ${VERBOSITY} ${COLOR} -K -D force_inventory
+/var/rudder/cfengine-community/bin/cf-agent ${VERBOSITY} ${COLOR} -K -D force_inventory | ${FILTER}
+

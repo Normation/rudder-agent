@@ -9,6 +9,8 @@
 # @man +
 # @man *-v*: run the agent in verbose mode, prints detailed information
 # @man +
+# @man *-q*: run the agent in quiet mode (display only error messages)
+# @man +
 # @man *-c*: run the agent without color output
 # @man +
 # @man *-b*: run the agent on a specific bundle
@@ -16,8 +18,9 @@
 VERBOSITY=""
 COLOR="-C"
 BUNDLE=""
+FILTER="cat"
 
-while getopts "iIvdcb:" opt; do
+while getopts "iIvdcqb:" opt; do
   case $opt in
     i|I)
       VERBOSITY="-I -D debug"
@@ -28,6 +31,9 @@ while getopts "iIvdcb:" opt; do
     d)
       VERBOSITY="-d"
       ;;
+    q)
+      FILTER="egrep -v @@result_success@@|@@result_na@@|@@log_info@@|@@log_debug@@|\[info\]|notice:"
+      ;;
     c)
       COLOR=""
       ;;
@@ -36,4 +42,4 @@ while getopts "iIvdcb:" opt; do
   esac
 done
 
-/var/rudder/cfengine-community/bin/cf-agent ${VERBOSITY} ${COLOR} -K ${BUNDLE}
+/var/rudder/cfengine-community/bin/cf-agent ${VERBOSITY} ${COLOR} -K ${BUNDLE} | ${FILTER}
