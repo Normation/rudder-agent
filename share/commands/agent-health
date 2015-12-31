@@ -1,0 +1,62 @@
+#!/bin/sh
+# @description monitor agent health
+# @man Check that rudder agent has no problem
+# @man +
+# @man *Options*:
+# @man +
+# @man *-n*: run in nrpe mode, print a single line and return 0,1 or 2
+# @man  put this line in your nrpe.cfg to use it
+# @man  command[check_rudder]=/opt/rudder/bin/rudder agent health -n
+
+CFE_DIR=/var/rudder/cfengine-community
+ENTERPRISE_CFE_DIR=/var/cfengine
+CFE_DISABLE_FILE=/opt/rudder/etc/disable-agent
+UUID_FILE=/opt/rudder/etc/uuid.hive
+
+[ -e "${ENTERPRISE_CFE_DIR}/bin/cf-agent" ] && CFE_DIR="${ENTERPRISE_CFE_DIR}"
+NRPE=
+
+while getopts "n" opt; do
+  case $opt in
+    n)
+      NRPE=y
+      ;;
+  esac
+done
+
+# test if disabled
+if [ -e "${CFE_DISABLE_FILE}" ]
+then
+  echo "Rudder agent disabled"
+  [ -z "${NRPE}" ] && echo "Type 'rudder agent enable' to enable it"
+  exit 1 # warning
+fi
+
+# test policy server
+if [ ! -e "${CFE_DIR}/policy_server.dat" ] || grep "%" "${CFE_DIR}/policy_server.dat" > /dev/null
+then
+  echo "Rudder agent not configured"
+  [ -z "${NRPE}" ] && echo "Edit ${CFE_DIR}/policy_server.dat to configure it"
+  exit 2 # error
+fi
+
+# test policy server value
+cat "${CFE_DIR}/policy_server.dat" | xargs getent hosts > /dev/null
+if [ $? -ne 0 ]
+then
+  echo "Unknown Rudder policy server"
+  [ -z "${NRPE}" ] && echo "Rudder server name must be in the DNS or in /etc/hosts"
+  exit 2 # error
+fi
+
+# test connection errors
+egrep "FATAL:|Fatal :|Could not get an updated configuration" "${CFE_DIR}/output/previous" > /dev/null
+if [ $? -ne 0 ]
+then
+  echo "Connection errors in Rudder agent last run"
+  [ -z "${NRPE}" ] && echo "See ${CFE_DIR}/output/previous for more details"
+  exit 2 # error
+fi
+
+echo "OK"
+exit 0 # success
