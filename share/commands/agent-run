@@ -12,15 +12,15 @@
 # @man *-d*: run the agent in debug mode, prints low-level information
 # @man +
 # @man *-q*: run the agent in quiet mode (display only error messages)
-# @mab +
+# @man +
 # @man *-w*: show full strings, never cut output
 # @man +
 # @man *-c*: run the agent without color output
-# @mab +
+# @man +
 # @man *-r*: run the agent with raw output
-# @mab +
+# @man +
 # @man *-R*: run the agent in completely unparsed mode, with no return code of 1 in case of error. A little faster.
-# @mab +
+# @man +
 # @man *-m*: run the agent with multiline output
 # @man +
 # @man *-b*: run the agent on a specific bundle
