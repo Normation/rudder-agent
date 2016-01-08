@@ -52,7 +52,7 @@ UUID=$(cat /opt/rudder/etc/uuid.hive 2>/dev/null)
 VERSION=`"${BASEDIR}/agent-version"`
 
 PRETTY="awk -v uuid=\"\${UUID}\" -v info=\"\${DISPLAY_INFO}\" -v full_strings=\"\${FULL_STRINGS}\" -v summary_only=\"\${SUMMARY_ONLY}\" -v quiet=\"\${QUIET}\" -v multiline=\"\${MULTILINE}\" -v version=\"\${VERSION}\" \
-            -v green=\"\${GREEN}\" -v darkgreen=\"\${DARKGREEN}\" -v red=\"\${RED}\" -v yellow=\"\${YELLOW}\" -v normal=\"\${NORMAL}\" -v white=\"\${WHITE}\" -v cyan=\"\${CYAN}\" \
+            -v green=\"\${GREEN}\" -v darkgreen=\"\${DARKGREEN}\" -v red=\"\${RED}\" -v yellow=\"\${YELLOW}\" -v magenta=\"\${MAGENTA}\" -v normal=\"\${NORMAL}\" -v white=\"\${WHITE}\" -v cyan=\"\${CYAN}\" \
             -f ${PRETTY_FILTER}"
 
 while getopts "iIvdqwrRmcb:D:" opt; do
@@ -60,14 +60,17 @@ while getopts "iIvdqwrRmcb:D:" opt; do
     i|I)
       VERBOSITY="-I ${DEBUG_CLASS}"
       DISPLAY_INFO=1
+      QUIET=0
       ;;
     v)
       VERBOSITY="-v ${DEBUG_CLASS}"
       DISPLAY_INFO=1
+      QUIET=0
       ;;
     d)
       VERBOSITY="-d ${DEBUG_CLASS}"
       DISPLAY_INFO=1
+      QUIET=0
       ;;
     q)
       VERBOSITY=""
@@ -78,17 +81,7 @@ while getopts "iIvdqwrRmcb:D:" opt; do
       FULL_STRINGS=1
       ;;
     c)
-      COLOR=""
-      GREEN=""
-      DARKGREEN=""
-      RED=""
-      BLUE=""
-      PINK=""
-      WHITE=""
-      WHITELIGHT=""
-      YELLOW=""
-      CYAN=""
-      NORMAL=""
+      clear_colors
       ;;
     r)
       SUMMARY_ONLY=1
