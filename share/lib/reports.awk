@@ -49,36 +49,41 @@ BEGIN {
   
   if ($3 == "result_success")
   { 
-    color = green;
-    result = "success";
     success++;
     if (quiet)
     {
       next
     }
+    color = green;
+    result = "success";
   }
   else if ($3 == "result_error")
   {
+    error++;
     color = red;
     result = "error";
-    error++;
   }
   else if ($3 == "result_na")
   {
-    color = green;
-    result = "n/a";
     if (quiet)
     {
       next
     }
+    color = green;
+    result = "n/a";
   }
   else if ($3 == "result_repaired")
   {
+    repaired++;
     color = yellow;
     result = "repaired";
-    repaired++;
   }
-  else if ($3 == "log_info" || $3 == "log_repaired" || $3 == "log_debug")
+  else if ($3 == "log_warn")
+  {
+    color = magenta;
+    result = "warning";
+  }
+  else if ($3 == "log_info" || $3 == "log_debug" || $3 == "log_trace" || $3 == "log_repaired")
   {
     if (!info)
     {
@@ -86,19 +91,15 @@ BEGIN {
     }
     color = cyan;
     result = "info";
-    if (quiet)
-    {
-      next
-    }
   }
   else
   {
-    color = white;
-    result = $3;
     if (quiet)
     {
       next
     }
+    color = white;
+    result = $3;
   }
   if ($8 == "None")
   { 

@@ -1,4 +1,20 @@
-## Colors configuration (enable colors only if stdout is a terminal)
+# Reset colors
+clear_colors() {
+    COLOR=""
+    GREEN=""
+    DARKGREEN=""
+    RED=""
+    BLUE=""
+    PINK=""
+    WHITE=""
+    WHITELIGHT=""
+    MAGENTA=""
+    YELLOW=""
+    CYAN=""
+    NORMAL=""
+}
+
+# Colors configuration (enable colors only if stdout is a terminal)
 if [ -t 1 ]; then
     COLOR="-Calways"
     GREEN="\\033[1;32m"
@@ -8,20 +24,10 @@ if [ -t 1 ]; then
     TPINK="\\033[1;35m"
     WHITE="\\033[0;02m"
     WHITELIGHT="\\033[1;08m"
+    MAGENTA="\\033[1;35m"
     YELLOW="\\033[1;33m"
     CYAN="\\033[1;36m"
     NORMAL="\\033[0;39m"
 else
-    COLOR=""
-    GREEN=""
-    DARKGREEN=""
-    RED=""
-    BLUE=""
-    PINK=""
-    WHITE=""
-    WHITELIGHT=""
-    YELLOW=""
-    CYAN=""
-    NORMAL=""
+    clear_colors
 fi
-
