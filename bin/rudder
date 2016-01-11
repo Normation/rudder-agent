@@ -41,6 +41,7 @@ role_usage() {
   echo ""
   echo "Usage: rudder ${role} help"
   echo "       rudder ${role} <command> [parameters ...]"
+  echo "       rudder ${role} <command> --help"
   echo ""
   echo "  Run commands on ${role}."
   echo ""
@@ -52,6 +53,17 @@ role_usage() {
     printf "    %-10s\t%s\n" "${name}" "${doc}"
   done
   echo ""
+}
+
+command_help() {
+   role="$1"
+   command="$2"
+   options="$3"
+   echo ""
+   echo "Usage: rudder ${role} ${command} [parameters ...]"
+   echo ""
+   echo "${options}"
+   echo ""
 }
 
 # first parameter is role parameter
@@ -104,6 +116,15 @@ then
   exit 3
 fi
 
+# test if third parameter is --help
+option=`echo "$1" | sed 's/[^A-Za-z_-]*//g'`
+if [ "${option}" = "--help" ] || [ "${option}" = "-h" ] || [ "${option}" = "help" ]
+then
+  options=`sed -ne "/#[ \t]*@man[ \t]*/s/#[ \t]*@man[ \t]*//p" "${BASEDIR}/${role}-${command}" |
+           sed "s/*//g" | sed "s/+//g" | sed 's/^-/  -/' | sed 's/^/  /'`
+  command_help "${role}" "${command}" "${options}"
+  exit 0
+fi
 
 # OK GO !
 exec "${BASEDIR}/${role}-${command}" "$@"
