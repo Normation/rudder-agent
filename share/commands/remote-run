@@ -14,6 +14,8 @@
 # @man +
 # @man *-v*: run the agent in verbose mode, prints detailed information
 # @man +
+# @man *-d*: run the agent in debug mode, prints low-level information
+# @man +
 # @man *-c*: run the agent without color output
 
 VERBOSITY=""
