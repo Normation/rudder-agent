@@ -102,4 +102,10 @@ while getopts "iIvdqwrRmcb:D:" opt; do
   esac
 done
 
+if [ -e /opt/rudder/etc/disable-agent ]; then
+  printf "${VERSION}\nNode uuid: ${UUID}\n\n"
+  printf "${RED}error${NORMAL}: The Rudder agent is currently disabled. You can enable it with 'rudder agent enable'.\n"
+  exit 1
+fi
+
 /var/rudder/cfengine-community/bin/cf-agent ${VERBOSITY} ${COLOR} -K ${BUNDLE} ${CLASS} | eval ${PRETTY}
