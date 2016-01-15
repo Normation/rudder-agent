@@ -7,6 +7,7 @@ BEGIN {
   current_component = "";
   new_technique = 0;
   header_printed = 0;
+  end_run = 0;
   padding_dash = "--------------------------------------------------------------------------------"
   padding =      "################################################################################"
   "date +%s.%N" | getline starttime;
@@ -43,6 +44,7 @@ BEGIN {
   }
   if ($8 == "EndRun")
   {
+    end_run = 1;
     # skip this one
     next
   }
@@ -180,6 +182,19 @@ BEGIN {
 }
 END {
   "date +%s.%N" | getline endtime;
+
+  # Check if agent run finished correctly
+  if (!end_run)
+  {
+    error++;
+    if (multiline)
+    {
+      printf "%serror: Rudder agent was interrupted during execution by a fatal error. Run with -i to see log messages.%s\n", red, normal;
+    }
+    else {
+      printf("%serror    Rudder agent was interrupted during execution by a fatal error\n         Run with -i to see log messages.%s\n", red, normal)
+    }
+  }
 
   printf "\n%s%-80.80s%s\n", white, "## Summary " padding, normal
 
