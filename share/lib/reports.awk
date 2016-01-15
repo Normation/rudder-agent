@@ -26,7 +26,8 @@ BEGIN {
   {
     print $0
   }
-  else if ($1 != "R: " || NF != 11)
+  # The line may begin with a color char (particularly in CFEngine 3.7 output)
+  else if (!match($1, /.*R: $/) || NF != 11)
   {
     if (info)
     {
