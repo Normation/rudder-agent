@@ -15,32 +15,14 @@
 # @man +
 # @man *-q*: run the agent in quiet mode (display only error messages)
 # @man +
+# @man *-w*: show full strings, never cut output
+# @man +
 # @man *-c*: run the agent without color output
+# @man +
+# @man *-r*: run the agent with raw output
+# @man +
+# @man *-R*: run the agent in completely unparsed mode, with no return code of 1 in case of error. A little faster.
+# @man +
+# @man *-m*: run the agent with multiline output
 
-# rudder agent run -b force_inventory
-VERBOSITY=""
-COLOR="-C"
-FILTER="cat"
-
-while getopts "iIvdqc" opt; do
-  case $opt in
-    i|I)
-      VERBOSITY="-I -D debug"
-      ;;
-    v)
-      VERBOSITY="-v"
-      ;;
-    d)
-      VERBOSITY="-d"
-      ;;
-    q)
-      FILTER="egrep -v @@result_success@@|@@result_na@@|@@log_info@@|@@log_debug@@|\[info\]|notice:"
-      ;;
-    c)
-      COLOR=""
-      ;;
-  esac
-done
-
-/var/rudder/cfengine-community/bin/cf-agent ${VERBOSITY} ${COLOR} -K -D force_inventory | ${FILTER}
-
+"${BASEDIR}/agent-run" -D force_inventory $@

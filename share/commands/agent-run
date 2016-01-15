@@ -9,37 +9,97 @@
 # @man +
 # @man *-v*: run the agent in verbose mode, prints detailed information
 # @man +
+# @man *-d*: run the agent in debug mode, prints low-level information
+# @man +
 # @man *-q*: run the agent in quiet mode (display only error messages)
+# @man +
+# @man *-w*: show full strings, never cut output
 # @man +
 # @man *-c*: run the agent without color output
 # @man +
+# @man *-r*: run the agent with raw output
+# @man +
+# @man *-R*: run the agent in completely unparsed mode, with no return code of 1 in case of error. A little faster.
+# @man +
+# @man *-m*: run the agent with multiline output
+# @man +
 # @man *-b*: run the agent on a specific bundle
+# @man +
+# @man *-D*: define a class for this run
 
-VERBOSITY=""
-COLOR="-C"
+. "${BASEDIR}/../lib/common.sh"
+
+PRETTY_FILTER="${BASEDIR}/../lib/reports.awk"
+
 BUNDLE=""
-FILTER="cat"
+CLASS=""
+VERBOSITY=""
+DEBUG_CLASS="-D debug"
+# Use multiline formatting
+MULTILINE=0
+# Display logs between Rudder reports
+DISPLAY_INFO=0
+# Only display a summary at the end of the run, keep the logs unmodified
+SUMMARY_ONLY=0
+# Only display errors
+QUIET=0
+# Display full strings
+FULL_STRINGS=0
 
-while getopts "iIvdcqb:" opt; do
+UUID=$(cat /opt/rudder/etc/uuid.hive 2>/dev/null)
+[ $? -ne 0 ] && UUID="Not yet configured"
+
+VERSION=`"${BASEDIR}/agent-version"`
+
+PRETTY="awk -v uuid=\"\${UUID}\" -v info=\"\${DISPLAY_INFO}\" -v full_strings=\"\${FULL_STRINGS}\" -v summary_only=\"\${SUMMARY_ONLY}\" -v quiet=\"\${QUIET}\" -v multiline=\"\${MULTILINE}\" -v version=\"\${VERSION}\" \
+            -v green=\"\${GREEN}\" -v darkgreen=\"\${DARKGREEN}\" -v red=\"\${RED}\" -v yellow=\"\${YELLOW}\" -v magenta=\"\${MAGENTA}\" -v normal=\"\${NORMAL}\" -v white=\"\${WHITE}\" -v cyan=\"\${CYAN}\" \
+            -f ${PRETTY_FILTER}"
+
+while getopts "iIvdqwrRmcb:D:" opt; do
   case $opt in
     i|I)
-      VERBOSITY="-I -D debug"
+      VERBOSITY="-I ${DEBUG_CLASS}"
+      DISPLAY_INFO=1
+      QUIET=0
       ;;
     v)
-      VERBOSITY="-v"
+      VERBOSITY="-v ${DEBUG_CLASS}"
+      DISPLAY_INFO=1
+      QUIET=0
       ;;
     d)
-      VERBOSITY="-d"
+      VERBOSITY="-d ${DEBUG_CLASS}"
+      DISPLAY_INFO=1
+      QUIET=0
       ;;
     q)
-      FILTER="egrep -v @@result_success@@|@@result_na@@|@@log_info@@|@@log_debug@@|\[info\]|notice:"
+      VERBOSITY=""
+      DISPLAY_INFO=0
+      QUIET=1
+      ;;
+    w)
+      FULL_STRINGS=1
       ;;
     c)
-      COLOR=""
+      clear_colors
+      ;;
+    r)
+      SUMMARY_ONLY=1
+      DISPLAY_INFO=1
+      ;;
+    R)
+      PRETTY="cat"
+      ;;
+    m)
+      MULTILINE=1
       ;;
     b)
       BUNDLE="-b ${OPTARG}"
+      ;;
+    D)
+      CLASS="-D ${OPTARG}"
+      ;;
   esac
 done
 
-/var/rudder/cfengine-community/bin/cf-agent ${VERBOSITY} ${COLOR} -K ${BUNDLE} | ${FILTER}
+/var/rudder/cfengine-community/bin/cf-agent ${VERBOSITY} ${COLOR} -K ${BUNDLE} ${CLASS} | eval ${PRETTY}
