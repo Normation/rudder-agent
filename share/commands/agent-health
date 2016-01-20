@@ -50,7 +50,7 @@ then
 fi
 
 # test connection errors
-egrep "FATAL:|Fatal :|Could not get an updated configuration" "${CFE_DIR}/outputs/previous" > /dev/null
+egrep "FATAL:|Fatal :|could not get an updated configuration" "${CFE_DIR}/outputs/previous" > /dev/null
 if [ $? -ne 1 ]
 then
   echo "Connection errors in Rudder agent last run"
