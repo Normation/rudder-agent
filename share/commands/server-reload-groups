@@ -1,0 +1,26 @@
+#!/bin/bash
+# @description reload dynamic groups
+# @man By default, dynamic groups are evaluated every 5 minutes.
+# @man This command triggers a reload of all dynamic groups.
+# @man +
+# @man *Options*:
+# @man +
+# @man *-i*: run the agent in information mode, displays all executed commands
+
+. "${BASEDIR}/../lib/api_call.sh"
+
+DISPLAY_COMMAND=false
+
+while getopts "iIvdc" opt; do
+  case $opt in
+    i|I|v|d)
+      DISPLAY_COMMAND=true
+      ;;
+    c)
+      clear_colors
+      ;;
+  esac
+done
+
+simple_api_call "https://localhost/rudder/api/dyngroup/reload" "reload dynamic groups" "${DISPLAY_COMMAND}"
+
