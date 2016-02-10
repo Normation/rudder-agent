@@ -2,5 +2,41 @@
 # @description forbid rudder-agent to be run by cron or service
 # @man This is useful when you want to temporarily prevent your Rudder agent
 # @man from doing any modification to your system.
+# @man +
+# @man +
+# @man *Options*:
+# @man +
+# @man *-s*: stop rudder-agent in addition to disabling it
+
+while getopts "s" opt; do
+  case $opt in
+    s)
+      STOP=y
+      ;;
+  esac
+done
 
 touch /opt/rudder/etc/disable-agent
+if [ -x /usr/bin/stopsrc ]
+then
+  CMD="stopsrc -s rudder-agent"
+elif [ -x /usr/sbin/service ]
+then
+  CMD="service rudder-agent stop"
+elif [ -x /etc/init.d/rudder-agent ]
+then
+  CMD="/etc/init.d/rudder-agent stop"
+fi
+if [ "${STOP}" = "y" ]
+then
+  if [ -n "${CMD}" ]
+  then
+    $CMD
+  else
+    echo "Don't know how to stop rudder agent." 1>&2
+    echo "Agent not stopped !" 1>&2
+  fi
+else
+  echo "rudder-agent has been enabled but not started, wait for next cron run"
+fi
+

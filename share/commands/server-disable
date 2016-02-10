@@ -1,0 +1,19 @@
+#!/bin/sh
+# @description forbid Rudder to distribute new policies as a server
+# @man This is useful when you want to temporarily prevent your Rudder server
+# @man from doing any modification on your agents
+# @man +
+# @man +
+# @man *Options*:
+# @man +
+# @man *--policy-server*: disable the policy-server component
+
+if [ -z "$1" ] || [ "$1" != "--policy-server" ]
+then
+  echo "Usage rudder server disable [option]"
+  exit 1
+fi
+
+# --policy-server
+`dirname "$0"`/agent-disable -s
+

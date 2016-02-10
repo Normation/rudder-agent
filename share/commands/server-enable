@@ -1,0 +1,15 @@
+#!/bin/sh
+# @description re-enable a disabled Rudder server
+# @man +
+# @man *Options*:
+# @man +
+# @man *--policy-server*: disable the policy-server component
+
+if [ -z "$1" ] || [ "$1" != "--policy-server" ]
+then
+  echo "Usage rudder server enable [option]"
+  exit 1
+fi
+
+# --policy-server
+`dirname "$0"`/agent-enable -s
