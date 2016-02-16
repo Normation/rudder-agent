@@ -104,8 +104,8 @@ done
 
 if [ -e /opt/rudder/etc/disable-agent ]; then
   printf "${VERSION}\nNode uuid: ${UUID}\n\n"
-  printf "${RED}error${NORMAL}: The Rudder agent is currently disabled. You can enable it with 'rudder agent enable'.\n"
+  printf "${RED}error${NORMAL}: The Rudder agent is currently disabled. You can enable it with 'rudder agent enable'.\n" 1>&2
   exit 1
 fi
 
-/var/rudder/cfengine-community/bin/cf-agent ${VERBOSITY} ${COLOR} -K ${BUNDLE} ${CLASS} | eval ${PRETTY}
+"${RUDDER_VAR}/cfengine-community/bin/cf-agent" ${VERBOSITY} ${COLOR} -K ${BUNDLE} ${CLASS} | eval ${PRETTY}
