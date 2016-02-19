@@ -51,7 +51,7 @@ UUID=$(cat /opt/rudder/etc/uuid.hive 2>/dev/null)
 
 VERSION=`"${BASEDIR}/agent-version"`
 
-PRETTY="awk -v uuid=\"\${UUID}\" -v info=\"\${DISPLAY_INFO}\" -v full_strings=\"\${FULL_STRINGS}\" -v summary_only=\"\${SUMMARY_ONLY}\" -v quiet=\"\${QUIET}\" -v multiline=\"\${MULTILINE}\" -v version=\"\${VERSION}\" \
+PRETTY="awk -v info=\"\${DISPLAY_INFO}\" -v full_strings=\"\${FULL_STRINGS}\" -v summary_only=\"\${SUMMARY_ONLY}\" -v quiet=\"\${QUIET}\" -v multiline=\"\${MULTILINE}\" \
             -v green=\"\${GREEN}\" -v darkgreen=\"\${DARKGREEN}\" -v red=\"\${RED}\" -v yellow=\"\${YELLOW}\" -v magenta=\"\${MAGENTA}\" -v normal=\"\${NORMAL}\" -v white=\"\${WHITE}\" -v cyan=\"\${CYAN}\" \
             -f ${PRETTY_FILTER}"
 
@@ -102,9 +102,10 @@ while getopts "iIvdqwrRmcb:D:" opt; do
   esac
 done
 
+printf "${VERSION}\nNode uuid: ${UUID}\n"
+
 if [ -e /opt/rudder/etc/disable-agent ]; then
-  printf "${VERSION}\nNode uuid: ${UUID}\n\n"
-  printf "${RED}error${NORMAL}: The Rudder agent is currently disabled. You can enable it with 'rudder agent enable'.\n"
+  printf "\n${RED}error${NORMAL}: The Rudder agent is currently disabled. You can enable it with 'rudder agent enable'.\n"
   exit 1
 fi
 
