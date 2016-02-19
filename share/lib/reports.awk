@@ -171,11 +171,11 @@ BEGIN {
           {
             printf "%-17.17s| ", $8;
           } else {
-            printf "%-18.18s", $8;
+            printf "%-18.18s ", $8;
           }
         }
 
-        printf " %s\n", $11
+        printf "%s\n", $11
       }
       fflush();
     }
