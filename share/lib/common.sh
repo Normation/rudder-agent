@@ -31,3 +31,6 @@ if [ -t 1 ]; then
 else
     clear_colors
 fi
+
+# Paths
+$RUDDER_VAR="/var/rudder"

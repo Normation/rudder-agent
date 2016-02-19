@@ -5,11 +5,25 @@
 # @man *Options*:
 # @man +
 # @man *-s*: start rudder-agent in addition to enabling it
+# @man +
+# @man *-q*: run the agent in quiet mode (display only error messages)
+# @man +
+# @man *-c*: run the agent without color output
 
-while getopts "s" opt; do
+. "${BASEDIR}/../lib/common.sh"
+
+QUIET=false
+
+while getopts "sqc" opt; do
   case $opt in
     s)
       START=y
+      ;;
+    q)
+      QUIET=true
+      ;;
+    c)
+      clear_colors
       ;;
   esac
 done
@@ -31,15 +45,15 @@ then
   then
     $CMD
   else
-    echo "Don't know how to start rudder agent." 1>&2
+    printf "${RED}error${NORMAL}: Don't know how to start rudder agent.\n" 1>&2
     echo "Agent not started !" 1>&2
   fi
 else
   if [ -n "${CMD}" ]
   then
-    echo "rudder-agent has been enabled but not started, use '$CMD' or wait for next cron run"
-    echo "Next time, use -s option to automatically start it"
+    [ "$QUIET" = false ] && printf "${GREEN}ok${NORMAL}: Rudder agent has been enabled but not started, use '$CMD' or wait for next cron run.\n"
+    [ "$QUIET" = false ] && echo "You can use the -s option to automatically start it"
   else
-    echo "rudder-agent has been enabled but not started, wait for next cron run"
+    [ "$QUIET" = false ] && printf "${GREEN}ok${NORMAL}: Rudder agent has been enabled but not started, wait for next cron run.\n"
   fi
 fi

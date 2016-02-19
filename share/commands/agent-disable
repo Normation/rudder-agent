@@ -2,5 +2,28 @@
 # @description forbid rudder-agent to be run by cron or service
 # @man This is useful when you want to temporarily prevent your Rudder agent
 # @man from doing any modification to your system.
+# @man +
+# @man *Options*:
+# @man +
+# @man *-q*: run the agent in quiet mode (display only error messages)
+# @man +
+# @man *-c*: run the agent without color output
+
+. "${BASEDIR}/../lib/common.sh"
+
+QUIET=false
+
+while getopts "qc" opt; do
+  case $opt in
+    q)
+      QUIET=true
+      ;;
+    c)
+      clear_colors
+      ;;
+  esac
+done
 
 touch /opt/rudder/etc/disable-agent
+
+[ "$QUIET" = false ] && printf "${GREEN}ok${NORMAL}: Rudder agent is now disabled.\n"

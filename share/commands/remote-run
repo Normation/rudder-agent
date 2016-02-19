@@ -20,17 +20,18 @@
 
 VERBOSITY=""
 COLOR="-C"
+DEBUG_CLASS="-D debug"
 
 while getopts "iIvdc" opt; do
   case $opt in
     i|I)
-      VERBOSITY="-I -D debug"
+      VERBOSITY="-I ${DEBUG_CLASS}"
       ;;
     v)
-      VERBOSITY="-v"
+      VERBOSITY="-v ${DEBUG_CLASS}"
       ;;
     d)
-      VERBOSITY="-d"
+      VERBOSITY="-d ${DEBUG_CLASS}"
       ;;
     c)
       COLOR=""
