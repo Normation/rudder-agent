@@ -36,10 +36,10 @@ BEGIN {
     next
   }
   
-  # Wait for the StartRun to start display because we want the config id
+  # Wait for the StartRun to display the config id
   if ($8 == "StartRun")
   {
-    printf "%s\nNode uuid: %s\n%s\n\n", version, uuid, $11;
+    printf "%s\n\n", $11;
     next
   }
   if ($8 == "EndRun")
