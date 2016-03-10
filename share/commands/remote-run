@@ -16,25 +16,62 @@
 # @man +
 # @man *-d*: run the agent in debug mode, prints low-level information
 # @man +
+# @man *-q*: run the agent in quiet mode (display only error messages)
+# @man +
+# @man *-w*: show full strings, never cut output
+# @man +
 # @man *-c*: run the agent without color output
+# @man +
+# @man *-r*: run the agent with raw output
+# @man +
+# @man *-R*: run the agent in completely unparsed mode, with no return code of 1 in case of error. A little faster.
+# @man +
+# @man *-m*: run the agent with multiline output
+# @man +
+# @man *-D*: define a class for this run
 
-VERBOSITY=""
-COLOR="-C"
-DEBUG_CLASS="-D debug"
+. "${BASEDIR}/../lib/cfengine_parsing.sh"
 
-while getopts "iIvdc" opt; do
+while getopts "iIvdqwrRmcb:D:" opt; do
   case $opt in
     i|I)
       VERBOSITY="-I ${DEBUG_CLASS}"
+      DISPLAY_INFO=1
+      QUIET=0
       ;;
     v)
       VERBOSITY="-v ${DEBUG_CLASS}"
+      DISPLAY_INFO=1
+      QUIET=0
       ;;
     d)
       VERBOSITY="-d ${DEBUG_CLASS}"
+      DISPLAY_INFO=1
+      QUIET=0
+      ;;
+    q)
+      VERBOSITY=""
+      DISPLAY_INFO=0
+      QUIET=1
+      ;;
+    w)
+      FULL_STRINGS=1
       ;;
     c)
-      COLOR=""
+      clear_colors
+      ;;
+    r)
+      SUMMARY_ONLY=1
+      DISPLAY_INFO=1
+      ;;
+    R)
+      PRETTY="cat"
+      ;;
+    m)
+      MULTILINE=1
+      ;;
+    D)
+      CLASS="-D ${OPTARG}"
       ;;
   esac
   # to keep the argument as $1
@@ -49,4 +86,4 @@ then
   exit 1
 fi
 
-/var/rudder/cfengine-community/bin/cf-runagent -H "${NODE}:${PORT}" ${VERBOSITY} ${COLOR}
+"${RUDDER_VAR}/cfengine-community/bin/cf-runagent" -H "${NODE}:${PORT}" ${VERBOSITY} ${COLOR} | eval ${PRETTY}

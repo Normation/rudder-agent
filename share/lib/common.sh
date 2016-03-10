@@ -33,4 +33,4 @@ else
 fi
 
 # Paths
-$RUDDER_VAR="/var/rudder"
+RUDDER_VAR="/var/rudder"
