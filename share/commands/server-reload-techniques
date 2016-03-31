@@ -1,0 +1,26 @@
+#!/bin/bash
+# @description reload techniques
+# @man This command will reload the technique library into memory from
+# @man the filesystem and regenerate the promises if necessary.
+# @man +
+# @man *Options*:
+# @man +
+# @man *-i*: run the agent in information mode, displays all executed commands
+
+. "${BASEDIR}/../lib/api_call.sh"
+
+DISPLAY_COMMAND=false
+
+while getopts "iIvdc" opt; do
+  case $opt in
+    i|I|v|d)
+      DISPLAY_COMMAND=true
+      ;;
+    c)
+      clear_colors
+      ;;
+  esac
+done
+
+simple_api_call "http://localhost/rudder/api/techniqueLibrary/reload" "reload techniques from files" "${DISPLAY_COMMAND}"
+
