@@ -4,9 +4,9 @@
 
 if type curl >/dev/null 2>/dev/null
 then
-  DOWNLOAD_COMMAND="curl -sS -k -L"
+  DOWNLOAD_COMMAND="curl --silent --show-error --insecure --location --proxy ''"
 else
-  DOWNLOAD_COMMAND="wget -q --no-check-certificate -O -"
+  DOWNLOAD_COMMAND="wget --quiet --no-check-certificate --no-proxy -O -"
 fi
 
 # This functions tests if the API call returns "OK"
