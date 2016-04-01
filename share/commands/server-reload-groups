@@ -6,8 +6,11 @@
 # @man *Options*:
 # @man +
 # @man *-i*: run the agent in information mode, displays all executed commands
+<<<<<<< HEAD
 # @man +
 # @man *-c*: run the agent without color output
+=======
+>>>>>>> branches/rudder/3.2
 
 . "${BASEDIR}/../lib/api_call.sh"
 
