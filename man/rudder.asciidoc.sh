@@ -33,6 +33,8 @@ node configuration tasks you can use the rudder-cli tool.
   Print detailed information.
 *-d*::
   Print all available information.
+*-c*::
+  Do not colorize output.
 
 == COMMANDS" > ${OUTPUT}
 
