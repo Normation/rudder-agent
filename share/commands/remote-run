@@ -6,7 +6,7 @@
 # @man +
 # @man *Arguments*:
 # @man +
-# @man *node*: IP or hostname of the target node
+# @man *node*: IP or hostname of the target node or 'all' for all nodes of the server
 # @man +
 # @man *Options*:
 # @man +
@@ -29,10 +29,37 @@
 # @man *-m*: run the agent with multiline output
 # @man +
 # @man *-D*: define a class for this run
+# @man +
+# @man *-a*: run the agent on all known nodes
+# @man +
+# @man *-g*: run the agent on all nodes of the group UUID given in parameter
+# @man +
+# @man *-j*: run this number of jobs in parallel
+# @man +
+# @man *-t*: provide an alternate token for group query (default from ~/.rudder)
+# @man +
+# @man *-u*: provide an alternate url for group query (default from ~/.rudder)
+# @man +
+# @man *-C*: provide an alternate config section in ~/.rudder for group query (default to first found)
+
 
 . "${BASEDIR}/../lib/cfengine_parsing.sh"
+. "${BASEDIR}/../lib/api_call.sh"
 
-while getopts "iIvdqwrRmcb:D:" opt; do
+PORT=5309
+LOOP="xargs -I{}"
+MULTIHOST=1
+
+# Check for js presence
+need_jq() {
+  if ! type jq >/dev/null 2>/dev/null
+  then
+    echo "ERROR: 'jq' must be installed to query hosts from server" 1>&2
+    exit 2
+  fi
+}
+
+while getopts "iIvdqwrRmcb:D:j:at:u:C:" opt; do
   case $opt in
     i|I)
       VERBOSITY="-I ${DEBUG_CLASS}"
@@ -73,17 +100,63 @@ while getopts "iIvdqwrRmcb:D:" opt; do
     D)
       CLASS="-D ${OPTARG}"
       ;;
+    j)
+      if ! type parallel >/dev/null 2>/dev/null
+      then
+        echo "ERROR: 'parallel' must be installed to run multiple jobs in parallel" 1>&2
+        exit 2
+      fi
+      LOOP="parallel --jobs ${OPTARG}"
+      ;;
+    g)
+      need_jq
+      GROUP="${OPTARG}"
+      ;;
+    a)
+      need_jq
+      ALL="true"
+      ;;
+    t)
+      TOKEN="${OPTARG}"
+      ;;
+    u)
+      URL="${OPTARG}"
+      ;;
+    C)
+      CONFID="${OPTARG}"
+      ;;
   esac
   # to keep the argument as $1
   shift `expr ${OPTIND} - 1`
 done
 
-PORT=5309
-NODE="$1"
-if [ -z "${NODE}" ]
+# Define node list method 
+if [ -n "${ALL}" ]
+then
+  NODELIST="get_all_hostnames"
+elif [ -n "${GROUP}" ]
+then
+  NODELIST="get_group_hostids ${GROUP}"
+elif [ -z "$1" ]
 then
   echo "Usage rudder remote run <node_ip_or_name>"
   exit 1
+else
+  NODELIST="echo $*"
 fi
 
-"${RUDDER_VAR}/cfengine-community/bin/cf-runagent" -H "${NODE}:${PORT}" ${VERBOSITY} ${COLOR} | eval ${PRETTY}
+# get all hosts on server
+get_all_hostnames() {
+  full_api_call "/api/nodes" "${URL}" "${CONFID}" "${TOKEN}" | jq '.data.nodes[].hostname' | sed -e 's/"\(.*\)"/\1/'
+}
+
+# get all hosts in a given group
+get_group_hostids() {
+  for id in $(full_api_call "/api/groups/$1" "${URL}" "${CONFID}" "${TOKEN}" | jq '.data.groups[0].nodeIds[]')
+  do
+    full_api_call "/api/nodes/${id}" "${URL}" "${CONFID}" "${TOKEN}" | jq '.data.nodes[0].hostname'
+  done | sed -e 's/"\(.*\)"/\1/'
+}
+
+# Aggregate everything
+${NODELIST} | ${LOOP} "${RUDDER_VAR}/cfengine-community/bin/cf-runagent" -H "{}:${PORT}" ${VERBOSITY} ${COLOR} | eval ${PRETTY}
