@@ -58,5 +58,32 @@ then
   exit 2 # error
 fi
 
+# test failsafe promises
+/var/rudder/cfengine-community/bin/cf-promises -f failsafe.cf > /dev/null 2>&1
+if [ $? -ne 0 ]
+then
+  echo "Broken failsafe promises"
+  [ -z "${NRPE}" ] && echo "The failsafe promises are broken, you can run 'rudder agent reset' to go back to the initial promises"
+  exit 2 # error
+fi
+
+# test promises
+CFPROMISES=$(/var/rudder/cfengine-community/bin/cf-promises -I 2>&1)
+if [ $? -ne 0 ]
+then
+  echo "Broken promises"
+  [ -z "${NRPE}" ] && echo "The promises are broken, you should fix them on the policy server or run 'rudder agent reset' to go back to the initial promises"
+  exit 2 # error
+fi
+
+# test hostname resolution errors
+RESOLUTION=$(printf '%s' "${CFPROMISES}" | grep "Unable to lookup hostname")
+if [ $? -eq 0 ]
+then
+  echo "Failed name resolution"
+  [ -z "${NRPE}" ] && printf '%s' "${RESOLUTION}" | awk -F"'" '{ print "could not resolve: " $2 }' | sort | uniq
+  exit 1 # warning
+fi
+
 echo "OK"
 exit 0 # success
