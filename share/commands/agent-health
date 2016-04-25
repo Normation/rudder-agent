@@ -49,21 +49,21 @@ then
   exit 2 # error
 fi
 
-# test connection errors
-egrep "FATAL:|Fatal :|could not get an updated configuration" "${CFE_DIR}/outputs/previous" > /dev/null
-if [ $? -ne 1 ]
-then
-  echo "Connection errors in Rudder agent last run"
-  [ -z "${NRPE}" ] && echo "See ${CFE_DIR}/outputs/previous for more details"
-  exit 2 # error
-fi
-
 # test failsafe promises
 /var/rudder/cfengine-community/bin/cf-promises -f failsafe.cf > /dev/null 2>&1
 if [ $? -ne 0 ]
 then
   echo "Broken failsafe promises"
   [ -z "${NRPE}" ] && echo "The failsafe promises are broken, you can run 'rudder agent reset' to go back to the initial promises"
+  exit 2 # error
+fi
+
+# test connection errors
+egrep "FATAL:|Fatal :|could not get an updated configuration" "${CFE_DIR}/outputs/previous" > /dev/null
+if [ $? -ne 1 ]
+then
+  echo "Connection errors in Rudder agent last run"
+  [ -z "${NRPE}" ] && echo "See ${CFE_DIR}/outputs/previous for more details"
   exit 2 # error
 fi
 
