@@ -36,6 +36,17 @@ else
   ROLES="${ROLES}, rudder-agent"
 fi
 
+if [ "${UUID}" != "root" ]
+then
+  if [ -d /var/rudder/share ]
+  then
+    ROLES="${ROLES}, rudder-relay"
+  elif [ -d /var/rudder/inventories/incoming ]
+  then
+    ROLES="${ROLES}, rudder-relay (not registered)"
+  fi
+fi
+
 if [ -e /opt/rudder/etc/disable-agent ]; then
   ENABLED="disabled"
 else
