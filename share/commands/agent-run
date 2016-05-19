@@ -5,6 +5,8 @@
 # @man +
 # @man *Options*:
 # @man +
+# @man *-u*: update policy before running the agent (default is to run existing policy)
+# @man +
 # @man *-i*: run the agent in information mode, prints basic information
 # @man +
 # @man *-v*: run the agent in verbose mode, prints detailed information
@@ -29,33 +31,44 @@
 
 . "${BASEDIR}/../lib/cfengine_parsing.sh"
 
-while getopts "iIvdqwrRmcb:D:" opt; do
+UPDATE=false
+UPDATE_OPTIONS=""
+
+while getopts "uiIvdqwrRmcb:D:" opt; do
   case $opt in
+    u)
+      UPDATE=true
+      ;;
     i|I)
       VERBOSITY="-I ${DEBUG_CLASS}"
       DISPLAY_INFO=1
       QUIET=0
+      UPDATE_OPTIONS="${UPDATE_OPTIONS} -i"
       ;;
     v)
       VERBOSITY="-v ${DEBUG_CLASS}"
       DISPLAY_INFO=1
       QUIET=0
+      UPDATE_OPTIONS="${UPDATE_OPTIONS} -v"
       ;;
     d)
       VERBOSITY="-d ${DEBUG_CLASS}"
       DISPLAY_INFO=1
       QUIET=0
+      UPDATE_OPTIONS="${UPDATE_OPTIONS} -d"
       ;;
     q)
       VERBOSITY=""
       DISPLAY_INFO=0
       QUIET=1
+      UPDATE_OPTIONS="${UPDATE_OPTIONS} -d"
       ;;
     w)
       FULL_STRINGS=1
       ;;
     c)
       clear_colors
+      UPDATE_OPTIONS="${UPDATE_OPTIONS} -c"
       ;;
     r)
       SUMMARY_ONLY=1
@@ -81,6 +94,10 @@ printf "${VERSION}\nNode uuid: ${UUID}\n"
 if [ -e /opt/rudder/etc/disable-agent ]; then
   printf "\n${RED}error${NORMAL}: The Rudder agent is currently disabled. You can enable it with 'rudder agent enable'.\n" 1>&2
   exit 1
+fi
+
+if [ "${UPDATE}" = "true" ]; then
+  "${BASEDIR}/agent-update" ${UPDATE_OPTIONS}
 fi
 
 "${RUDDER_VAR}/cfengine-community/bin/cf-agent" ${VERBOSITY} ${COLOR} -K ${BUNDLE} ${CLASS} | eval ${PRETTY}
