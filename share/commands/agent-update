@@ -2,5 +2,24 @@
 # @description update promises on agent
 # @man The agent will fetch the last version of its promises from its configured
 # @man policy server.
+# @man +
+# @man *Options*:
+# @man +
+# @man *-f*: force full update
+
+FORCE=false
+
+while getopts "f" opt; do
+  case $opt in
+    f)
+      FORCE=true
+	  ;;
+  esac
+done
+
+if [ "${FORCE}" = "true" ]; then
+  rm -f /var/rudder/cfengine-community/inputs/rudder_promises_generated
+  rm -f /var/rudder/tools/rudder_tools_updated
+fi
 
 /var/rudder/cfengine-community/bin/cf-agent -KC -f failsafe.cf
