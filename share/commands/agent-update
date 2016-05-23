@@ -14,13 +14,16 @@
 # @man *-q*: run the agent in quiet mode (display only error messages)
 # @man +
 # @man *-c*: run the agent without color output
+# @man +
+# @man *-f*: force full update
 
 . "${BASEDIR}/../lib/common.sh"
 
 VERBOSITY=""
+FORCE=false
 DEBUG_CLASS="-D debug"
 
-while getopts "iIvdqc" opt; do
+while getopts "iIvdqcf" opt; do
   case $opt in
     i|I)
       VERBOSITY="-I ${DEBUG_CLASS}"
@@ -41,8 +44,18 @@ while getopts "iIvdqc" opt; do
     c)
       COLOR=""
       ;;
+    f)
+      FORCE=true
+      ;;
   esac
 done
+
+if [ "${FORCE}" = "true" ]; then
+  rm -f ${RUDDER_VAR}/cfengine-community/inputs/rudder_promises_generated
+  rm -f ${RUDDER_VAR}/tools/rudder_tools_updated
+  rm -f ${RUDDER_VAR}/ncf/common/ncf_hash_file
+  rm -f ${RUDDER_VAR}/ncf/local/ncf_hash_file
+fi
 
 "${RUDDER_VAR}/cfengine-community/bin/cf-agent" ${VERBOSITY} ${COLOR} -K -f failsafe.cf
 
