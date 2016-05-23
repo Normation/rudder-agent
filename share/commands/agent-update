@@ -37,6 +37,7 @@ while getopts "iIvdqc" opt; do
     q)
       VERBOSITY=""
       QUIET=true
+      ;;
     c)
       COLOR=""
       ;;
