@@ -12,11 +12,14 @@
 # @man *-d*: run the agent in debug mode, prints low-level information
 # @man +
 # @man *-c*: run the agent without color output
+# @man +
+# @man *-f*: force full update
 
 VERBOSITY=""
 COLOR="-C"
+FORCE=false
 
-while getopts "iIvdic" opt; do
+while getopts "iIvdicf" opt; do
   case $opt in
     i|I)
       VERBOSITY="-I -D debug"
@@ -30,7 +33,17 @@ while getopts "iIvdic" opt; do
     c)
       COLOR=""
       ;;
+    f)
+      FORCE=true
+      ;;
   esac
 done
+
+if [ "${FORCE}" = "true" ]; then
+  rm -f /var/rudder/cfengine-community/inputs/rudder_promises_generated
+  rm -f /var/rudder/tools/rudder_tools_updated
+  rm -f /var/rudder/ncf/common/ncf_hash_file
+  rm -f /var/rudder/ncf/local/ncf_hash_file
+fi
 
 /var/rudder/cfengine-community/bin/cf-agent ${VERBOSITY} ${COLOR} -K -f failsafe.cf
