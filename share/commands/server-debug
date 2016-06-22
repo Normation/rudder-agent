@@ -8,15 +8,21 @@
 # @man +
 # @man *Arguments*:
 # @man +
+# @man *-e*: debug the cfengine enterprise server
+# @man +
+# @man *-i*: run a debug server for the given node
+# @man +
 # @man *node*: IP or hostname of the host you want to debug
 
 DEBUG_PORT=5310
+SERVER_PORT=5309
+DAEMON=/var/rudder/cfengine-community/bin/cf-serverd
 
 set -e
 
 # necessary to manage iptables removal on error or on ctrl-c
 function anomaly_handler() {
-  iptables -t nat -D PREROUTING -p tcp -s ${NODE} --dport 5309 -j DNAT --to-destination :${DEBUG_PORT}
+  iptables -t nat -D PREROUTING -p tcp -s ${NODE} --dport ${SERVER_PORT} -j DNAT --to-destination :${DEBUG_PORT}
   echo ""
   echo "Debug has been stopped on step: ${STEP}"
 }
@@ -25,18 +31,33 @@ trap anomaly_handler ERR INT TERM
 
 # Parameter
 STEP="INIT"
+
+# default: node is the first parameter to match the old behaviour (no other option)
 NODE="$1"
+
+while getopts ":ei:" opt; do
+  case $opt in
+    i)
+      NODE="${OPTARG}"
+      ;;
+    e)
+      SERVER_PORT=5308
+      DAEMON=/var/cfengine/bin/cf-serverd
+      ;;
+  esac
+done
+
 if [ -z "${NODE}" ]
 then
-  echo "Usage rudder server debug <node_ip>"
+  echo "Usage rudder server debug [-e] -i <node_ip>"
   exit 1
 fi
 
 STEP="Creating redirect iptables rule"
-iptables -t nat -I PREROUTING -p tcp -s ${NODE} --dport 5309 -j DNAT --to-destination :${DEBUG_PORT}
+iptables -t nat -I PREROUTING -p tcp -s ${NODE} --dport ${SERVER_PORT} -j DNAT --to-destination :${DEBUG_PORT}
 
 STEP="Running debug server"
-/var/rudder/cfengine-community/bin/cf-serverd -v --no-fork -D debug_port
+${DAEMON} -v --no-fork -D debug_port
 
 STEP="Removing iptables rule"
-iptables -t nat -D PREROUTING -p tcp -s ${NODE} --dport 5309 -j DNAT --to-destination :${DEBUG_PORT}
+iptables -t nat -D PREROUTING -p tcp -s ${NODE} --dport ${SERVER_PORT} -j DNAT --to-destination :${DEBUG_PORT}
