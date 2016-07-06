@@ -8,6 +8,7 @@ BEGIN {
   new_technique = 0;
   header_printed = 0;
   end_run = 0;
+  unknown_report = 0;
   padding_dash = "--------------------------------------------------------------------------------"
   padding =      "################################################################################"
   "date +%s.%N" | getline starttime;
@@ -27,7 +28,29 @@ BEGIN {
   {
     print $0
   }
-  else if ($1 != "R: " || NF != 11)
+  if ($1 == "R: ") {
+    if (NF > 11)
+    {
+      # We might have some of the possible separators ('##','#@','@#', '@@') in the message field, and the line is being split by it, 
+      # not showing it correctly. We check if we actually have the message-separator in the report, if yes, we assume that the line
+      # is a correct report, just badly parsed by awk, so we extract the message as of '@#' instead of relying on $11
+      i = index($0, "@#");
+      if (i > 0)
+      {
+        message = substr($0, i+2);
+        unknown_report = 0;
+      }
+      else
+      {
+        unknown_report = 1;
+      }
+    }
+    else
+    {
+      message = $11;
+    }
+  }
+  else if ($1 != "R: " || unknown_report == 1)
   {
     if (info)
     {
@@ -120,7 +143,7 @@ BEGIN {
           printf "%s%-80.80s%s\n", white, padding, normal;
         }
         
-        printf "%s%s%s: %s\n", color, result, normal, $11;
+        printf "%s%s%s: %s\n", color, result, normal, message;
       
         if ($8 != "")
         {
@@ -174,7 +197,7 @@ BEGIN {
           }
         }
 
-        printf "%s\n", $11
+        printf "%s\n", message; 
       }
       fflush();
     }
