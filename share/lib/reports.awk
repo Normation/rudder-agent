@@ -1,5 +1,8 @@
 BEGIN {
-  FS = "[#@][#@]";
+  FS = "@#";
+  nf_report = 0;
+  is_report = 0;
+  broken_reports = 0;
   success = 0;
   error = 0;
   repaired = 0;
@@ -15,21 +18,45 @@ BEGIN {
   close("date +%s.%N");
 }
 {
-  ## Enter the main loop
-  # $2 -> technique
-  # $3 -> result
-  # $7 -> component
-  # $8 -> key
-  # $11 -> message
-  ##
+  is_report = 0;
+
+  if (NF > 1)
+  {
+    # $1 is the report, the rest is the message
+    # split the first part of the report
+    nf_report = split($1, r, "##|@@");
+
+    ## variable -> report field:
+    # r[2]    -> technique
+    # r[3]    -> result
+    # r[7]    -> component
+    # r[8]    -> key
+    # message -> message
+    ##
+
+    # the rest is the message
+    message = substr($0, length($1) + 3);
+
+    if (nf_report == 10 && match(r[1], /.*R: $/))
+    {
+      # line has been parsed as a valid report
+      is_report = 1;
+    }
+  }
   
   if (summary_only)
   {
     print $0
   }
-  # The line may begin with a color char (particularly in CFEngine 3.7 output)
-  else if (!match($1, /.*R: $/) || NF != 11)
+
+  if (!is_report)
   {
+    # very likely a broken report
+    if (match($0, /.*R: @@/))
+    {
+      broken_reports++;
+    } 
+
     if (info)
     {
       print darkgreen $0 normal;
@@ -38,20 +65,20 @@ BEGIN {
   }
   
   # Wait for the StartRun to display the config id
-  if ($8 == "StartRun")
+  if (r[8] == "StartRun")
   {
-    printf "%s\n\n", $11;
+    printf "%s\n\n", message;
     next
   }
-  if ($8 == "EndRun")
+  if (r[8] == "EndRun")
   {
     end_run = 1;
     # skip this one
     next
   }
   
-  if ($3 == "result_success")
-  { 
+  if (r[3] == "result_success")
+  {
     success++;
     if (quiet)
     {
@@ -60,13 +87,13 @@ BEGIN {
     color = green;
     result = "success";
   }
-  else if ($3 == "result_error")
+  else if (r[3] == "result_error")
   {
     error++;
     color = red;
     result = "error";
   }
-  else if ($3 == "result_na")
+  else if (r[3] == "result_na")
   {
     if (quiet)
     {
@@ -75,18 +102,18 @@ BEGIN {
     color = green;
     result = "n/a";
   }
-  else if ($3 == "result_repaired")
+  else if (r[3] == "result_repaired")
   {
     repaired++;
     color = yellow;
     result = "repaired";
   }
-  else if ($3 == "log_warn")
+  else if (r[3] == "log_warn")
   {
     color = magenta;
     result = "warning";
   }
-  else if ($3 == "log_info" || $3 == "log_debug" || $3 == "log_trace" || $3 == "log_repaired")
+  else if (r[3] == "log_info" || r[3] == "log_debug" || r[3] == "log_trace" || r[3] == "log_repaired")
   {
     if (!info)
     {
@@ -102,12 +129,12 @@ BEGIN {
       next
     }
     color = white;
-    result = $3;
+    result = r[3];
   }
-  if ($8 == "None")
+  if (r[8] == "None")
   { 
     # Do not display "None" keys
-    $8 = "";
+    r[8] = "";
   }
   
   { 
@@ -121,16 +148,16 @@ BEGIN {
           printf "%s%-80.80s%s\n", white, padding, normal;
         }
         
-        printf "%s%s%s: %s\n", color, result, normal, $11;
+        printf "%s%s%s: %s\n", color, result, normal, message;
       
-        if ($8 != "")
+        if (r[8] != "")
         {
-          printf "%s%-80.80s%s\n", white, "-- Key: " $8 " " padding_dash, normal;
+          printf "%s%-80.80s%s\n", white, "-- Key: " r[8] " " padding_dash, normal;
         }
         
-        printf "%s%-80.80s%s\n", white, "-- Component: " $7 " " padding_dash, normal;
+        printf "%s%-80.80s%s\n", white, "-- Component: " r[7] " " padding_dash, normal;
       
-        printf "%s%-80.80s%s\n", white, "-- Technique: " $2 " " padding_dash, normal;
+        printf "%s%-80.80s%s\n", white, "-- Technique: " r[2] " " padding_dash, normal;
         
         printf "%s%-80.80s%s\n\n", white, padding, normal;
         
@@ -149,33 +176,33 @@ BEGIN {
 
         if (full_strings)
         {
-          printf "%-25s %-25s %-18s", $2, $7, $8;
+          printf "%-25s %-25s %-18s", r[2], r[7], r[8];
         }
         else
         {
-          if (length($2) > 25)
+          if (length(r[2]) > 25)
           {
-            printf "%-24.24s| ", $2;
+            printf "%-24.24s| ", r[2];
           } else {
-            printf "%-25.25s ", $2;
+            printf "%-25.25s ", r[2];
           }
 
-          if (length($7) > 25)
+          if (length(r[7]) > 25)
           {
-            printf "%-24.24s| ", $7;
+            printf "%-24.24s| ", r[7];
           } else {
-            printf "%-25.25s ", $7;
+            printf "%-25.25s ", r[7];
           }
 
-          if (length($8) > 18)
+          if (length(r[8]) > 18)
           {
-            printf "%-17.17s| ", $8;
+            printf "%-17.17s| ", r[8];
           } else {
-            printf "%-18.18s ", $8;
+            printf "%-18.18s ", r[8];
           }
         }
 
-        printf "%s\n", $11
+        printf "%s\n", message
       }
       fflush();
     }
@@ -192,8 +219,22 @@ END {
     {
       printf "%serror: Rudder agent was interrupted during execution by a fatal error. Run with -i to see log messages.%s\n", red, normal;
     }
-    else {
+    else
+    {
       printf("%serror    Rudder agent was interrupted during execution by a fatal error\n         Run with -i to see log messages.%s\n", red, normal)
+    }
+  }
+
+  # Check for unparsable reports
+  if (broken_reports)
+  {
+    if (multiline)
+    {
+      printf "%swarning: %d reports were not parsable. Run with -i to see log messages.%s\n", magenta, broken_reports, normal;
+    }
+    else
+    {
+      printf("%swarning: %d reports were not parsable.\n         Run with -i to see log messages.%s\n", magenta, broken_reports, normal)
     }
   }
 
