@@ -3,7 +3,11 @@
 # @man Remove all locks and state cache of the agent, and restore initial promises.
 # @man This won't affect the desired state of the node, but will only
 # @man reset the internal state of the agent. It is useful to test a rule
-# @man without caching interference or when you have trouble with the promises updates.
+# @man without caching interference or when you have trouble with the promises updates,
+# @man and is in most cases sufficient to resolve issues.
+# @man +
+# @man To completely reinitialize the agent and make it appear as a new node again, please
+# @man use "rudder agent factory-reset" instead.
 
 # Try to remove everything that can block
 # - restore initial promises
