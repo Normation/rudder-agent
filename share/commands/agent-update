@@ -11,24 +11,35 @@
 # @man +
 # @man *-d*: run the agent in debug mode, prints low-level information
 # @man +
+# @man *-q*: run the agent in quiet mode (display only error messages)
+# @man +
 # @man *-c*: run the agent without color output
 # @man +
 # @man *-f*: force full update
 
-VERBOSITY=""
-COLOR="-C"
-FORCE=false
+. "${BASEDIR}/../lib/common.sh"
 
-while getopts "iIvdicf" opt; do
+VERBOSITY=""
+FORCE=false
+DEBUG_CLASS="-D debug"
+
+while getopts "iIvdqcf" opt; do
   case $opt in
     i|I)
-      VERBOSITY="-I -D debug"
+      VERBOSITY="-I ${DEBUG_CLASS}"
+      QUIET=false
       ;;
     v)
-      VERBOSITY="-v"
+      VERBOSITY="-v ${DEBUG_CLASS}"
+      QUIET=false
       ;;
     d)
-      VERBOSITY="-d"
+      VERBOSITY="-d ${DEBUG_CLASS}"
+      QUIET=false
+      ;;
+    q)
+      VERBOSITY=""
+      QUIET=true
       ;;
     c)
       COLOR=""
@@ -40,10 +51,17 @@ while getopts "iIvdicf" opt; do
 done
 
 if [ "${FORCE}" = "true" ]; then
-  rm -f /var/rudder/cfengine-community/inputs/rudder_promises_generated
-  rm -f /var/rudder/tools/rudder_tools_updated
-  rm -f /var/rudder/ncf/common/ncf_hash_file
-  rm -f /var/rudder/ncf/local/ncf_hash_file
+  rm -f ${RUDDER_VAR}/cfengine-community/inputs/rudder_promises_generated
+  rm -f ${RUDDER_VAR}/tools/rudder_tools_updated
+  rm -f ${RUDDER_VAR}/ncf/common/ncf_hash_file
+  rm -f ${RUDDER_VAR}/ncf/local/ncf_hash_file
 fi
 
-/var/rudder/cfengine-community/bin/cf-agent ${VERBOSITY} ${COLOR} -K -f failsafe.cf
+"${RUDDER_VAR}/cfengine-community/bin/cf-agent" ${VERBOSITY} ${COLOR} -K -f failsafe.cf
+
+if [ $? -eq 0 ]; then
+  [ "$QUIET" = false ] && printf "${GREEN}ok${NORMAL}: Rudder agent promises were updated.\n"
+else
+  printf "${RED}error${NORMAL}: Rudder agent promises could not be updated.\n" 1>&2
+  exit 1
+fi

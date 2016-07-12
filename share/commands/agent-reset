@@ -3,23 +3,61 @@
 # @man Remove all locks and state cache of the agent, and restore initial promises.
 # @man This won't affect the desired state of the node, but will only
 # @man reset the internal state of the agent. It is useful to test a rule
-# @man without caching interference or when you have trouble with the promises updates.
+# @man without caching interference or when you have trouble with the promises updates,
+# @man and is in most cases sufficient to resolve issues.
+# @man +
+# @man To completely reinitialize the agent and make it appear as a new node again, please
+# @man use "rudder agent factory-reset" instead.
+# @man +
+# @man *Options*:
+# @man +
+# @man *-i*: run the agent in information mode, prints basic information
+# @man +
+# @man *-q*: run the agent in quiet mode (display only error messages)
+# @man +
+# @man *-c*: run the agent without color output
+
+VERBOSE=false
+QUIET=false
+
+while getopts "iIvdqc" opt; do
+  case $opt in
+    i|I|v|d)
+      VERBOSE=true
+      QUIET=false
+      ;;
+    q)
+      VERBOSE=false
+      QUIET=true
+      ;;
+    c)
+      clear_colors
+      ;;
+  esac
+done
 
 # Try to remove everything that can block
 # - restore initial promises
+[ "$VERBOSE" = true ] && echo "Restoring initial promises..."
 rm -rf /var/rudder/cfengine-community/inputs/*
 cp -r /opt/rudder/share/initial-promises/* /var/rudder/cfengine-community/inputs
 
 # - remove state
+[ "$VERBOSE" = true ] && echo "Resetting internal agent state..."
 rm -rf /var/rudder/cfengine-community/state/*
 rm -f /var/rudder/cfengine-community/*.lmdb
 
 # - remove locks
+[ "$VERBOSE" = true ] && echo "Removing all agent locks..."
 rm -f /var/rudder/cfengine-community/*lock
 
 # - trigger ncf and tools update on next agent run
+[ "$VERBOSE" = true ] && echo "Trigger a policy and tools update..."
 rm -f /var/rudder/tools/rudder_tools_updated{,.tmp}
 rm -f /var/rudder/ncf/{common,local}/ncf_hash_file
 
 # - remove the disable status
+[ "$VERBOSE" = true ] && echo "Enabling the agent if needed..."
 rm -f /opt/rudder/etc/disable-agent
+
+[ "$QUIET" = false ] && printf "${GREEN}ok${NORMAL}: Rudder agent state has been reset.\n"

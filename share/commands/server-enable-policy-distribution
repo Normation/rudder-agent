@@ -1,0 +1,11 @@
+#!/bin/sh
+# @description Re-enable Rudder to distribute new policies as a server
+# @man This is useful after you have run "rudder server disable-policy-distribution"
+# @man to allow the agent to restart the policy server.
+# @man This will restart the policy server immediately.
+
+# Allow the agent from restarting cf-serverd
+rm -f /opt/rudder/etc/disable-policy-distribution
+
+# Then, actually start the server right now
+/var/rudder/cfengine-community/bin/cf-serverd

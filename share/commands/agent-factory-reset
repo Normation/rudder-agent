@@ -1,0 +1,84 @@
+#!/bin/sh
+<<<<<<< HEAD
+# @description re-initialise the agent to make it be seen as a new node on the server
+# @man This command will delete all local agent data, including its uuid and
+# @man keys, and also reset the agent internal state.
+# @man The only configuration kept is the server hostname or ip configured in _policy_server.dat_.
+# @man It will also send an inventory to the server, which will treat it as a new node inventory.
+# @man +
+# @man *WARNING*: This command will permanently delete your node uuid and keys, and no configuration will
+# @man be applied before re-accepting and configuring the node on the server.
+# @man +
+# @man *Options*:
+# @man +
+# @man *-i*: run the agent in information mode, prints basic information
+# @man +
+# @man *-v*: run the agent in verbose mode, prints detailed information
+# @man +
+# @man *-d*: run the agent in debug mode, prints low-level information
+# @man +
+# @man *-q*: run the agent in quiet mode (display only error messages)
+# @man +
+# @man *-w*: show full strings, never cut output
+# @man +
+# @man *-c*: run the agent without color output
+# @man +
+# @man *-r*: run the agent with raw output
+# @man +
+# @man *-R*: run the agent in completely unparsed mode, with no return code of 1 in case of error. A little faster.
+# @man +
+# @man *-m*: run the agent with multiline output
+
+VERBOSE=false
+QUIET=false
+
+while getopts "iIvdqc" opt; do
+  case $opt in
+    i|I|v|d)
+      VERBOSE=true
+      QUIET=false
+      ;;
+    q)
+      VERBOSE=false
+      QUIET=true
+      ;;
+    c)
+      clear_colors
+      ;;
+  esac
+done
+
+# - replace ppkeys
+[ "$VERBOSE" = true ] && echo "Removing the agent keys..."
+rm -f /var/rudder/cfengine-community/ppkeys/localhost*
+[ "$VERBOSE" = true ] && echo "Generating a new key pair..."
+/var/rudder/cfengine-community/bin/cf-key
+
+# - generate a new uuid
+[ "$VERBOSE" = true ] && echo "Generating a new uuid..."
+if [ -x /opt/rudder/bin/uuidgen ]
+then
+  /opt/rudder/bin/uuidgen > /opt/rudder/etc/uuid.hive
+else
+  uuidgen > /opt/rudder/etc/uuid.hive
+fi
+
+# - remove old inventory
+[ "$VERBOSE" = true ] && echo "Removing old inventory..."
+rm -rf /opt/rudder/var/fusioninventory/*
+
+# - reset cfengine status
+"${BASEDIR}/agent-reset"
+
+[ "$VERBOSE" = true ] && echo "Triggering an inventory..."
+
+# - resend inventory
+"${BASEDIR}/agent-inventory $@"
+=======
+# @description alias of command "rudder agent factory-reset"
+# @man This command is a wrapper for "rudder agent factory-reset",
+# @man that has replaced it.
+
+# - trigger a factory reset
+"${BASEDIR}/agent-factory-reset"
+>>>>>>> bb38d16... Fixes #8676: Add the rudder agent factory-reset command

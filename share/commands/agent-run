@@ -5,6 +5,8 @@
 # @man +
 # @man *Options*:
 # @man +
+# @man *-u*: update policy before running the agent (default is to run existing policy)
+# @man +
 # @man *-i*: run the agent in information mode, prints basic information
 # @man +
 # @man *-v*: run the agent in verbose mode, prints detailed information
@@ -27,61 +29,46 @@
 # @man +
 # @man *-D*: define a class for this run
 
-. "${BASEDIR}/../lib/common.sh"
+. "${BASEDIR}/../lib/cfengine_parsing.sh"
 
-PRETTY_FILTER="${BASEDIR}/../lib/reports.awk"
+UPDATE=false
+UPDATE_OPTIONS=""
 
-BUNDLE=""
-CLASS=""
-VERBOSITY=""
-DEBUG_CLASS="-D debug"
-# Use multiline formatting
-MULTILINE=0
-# Display logs between Rudder reports
-DISPLAY_INFO=0
-# Only display a summary at the end of the run, keep the logs unmodified
-SUMMARY_ONLY=0
-# Only display errors
-QUIET=0
-# Display full strings
-FULL_STRINGS=0
-
-UUID=$(cat /opt/rudder/etc/uuid.hive 2>/dev/null)
-[ $? -ne 0 ] && UUID="Not yet configured"
-
-VERSION=`"${BASEDIR}/agent-version"`
-
-PRETTY="awk -v info=\"\${DISPLAY_INFO}\" -v full_strings=\"\${FULL_STRINGS}\" -v summary_only=\"\${SUMMARY_ONLY}\" -v quiet=\"\${QUIET}\" -v multiline=\"\${MULTILINE}\" \
-            -v green=\"\${GREEN}\" -v darkgreen=\"\${DARKGREEN}\" -v red=\"\${RED}\" -v yellow=\"\${YELLOW}\" -v magenta=\"\${MAGENTA}\" -v normal=\"\${NORMAL}\" -v white=\"\${WHITE}\" -v cyan=\"\${CYAN}\" \
-            -f ${PRETTY_FILTER}"
-
-while getopts "iIvdqwrRmcb:D:" opt; do
+while getopts "uiIvdqwrRmcb:D:" opt; do
   case $opt in
+    u)
+      UPDATE=true
+      ;;
     i|I)
       VERBOSITY="-I ${DEBUG_CLASS}"
       DISPLAY_INFO=1
       QUIET=0
+      UPDATE_OPTIONS="${UPDATE_OPTIONS} -i"
       ;;
     v)
       VERBOSITY="-v ${DEBUG_CLASS}"
       DISPLAY_INFO=1
       QUIET=0
+      UPDATE_OPTIONS="${UPDATE_OPTIONS} -v"
       ;;
     d)
       VERBOSITY="-d ${DEBUG_CLASS}"
       DISPLAY_INFO=1
       QUIET=0
+      UPDATE_OPTIONS="${UPDATE_OPTIONS} -d"
       ;;
     q)
       VERBOSITY=""
       DISPLAY_INFO=0
       QUIET=1
+      UPDATE_OPTIONS="${UPDATE_OPTIONS} -d"
       ;;
     w)
       FULL_STRINGS=1
       ;;
     c)
       clear_colors
+      UPDATE_OPTIONS="${UPDATE_OPTIONS} -c"
       ;;
     r)
       SUMMARY_ONLY=1
@@ -105,8 +92,12 @@ done
 printf "${VERSION}\nNode uuid: ${UUID}\n"
 
 if [ -e /opt/rudder/etc/disable-agent ]; then
-  printf "\n${RED}error${NORMAL}: The Rudder agent is currently disabled. You can enable it with 'rudder agent enable'.\n"
+  printf "\n${RED}error${NORMAL}: The Rudder agent is currently disabled. You can enable it with 'rudder agent enable'.\n" 1>&2
   exit 1
 fi
 
-/var/rudder/cfengine-community/bin/cf-agent ${VERBOSITY} ${COLOR} -K ${BUNDLE} ${CLASS} | eval ${PRETTY}
+if [ "${UPDATE}" = "true" ]; then
+  "${BASEDIR}/agent-update" ${UPDATE_OPTIONS}
+fi
+
+"${RUDDER_VAR}/cfengine-community/bin/cf-agent" ${VERBOSITY} ${COLOR} -K ${BUNDLE} ${CLASS} | eval ${PRETTY}

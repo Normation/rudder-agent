@@ -7,4 +7,32 @@
 # @man - clean lock file if it is too big
 # @man - check and restore init files 
 # @man - check that promises have been properly copied
+# @man +
+# @man *Options*:
+# @man +
+# @man *-q*: run the agent in quiet mode (display only error messages)
+# @man +
+# @man *-c*: run the agent without color output
+
+. "${BASEDIR}/../lib/common.sh"
+
+QUIET=false
+
+while getopts "qc" opt; do
+  case $opt in
+    q)
+      QUIET=true
+    c)
+      clear_colors
+      ;;
+  esac
+done
+
 /opt/rudder/bin/check-rudder-agent
+
+if [ $? -eq 0 ]; then
+  [ "$QUIET" = false ] && printf "${GREEN}ok${NORMAL}: Rudder agent check ran without errors.\n"
+else
+  printf "${RED}error${NORMAL}: Rudder agent check failed.\n" 1>&2
+  exit 1
+fi

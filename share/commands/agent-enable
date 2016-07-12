@@ -5,42 +5,37 @@
 # @man *Options*:
 # @man +
 # @man *-s*: start rudder-agent in addition to enabling it
+# @man +
+# @man *-q*: run the agent in quiet mode (display only error messages)
+# @man +
+# @man *-c*: run the agent without color output
 
-while getopts "s" opt; do
+. "${BASEDIR}/../lib/common.sh"
+
+QUIET=false
+OPTIONS=""
+
+while getopts "sqc" opt; do
   case $opt in
     s)
       START=y
+      ;;
+    q)
+      QUIET=true
+      OPTION="${OPTIONS} -q"
+      ;;
+    c)
+      clear_colors
+      OPTION="${OPTIONS} -c"
       ;;
   esac
 done
 
 rm -f /opt/rudder/etc/disable-agent
-if [ -x /usr/bin/startsrc ]
-then
-  CMD="startsrc -s rudder-agent"
-elif [ -x /usr/sbin/service ]
-then
-  CMD="service rudder-agent start"
-elif [ -x /etc/init.d/rudder-agent ]
-then
-  CMD="/etc/init.d/rudder-agent start"
-fi
 if [ "${START}" = "y" ]
 then
-  if [ -n "${CMD}" ]
-  then
-    $CMD
-  else
-    echo "Don't know how to start rudder agent." 1>&2
-    echo "Agent not started!" 1>&2
-	exit 2
-  fi
+  [ "$QUIET" = false ] && printf "${GREEN}ok${NORMAL}: Rudder agent has been enabled.\n"
+  "${BASEDIR}/agent-start" ${OPTIONS}
 else
-  if [ -n "${CMD}" ]
-  then
-    echo "rudder-agent has been enabled but not started, use '$CMD' or wait for next cron run"
-    echo "Next time, use -s option to automatically start it"
-  else
-    echo "rudder-agent has been enabled but not started, wait for next cron run"
-  fi
+  [ "$QUIET" = false ] && printf "${GREEN}ok${NORMAL}: Rudder agent has been enabled but not started, wait for next cron run.\n"
 fi

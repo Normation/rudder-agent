@@ -7,7 +7,7 @@
 # @man +
 # @man *-i*: run the agent in information mode, displays all executed commands
 # @man +
-# @man *-c*: do not colorize output
+# @man *-c*: run the agent without color output
 
 . "${BASEDIR}/../lib/api_call.sh"
 

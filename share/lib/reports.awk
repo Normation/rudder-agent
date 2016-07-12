@@ -136,6 +136,10 @@ BEGIN {
     # Do not display "None" keys
     r[8] = "";
   }
+  if (match($1, /.*> ->/))
+  {
+    hostname=substr($1, RSTART, RLENGTH-4);
+  }
   
   { 
     if (!summary_only)
@@ -169,9 +173,21 @@ BEGIN {
         if (!header_printed)
         {
           header_printed = 1;
-          printf "%s%-8.8s %-25.25s %-25.25s %-18.18s %s%s\n", white, "Result", "Technique", "Component", "Key", "Message", normal;
+          if(multihost)
+          {
+            printf "%s%-10.10s %-8.8s %-25.25s %-25.25s %-18.18s %s%s\n", white, "Hostname", "Result", "Technique", "Component", "Key", "Message", normal;
+          }
+          else
+          {
+            printf "%s%-8.8s %-25.25s %-25.25s %-18.18s %s%s\n", white, "Result", "Technique", "Component", "Key", "Message", normal;
+          }
         }
       
+        if(multihost)
+        {
+          printf "%s%-10.10s ", normal, hostname;
+        }
+
         printf "%s%-8.8s%s ", color, result, normal;
 
         if (full_strings)
