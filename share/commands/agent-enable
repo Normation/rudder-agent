@@ -33,7 +33,7 @@ then
   else
     echo "Don't know how to start rudder agent." 1>&2
     echo "Agent not started!" 1>&2
-	exit 2
+    exit 2
   fi
 else
   if [ -n "${CMD}" ]
