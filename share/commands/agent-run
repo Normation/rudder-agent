@@ -45,6 +45,8 @@ SUMMARY_ONLY=0
 QUIET=0
 # Display full strings
 FULL_STRINGS=0
+# CLASSES to define
+CLASSES=""
 
 UUID=$(cat /opt/rudder/etc/uuid.hive 2>/dev/null)
 [ $? -ne 0 ] && UUID="Not yet configured"
@@ -97,7 +99,7 @@ while getopts "iIvdqwrRmcb:D:" opt; do
       BUNDLE="-b ${OPTARG}"
       ;;
     D)
-      CLASS="-D ${OPTARG}"
+      CLASSES="${CLASSES},${OPTARG}"
       ;;
   esac
 done
@@ -107,6 +109,12 @@ printf "${VERSION}\nNode uuid: ${UUID}\n"
 if [ -e /opt/rudder/etc/disable-agent ]; then
   printf "\n${RED}error${NORMAL}: The Rudder agent is currently disabled. You can enable it with 'rudder agent enable'.\n"
   exit 1
+fi
+
+if [ -n "${CLASSES}" ]
+then
+  # remove the first comma, yes it's posix
+  CLASS="-D ${CLASSES#,}"
 fi
 
 /var/rudder/cfengine-community/bin/cf-agent ${VERBOSITY} ${COLOR} -K ${BUNDLE} ${CLASS} | eval ${PRETTY}
