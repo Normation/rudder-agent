@@ -25,4 +25,4 @@
 # @man +
 # @man *-m*: run the agent with multiline output
 
-"${BASEDIR}/agent-run" -D force_inventory "$@"
+"${BASEDIR}/agent-run" -D force_inventory -b doInventory "$@"
