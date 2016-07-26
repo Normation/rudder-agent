@@ -33,6 +33,8 @@
 
 UPDATE=false
 UPDATE_OPTIONS=""
+# CLASSES to define
+CLASSES=""
 
 while getopts "uiIvdqwrRmcb:D:" opt; do
   case $opt in
@@ -84,7 +86,7 @@ while getopts "uiIvdqwrRmcb:D:" opt; do
       BUNDLE="-b ${OPTARG}"
       ;;
     D)
-      CLASS="-D ${OPTARG}"
+      CLASSES="${CLASSES},${OPTARG}"
       ;;
   esac
 done
@@ -98,6 +100,12 @@ fi
 
 if [ "${UPDATE}" = "true" ]; then
   "${BASEDIR}/agent-update" ${UPDATE_OPTIONS}
+fi
+
+if [ -n "${CLASSES}" ]
+then
+  # remove the first comma, yes it's posix
+  CLASS="-D ${CLASSES#,}"
 fi
 
 "${RUDDER_VAR}/cfengine-community/bin/cf-agent" ${VERBOSITY} ${COLOR} -K ${BUNDLE} ${CLASS} | eval ${PRETTY}
