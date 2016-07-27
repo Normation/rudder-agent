@@ -28,6 +28,8 @@
 # @man *-b*: run the agent on a specific bundle
 # @man +
 # @man *-D*: define a class for this run
+# @man +
+# @man *-f*: run the agent even if it is disabled
 
 . "${BASEDIR}/../lib/cfengine_parsing.sh"
 
@@ -35,8 +37,10 @@ UPDATE=false
 UPDATE_OPTIONS=""
 # CLASSES to define
 CLASSES=""
+# Ignore disable-agent flag
+FORCE=0
 
-while getopts "uiIvdqwrRmcb:D:" opt; do
+while getopts "uiIvdqwrRmcb:D:f" opt; do
   case $opt in
     u)
       UPDATE=true
@@ -88,24 +92,32 @@ while getopts "uiIvdqwrRmcb:D:" opt; do
     D)
       CLASSES="${CLASSES},${OPTARG}"
       ;;
+    f)
+      FORCE=1
+      ;;
   esac
 done
 
 printf "${VERSION}\nNode uuid: ${UUID}\n"
 
-if [ -e /opt/rudder/etc/disable-agent ]; then
+if [ ${FORCE} -eq 0 ] && [ -e /opt/rudder/etc/disable-agent ]; then
   printf "\n${RED}error${NORMAL}: The Rudder agent is currently disabled. You can enable it with 'rudder agent enable'.\n" 1>&2
   exit 1
 fi
 
-if [ "${UPDATE}" = "true" ]; then
-  "${BASEDIR}/agent-update" ${UPDATE_OPTIONS}
+if [ ${FORCE} -eq 1 ]; then
+  CLASSES="${CLASSES},ignore_disable_agent"
+  UPDATE_OPTIONS="${UPDATE_OPTIONS} -D ignore_disable_agent"
 fi
 
 if [ -n "${CLASSES}" ]
 then
   # remove the first comma, yes it's posix
   CLASS="-D ${CLASSES#,}"
+fi
+
+if [ "${UPDATE}" = "true" ]; then
+  "${BASEDIR}/agent-update" ${UPDATE_OPTIONS}
 fi
 
 "${RUDDER_VAR}/cfengine-community/bin/cf-agent" ${VERBOSITY} ${COLOR} -K ${BUNDLE} ${CLASS} | eval ${PRETTY}

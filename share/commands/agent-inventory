@@ -24,5 +24,16 @@
 # @man *-R*: run the agent in completely unparsed mode, with no return code of 1 in case of error. A little faster.
 # @man +
 # @man *-m*: run the agent with multiline output
+# @man +
+# @man *-f*: run the agent even if it is disabled
 
-"${BASEDIR}/agent-run" -D force_inventory -b doInventory "$@"
+OPTS=""
+argcount=$#
+# Process all options in order (getopts doesn't set OPTIND in case of error)
+for OPTIND in `seq 1 ${argcount}`
+do
+  getopts ":f" opt # ignore getopt errors
+  [ "${opt}" = "f" ] && OPTS="-D ignore_disable_inventory"
+done
+
+"${BASEDIR}/agent-run" -D force_inventory -b doInventory "$@" ${OPTS}
