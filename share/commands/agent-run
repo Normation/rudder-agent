@@ -26,6 +26,8 @@
 # @man *-b*: run the agent on a specific bundle
 # @man +
 # @man *-D*: define a class for this run
+# @man +
+# @man *-f*: run the agent even if it is disabled
 
 . "${BASEDIR}/../lib/common.sh"
 
@@ -47,6 +49,8 @@ QUIET=0
 FULL_STRINGS=0
 # CLASSES to define
 CLASSES=""
+# Ignore disable-agent flag
+FORCE=0
 
 UUID=$(cat /opt/rudder/etc/uuid.hive 2>/dev/null)
 [ $? -ne 0 ] && UUID="Not yet configured"
@@ -57,7 +61,7 @@ PRETTY="awk -v info=\"\${DISPLAY_INFO}\" -v full_strings=\"\${FULL_STRINGS}\" -v
             -v green=\"\${GREEN}\" -v darkgreen=\"\${DARKGREEN}\" -v red=\"\${RED}\" -v yellow=\"\${YELLOW}\" -v magenta=\"\${MAGENTA}\" -v normal=\"\${NORMAL}\" -v white=\"\${WHITE}\" -v cyan=\"\${CYAN}\" \
             -f ${PRETTY_FILTER}"
 
-while getopts "iIvdqwrRmcb:D:" opt; do
+while getopts "iIvdqwrRmcb:D:f" opt; do
   case $opt in
     i|I)
       VERBOSITY="-I ${DEBUG_CLASS}"
@@ -101,14 +105,21 @@ while getopts "iIvdqwrRmcb:D:" opt; do
     D)
       CLASSES="${CLASSES},${OPTARG}"
       ;;
+    f)
+      FORCE=1
+      ;;
   esac
 done
 
 printf "${VERSION}\nNode uuid: ${UUID}\n"
 
-if [ -e /opt/rudder/etc/disable-agent ]; then
+if [ ${FORCE} -eq 0 ] && [ -e /opt/rudder/etc/disable-agent ]; then
   printf "\n${RED}error${NORMAL}: The Rudder agent is currently disabled. You can enable it with 'rudder agent enable'.\n"
   exit 1
+fi
+
+if [ ${FORCE} -eq 1 ]; then
+  CLASSES="${CLASSES},ignore_disable_agent"
 fi
 
 if [ -n "${CLASSES}" ]
