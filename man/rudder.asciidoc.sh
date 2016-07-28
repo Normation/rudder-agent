@@ -36,7 +36,10 @@ node configuration tasks you can use the rudder-cli tool.
 *-c*::
   Do not colorize output.
 
-== COMMANDS" > ${OUTPUT}
+== COMMANDS
+
+The commands below are listed by component.
+" > ${OUTPUT}
 
 for role in `ls "${BASEDIR}" | sed 's/\([A-Za-z_]*\)-.*/\1/' | uniq`
 do
