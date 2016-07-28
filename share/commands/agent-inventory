@@ -27,13 +27,25 @@
 # @man +
 # @man *-f*: run the agent even if it is disabled
 
+. "${BASEDIR}/../lib/common.sh"
+
+# Ignore disable-inventory flag
+FORCE=0
 OPTS=""
 argcount=$#
 # Process all options in order (getopts doesn't set OPTIND in case of error)
 for OPTIND in `seq 1 ${argcount}`
 do
   getopts ":f" opt # ignore getopt errors
-  [ "${opt}" = "f" ] && OPTS="-D ignore_disable_inventory"
+  [ "${opt}" = "f" ] && FORCE=1
 done
+
+if [ ${FORCE} -eq 0 ] && [ -e /opt/rudder/etc/disable-inventory ]; then
+  printf "${RED}error${NORMAL}: The inventory is currently disabled.\n"
+  exit 1
+fi
+
+# Add the class to force inventory if requested
+[ ${FORCE} -eq 1 ] && OPTS="-D ignore_disable_inventory"
 
 "${BASEDIR}/agent-run" -D force_inventory -b doInventory "$@" ${OPTS}
