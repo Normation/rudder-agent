@@ -36,4 +36,5 @@ do
   [ "${opt}" = "f" ] && OPTS="-D ignore_disable_inventory"
 done
 
-"${BASEDIR}/agent-run" -D force_inventory -b doInventory "$@" ${OPTS}
+# We need the startExecution and endExecution bundles to be able to parse the run output like a normal one
+"${BASEDIR}/agent-run" -D force_inventory -b startExecution,doInventory,endExecution "$@" ${OPTS}
