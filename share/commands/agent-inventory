@@ -32,12 +32,24 @@
 # Ignore disable-inventory flag
 FORCE=0
 OPTS=""
-argcount=$#
-# Process all options in order (getopts doesn't set OPTIND in case of error)
-for OPTIND in `seq 1 ${argcount}`
+optmax=0
+err=0
+# err=1 -> we have a parameter with an argument
+# err=2 -> we have reached the end (or we have invalid parameters)
+while [ ${err} -lt 2 ]
 do
-  getopts ":f" opt # ignore getopt errors
-  [ "${opt}" = "f" ] && FORCE=1
+  getopts ":f" opt # ':' -> ignore getopt errors
+  res=$?
+  [ ${OPTIND} -lt ${optmax} ] && break # OPTIND value has wrapped, we reached the end of parameters
+  if [ ${res} -eq 0 ]
+  then
+    [ "${opt}" = "f" ] && FORCE=1
+    err=0
+  else
+    err=$((err+1))
+    OPTIND=$((OPTIND+1))
+    optmax=${OPTIND} # to detect wrapping
+  fi
 done
 
 if [ ${FORCE} -eq 0 ] && [ -e /opt/rudder/etc/disable-inventory ]; then
