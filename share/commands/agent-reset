@@ -42,6 +42,12 @@ done
 rm -rf /var/rudder/cfengine-community/inputs/*
 cp -r /opt/rudder/share/initial-promises/* /var/rudder/cfengine-community/inputs
 
+# - restore initial ncf
+rm -rf /var/rudder/ncf/common/*
+rm -rf /var/rudder/ncf/local/*
+cp -r /opt/rudder/share/initial-ncf/* /var/rudder/ncf/common/
+
+
 # - remove state
 [ "$VERBOSE" = true ] && echo "Resetting internal agent state..."
 rm -rf /var/rudder/cfengine-community/state/*
