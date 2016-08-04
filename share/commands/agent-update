@@ -51,7 +51,11 @@ while getopts "iIvdqcf" opt; do
 done
 
 if [ "${FORCE}" = "true" ]; then
+  # Rudder < 4.0
   rm -f ${RUDDER_VAR}/cfengine-community/inputs/rudder_promises_generated
+  # Rudder >= 4.0
+  rm -f ${RUDDER_VAR}/cfengine-community/inputs/rudder-promises-generated
+
   rm -f ${RUDDER_VAR}/tools/rudder_tools_updated
   rm -f ${RUDDER_VAR}/ncf/common/ncf_hash_file
   rm -f ${RUDDER_VAR}/ncf/local/ncf_hash_file
