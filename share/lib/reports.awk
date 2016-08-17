@@ -215,27 +215,43 @@ END {
   if (!end_run)
   {
     error++;
+    printf "%s", red;
     if (multiline)
     {
-      printf "%serror: Rudder agent was interrupted during execution by a fatal error. Run with -i to see log messages.%s\n", red, normal;
+      printf "error: Rudder agent was interrupted during execution by a fatal error.";
+      if (!info) {
+        printf " Run with -i to see log messages.";
+      }
     }
     else
     {
-      printf("%serror    Rudder agent was interrupted during execution by a fatal error\n         Run with -i to see log messages.%s\n", red, normal)
+      printf "error    Rudder agent was interrupted during execution by a fatal errors";
+      if (!info) {
+        printf "\n         Run with -i to see log messages.";
+      }
     }
+    printf "%s\n", normal;
   }
 
   # Check for unparsable reports
   if (broken_reports)
   {
+    printf "%s", magenta;
     if (multiline)
     {
-      printf "%swarning: %d reports were not parsable. Run with -i to see log messages.%s\n", magenta, broken_reports, normal;
+      printf "warning: %d reports were not parsable.", broken_reports;
+      if (!info) {
+        printf " Run with -i to see log messages.";
+      }
     }
     else
     {
-      printf("%swarning: %d reports were not parsable.\n         Run with -i to see log messages.%s\n", magenta, broken_reports, normal)
+      printf "warning  %d reports were not parsable.", broken_reports;
+      if (!info) {
+        printf "\n         Run with -i to see log messages.";
+      }
     }
+    printf "%s\n", normal;
   }
 
   printf "\n%s%-80.80s%s\n", white, "## Summary " padding, normal
