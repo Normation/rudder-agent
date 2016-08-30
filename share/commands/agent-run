@@ -39,6 +39,7 @@ UPDATE_OPTIONS=""
 CLASSES=""
 # Ignore disable-agent flag
 FORCE=0
+DEBUG_CLASS="-D debug"
 
 while getopts "uiIvdqwrRmcb:D:f" opt; do
   case $opt in
