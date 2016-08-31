@@ -32,6 +32,6 @@ done
 touch /opt/rudder/etc/disable-agent
 
 [ "$QUIET" = false ] && printf "${GREEN}ok${NORMAL}: Rudder agent is now disabled.\n"
-if [ "${STOP}" = "y" ]
+if [ "${STOP}" = "y" ]; then
   "${BASEDIR}/agent-stop" ${OPTIONS}
 fi
