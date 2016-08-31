@@ -23,7 +23,7 @@ MULTIHOST=0
 UUID=$(cat /opt/rudder/etc/uuid.hive 2>/dev/null)
 [ $? -ne 0 ] && UUID="Not yet configured"
 
-VERSION=`"${BASEDIR}/agent-version"`
+VERSION=`rudder agent version`
 
 PRETTY="awk -v info=\"\${DISPLAY_INFO}\" -v full_strings=\"\${FULL_STRINGS}\" -v summary_only=\"\${SUMMARY_ONLY}\" -v quiet=\"\${QUIET}\" -v multiline=\"\${MULTILINE}\" -v multihost=\"\${MULTIHOST}\" \
             -v green=\"\${GREEN}\" -v darkgreen=\"\${DARKGREEN}\" -v red=\"\${RED}\" -v yellow=\"\${YELLOW}\" -v magenta=\"\${MAGENTA}\" -v normal=\"\${NORMAL}\" -v white=\"\${WHITE}\" -v cyan=\"\${CYAN}\" \

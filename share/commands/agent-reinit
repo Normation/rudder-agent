@@ -4,4 +4,4 @@
 # @man that has replaced it.
 
 # - trigger a factory reset
-"${BASEDIR}/agent-factory-reset"
+rudder agent factory-reset

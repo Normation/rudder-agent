@@ -117,7 +117,7 @@ then
 fi
 
 if [ "${UPDATE}" = "true" ]; then
-  "${BASEDIR}/agent-update" ${UPDATE_OPTIONS}
+  rudder agent update "${UPDATE_OPTIONS}"
 fi
 
 "${RUDDER_VAR}/cfengine-community/bin/cf-agent" ${VERBOSITY} ${COLOR} -K ${BUNDLE} ${CLASS} | eval ${PRETTY}

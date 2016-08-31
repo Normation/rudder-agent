@@ -67,9 +67,9 @@ fi
 rm -rf /opt/rudder/var/fusioninventory/*
 
 # - reset cfengine status
-"${BASEDIR}/agent-reset"
+rudder agent reset
 
 [ "$VERBOSE" = true ] && echo "Triggering an inventory..."
 
 # - resend inventory
-"${BASEDIR}/agent-inventory $@"
+rudder agent inventory "$@"
