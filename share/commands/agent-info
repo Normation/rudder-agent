@@ -42,7 +42,7 @@ else
   ENABLED="enabled"
 fi
 
-VERSION=$(rudder agent version)
+VERSION=`${RUDDER_BIN} agent version`
 
 echo "Hostname: ${HOSTNAME}"
 echo "UUID: ${UUID}"
