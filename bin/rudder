@@ -14,6 +14,10 @@
 set -e
 BASEDIR="/opt/rudder/share/commands"
 export BASEDIR
+REL_PATH=`dirname "$0"`
+ABS_PATH=`cd "${REL_PATH}" && pwd`
+RUDDER_BIN="${ABS_PATH}/`basename $0`"
+export RUDDER_BIN
 
 role_list() {
   ls "${BASEDIR}" | sed 's/\([A-Za-z_]*\)-.*/\1/' | uniq
