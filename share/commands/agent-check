@@ -37,10 +37,6 @@ done
 # after the sourcing.
 set -e
 
-# Ensure our PATH includes Rudder's bin dir (for uuidgen on AIX in particular)
-PATH=/opt/rudder/bin/:$PATH
-export PATH
-
 # Variables
 BACKUP_DIR=/var/backups/rudder/
 
@@ -173,7 +169,7 @@ check_and_fix_rudder_uuid() {
       echo " Done"
     else
       printf "WARNING: The UUID of the node does not exist and no backup exist. A new one will be generated..."
-      uuidgen > ${UUID_FILE}
+      /opt/rudder/bin/rudder-uuidgen > ${UUID_FILE}
       echo " Done"
     fi
   else
@@ -187,7 +183,7 @@ check_and_fix_rudder_uuid() {
       mkdir -p "${BACKUP_DIR}"
       cp -f /opt/rudder/etc/uuid.hive ${BACKUP_DIR}/uuid-`date +%Y%m%d`.hive
       # Generate a new one
-      uuidgen > ${UUID_FILE}
+      /opt/rudder/bin/rudder-uuidgen > ${UUID_FILE}
       echo " Done."
     fi
   fi
