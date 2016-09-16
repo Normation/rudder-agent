@@ -8,6 +8,11 @@
 # @man *WARNING*: This command will permanently delete your node uuid and keys, and no configuration will
 # @man be applied before re-accepting and configuring the node on the server.
 
+if [ $(cat /opt/rudder/etc/uuid.hive 2>/dev/null) = "root" ]
+then
+  echo "Reinitializing the root server breaks the agents. ABORTING!" >&2
+  exit 1
+fi
 
 # - replace ppkeys
 rm -f /var/rudder/cfengine-community/ppkeys/localhost*
