@@ -4,11 +4,15 @@
 # @man This won't affect the desired state of the node, but will only
 # @man reset the internal state of the agent. It is useful to test a rule
 # @man without caching interference or when you have trouble with the promises updates.
+# @man On the root server, initial promises won't be reset.
 
 # Try to remove everything that can block
-# - restore initial promises
-rm -rf /var/rudder/cfengine-community/inputs/*
-cp -r /opt/rudder/share/initial-promises/* /var/rudder/cfengine-community/inputs
+# - restore initial promises except on root
+if [ $(cat /opt/rudder/etc/uuid.hive 2>/dev/null) != "root" ]
+then
+  rm -rf /var/rudder/cfengine-community/inputs/*
+  cp -r /opt/rudder/share/initial-promises/* /var/rudder/cfengine-community/inputs
+fi
 
 # - remove state
 rm -rf /var/rudder/cfengine-community/state/*
