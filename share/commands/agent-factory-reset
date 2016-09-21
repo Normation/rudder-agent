@@ -47,6 +47,12 @@ while getopts "iIvdqc" opt; do
   esac
 done
 
+if [ $(cat /opt/rudder/etc/uuid.hive 2>/dev/null) = "root" ]
+then
+  echo "Reinitializing the root server breaks the agents. ABORTING!" >&2
+  exit 1
+fi
+
 # - replace ppkeys
 [ "$VERBOSE" = true ] && echo "Removing the agent keys..."
 rm -f /var/rudder/cfengine-community/ppkeys/localhost*
