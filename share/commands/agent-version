@@ -5,7 +5,7 @@
 if [ -e /usr/bin/dpkg ]; then
     AGENT_VERSION=$(dpkg-query -W --showformat='${Version}' rudder-agent)
 elif [ -e /bin/rpm ]; then
-    AGENT_VERSION=$(rpm -qa --queryformat '%{version}' rudder-agent)
+    AGENT_VERSION=$(rpm -q --queryformat '%{version}' rudder-agent)
 else
     AGENT_VERSION='unknown version'
 fi
