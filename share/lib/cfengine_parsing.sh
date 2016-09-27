@@ -24,7 +24,14 @@ UUID=$(cat /opt/rudder/etc/uuid.hive 2>/dev/null)
 [ $? -ne 0 ] && UUID="Not yet configured"
 
 VERSION=`${RUDDER_BIN} agent version`
+# Some awk version crash miserably when fflush is not defined
+# Since there is no way to detect it within awk, detect it here and pass it a parameter
+AWK_FFLUSH=`awk 'BEGIN{fflush();}' /dev/null 2>/dev/null && echo OK`
+if [ `uname -s 2>/dev/null` = 'AIX' ]
+then
+  AWK_OPTS="-u"
+fi
 
 PRETTY="awk -v info=\"\${DISPLAY_INFO}\" -v full_strings=\"\${FULL_STRINGS}\" -v summary_only=\"\${SUMMARY_ONLY}\" -v quiet=\"\${QUIET}\" -v multiline=\"\${MULTILINE}\" -v multihost=\"\${MULTIHOST}\" \
             -v green=\"\${GREEN}\" -v darkgreen=\"\${DARKGREEN}\" -v red=\"\${RED}\" -v yellow=\"\${YELLOW}\" -v magenta=\"\${MAGENTA}\" -v normal=\"\${NORMAL}\" -v white=\"\${WHITE}\" -v cyan=\"\${CYAN}\" \
-            -f ${PRETTY_FILTER}"
+            -v has_fflush=\"\${AWK_FFLUSH}\" ${AWK_OPTS} -f ${PRETTY_FILTER}"
