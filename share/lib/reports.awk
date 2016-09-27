@@ -204,7 +204,10 @@ BEGIN {
 
         printf "%s\n", message
       }
-      fflush();
+      if (has_fflush) 
+      {
+        fflush();
+      }
     }
   }
 }
