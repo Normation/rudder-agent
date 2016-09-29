@@ -13,7 +13,7 @@ _rudder() {
   elif [ "${COMP_CWORD}" = "2" ]
   then
     # second level -> commands
-    cmd=$(cd ${base} && ls -1 | grep "^${COMP_WORDS[1]}" | cut -f 2 -d "-")
+    cmd=$(cd ${base} && ls -1 | grep "^${COMP_WORDS[1]}" | cut -f 2- -d "-")
     COMPREPLY=( $(compgen -W "help ${cmd}" -- "${cur}") )
   else
     # other level -> options
