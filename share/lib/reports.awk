@@ -6,6 +6,8 @@ BEGIN {
   success = 0;
   error = 0;
   repaired = 0;
+  compliant = 0;
+  noncompliant = 0;
   current_technique = "";
   current_component = "";
   new_technique = 0;
@@ -122,6 +124,24 @@ BEGIN {
     color = cyan;
     result = "info";
   }
+  else if (r[3] == "audit_compliant")
+  {
+    compliant++;
+    color = green;
+    result = "compliant";
+  }
+  else if (r[3] == "audit_noncompliant")
+  {
+    noncompliant++;
+    color = red;
+    result = "non-compliant";
+  }
+  else if (r[3] == "audit_error")
+  {
+    error++;
+    color = red;
+    result = "error";
+  }
   else
   {
     if (quiet)
@@ -175,11 +195,11 @@ BEGIN {
           header_printed = 1;
           if(multihost)
           {
-            printf "%s%-10.10s %-8.8s %-25.25s %-25.25s %-18.18s %s%s\n", white, "Hostname", "Result", "Technique", "Component", "Key", "Message", normal;
+            printf "%s%-10.10s %-13.13s %-25.25s %-25.25s %-18.18s %s%s\n", white, "Hostname", "Result", "Technique", "Component", "Key", "Message", normal;
           }
           else
           {
-            printf "%s%-8.8s %-25.25s %-25.25s %-18.18s %s%s\n", white, "Result", "Technique", "Component", "Key", "Message", normal;
+            printf "%s%-13.13s %-25.25s %-25.25s %-18.18s %s%s\n", white, "Result", "Technique", "Component", "Key", "Message", normal;
           }
         }
       
@@ -188,7 +208,7 @@ BEGIN {
           printf "%s%-10.10s ", normal, hostname;
         }
 
-        printf "%s%-8.8s%s ", color, result, normal;
+        printf "%s%-13.13s%s ", color, result, normal;
 
         if (full_strings)
         {
@@ -277,22 +297,30 @@ END {
 
   if (success > 0)
   {
-    printf "success: %s%6s%s\n", green, success, normal
+    printf "success: %s%11s%s\n", green, success, normal
   }
   if (repaired > 0)
   {
-    printf "repaired: %s%5s%s\n", yellow, repaired, normal
+    printf "repaired: %s%10s%s\n", yellow, repaired, normal
+  }
+  if (compliant > 0)
+  {
+    printf "compliant: %s%9s%s\n", green, compliant, normal
+  }
+  if (noncompliant > 0)
+  {
+    printf "non-compliant: %s%5s%s\n", red, noncompliant, normal
   }
   if (error > 0)
   {
-    printf "error: %s%8s%s\n", red, error, normal;
+    printf "error: %s%13s%s\n", red, error, normal;
   }
 
   printf "execution time: %.2fs\n", endtime - starttime, endtime, starttime;
 
   printf "%s%-80.80s%s\n", white, padding, normal
 
-  if (error != 0)
+  if (error + noncompliant != 0)
   {
     exit 1;  
   }
