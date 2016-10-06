@@ -3,247 +3,298 @@ BEGIN {
   nf_report = 0;
   is_report = 0;
   broken_reports = 0;
-  success = 0;
-  error = 0;
-  repaired = 0;
-  current_technique = "";
-  current_component = "";
-  new_technique = 0;
+
+  # report counters
+  run_error = 0;
+  audit_compliant = 0;
+  enforce_compliant = 0;
+  audit_error = 0;
+  enforce_error = 0;
+  enforce_repaired = 0;
+  audit_noncompliant = 0;
+  audit_notapplicable = 0;
+  enforce_notapplicable = 0;
+
+  mode_color["Audit"] = dblue;
+  mode_color["Enforce"] = dgreen;
+  mode_color[""] = normal;
+
+  state_color["compliant"] = green;
+  state_color["non-compliant"] = magenta;
+  state_color["error"] = red;
+  state_color["repaired"] = yellow;
+  state_color["info"] = cyan;
+  state_color["warning"] = magenta;
+  state_color["n/a"] = green;
+
   header_printed = 0;
   end_run = 0;
-  padding_dash = "--------------------------------------------------------------------------------"
-  padding =      "################################################################################"
+  padding_dash = "--------------------------------------------------------------------------------";
+  padding =      "################################################################################";
   "date +%s.%N" | getline starttime;
   # needed to be able to call the same command a second time
   close("date +%s.%N");
 }
+
+# We need it because length() only exists in gawk
+function alen (a) {
+  k = 0;
+  for (i in a)
+    k++;
+  return k;
+}
+
+function print_count_offset(offset, marker, color, count, text) {
+  for (c=0; c<offset; c++) {
+    printf " ";
+  }
+  printf "%s %s%s%s %s\n", marker, color, count, normal, text;
+}
+
+function print_report_singleline() {
+  if (hostname) {
+    printf "%s%-10.10s ", normal, hostname;
+  }
+
+  if (full_strings) {
+    printf "%s%-7.7s%s %s%-13.13s%s ", mode_color[mode], mode, normal, state_color[result], result, normal;
+    } else {
+      if (mode) {
+      separator = "| ";
+    } else {
+      separator = "  ";
+    }
+    printf "%s%-1.1s%s%s%s%-13.13s%s ", mode_color[mode], mode, normal, separator, state_color[result], result, normal;
+  }
+
+  if (full_strings) {
+    printf "%-25s %-25s %-18s", technique, component, key;
+  } else {
+    if (length(technique) > 25) {
+      printf "%-24.24s| ", technique;
+    } else {
+      printf "%-25.25s ", technique;
+    }
+
+    if (length(component) > 25) {
+      printf "%-24.24s| ", component;
+    } else {
+      printf "%-25.25s ", component;
+    }
+
+    if (length(key) > 18) {
+      printf "%-17.17s| ", key;
+    } else {
+      printf "%-18.18s ", key;
+    }
+  }
+
+  printf "%s\n", message;
+}
+
+function print_report_multiline() {
+  printf "%s%s%s: %s\n", state_color[result], state, normal, message;
+      
+  printf "%s%-80.80s%s\n", white, "-- Mode: " mode " " padding_dash, normal;
+
+  if (key != "") {
+    printf "%s%-80.80s%s\n", white, "-- Key: " key " " padding_dash, normal;
+  }
+        
+  printf "%s%-80.80s%s\n", white, "-- Component: " component " " padding_dash, normal;
+     
+  printf "%s%-80.80s%s\n", white, "-- Technique: " technique " " padding_dash, normal;
+        
+  printf "%s%-80.80s%s\n\n", white, padding, normal;
+}
+
 {
+  #### 1/ Parse the line
+
   is_report = 0;
 
-  if (NF > 1)
-  {
+  if (NF > 1) {
     # $1 is the report, the rest is the message
     # split the first part of the report
     nf_report = split($1, r, "##|@@");
 
-    ## variable -> report field:
-    # r[2]    -> technique
-    # r[3]    -> result
-    # r[7]    -> component
-    # r[8]    -> key
-    # message -> message
-    ##
+    technique = r[2];
+    state = r[3];
+    component = r[7];
+    key = r[8];
+    directiveid = r[5];
+
+    if (directive_array[directiveid] != 1)  {
+      directive_array[directiveid] = 1;
+    }
 
     # the rest is the message
     message = substr($0, length($1) + 3);
 
-    if (nf_report == 10 && match(r[1], /.*R: $/))
-    {
+    if (nf_report == 10 && match(r[1], /.*R: $/)) {
       # line has been parsed as a valid report
       is_report = 1;
     }
   }
   
-  if (summary_only)
-  {
-    print $0
+  if (summary_only) {
+    print $0;
   }
 
-  if (!is_report)
-  {
+  if (!is_report) {
     # very likely a broken report
-    if (match($0, /.*R: @@/))
-    {
+    if (match($0, /.*R: @@/)) {
       broken_reports++;
     } 
 
-    if (info)
-    {
+    if (info) {
       print darkgreen $0 normal;
     }
     next
   }
+
+  # Parse hostname
+  if (match($1, /.*> ->/)) {
+    hostname=substr($1, RSTART, RLENGTH-4);
+  }
   
+  #### 2/ Parse start and end of the run
+
   # Wait for the StartRun to display the config id
-  if (r[8] == "StartRun")
-  {
+  if (key == "StartRun") {
     printf "%s\n\n", message;
     next
   }
-  if (r[8] == "EndRun")
-  {
+  if (key == "EndRun") {
     end_run = 1;
     # skip this one
     next
   }
   
-  if (r[3] == "result_success")
-  {
-    success++;
-    if (quiet)
-    {
+  #### 3/ Parse report mode
+
+  if (match(state, /^result_/)) {
+    mode = "Enforce";
+  } else if (match(state, /^audit_/)) {
+    mode = "Audit";
+  } else {
+    # a simple log 
+    mode = "";
+  }
+
+  #### 4/ Check report type
+
+  if (state == "result_success") {
+    enforce_compliant++;
+    if (quiet) {
       next
     }
-    color = green;
-    result = "success";
-  }
-  else if (r[3] == "result_error")
-  {
-    error++;
-    color = red;
+    result = "compliant";
+  } else if (state == "result_error") {
+    enforce_error++;
     result = "error";
-  }
-  else if (r[3] == "result_na")
-  {
-    if (quiet)
-    {
+  } else if (state == "result_na") {
+    enforce_notapplicable++;
+    if (quiet) {
       next
     }
-    color = green;
     result = "n/a";
-  }
-  else if (r[3] == "result_repaired")
-  {
-    repaired++;
-    color = yellow;
+  } else if (state == "result_repaired") {
+    enforce_repaired++;
     result = "repaired";
-  }
-  else if (r[3] == "log_warn")
-  {
-    color = magenta;
+  } else if (state == "log_warn") {
     result = "warning";
-  }
-  else if (r[3] == "log_info" || r[3] == "log_debug" || r[3] == "log_trace" || r[3] == "log_repaired")
-  {
-    if (!info)
-    {
+  } else if (state == "log_info" || state == "log_debug" || state == "log_trace" || state == "log_repaired") {
+    if (!info) {
       next
     }
-    color = cyan;
     result = "info";
-  }
-  else
-  {
+  } else if (state == "audit_compliant") {
+    audit_compliant++;
     if (quiet)
-    {
+    { 
       next
     }
-    color = white;
-    result = r[3];
+    result = "compliant";
+  } else if (state == "audit_noncompliant") {
+    audit_noncompliant++;
+    result = "non-compliant";
+  } else if (state == "audit_error") {
+    audit_error++;
+    result = "error";
+  } else if (state == "audit_na") {
+    audit_notapplicable++;
+    if (quiet) {
+      next
+    }
+    result = "n/a";
+  } else {
+    if (quiet) {
+      next
+    }
+    result = state;
   }
-  if (r[8] == "None")
-  { 
+  if (key == "None") { 
     # Do not display "None" keys
-    r[8] = "";
+    key = "";
   }
-  if (match($1, /.*> ->/))
-  {
-    hostname=substr($1, RSTART, RLENGTH-4);
-  }
-  
+
+  #### 5/ Display reports
   { 
-    if (!summary_only)
-    {
-      if (multiline)
-      {      
-        if (!header_printed)
-        {
+    if (!summary_only) {
+      if (multiline) {
+        if (!header_printed) {
           header_printed = 1;
           printf "%s%-80.80s%s\n", white, padding, normal;
         }
-        
-        printf "%s%s%s: %s\n", color, result, normal, message;
-      
-        if (r[8] != "")
-        {
-          printf "%s%-80.80s%s\n", white, "-- Key: " r[8] " " padding_dash, normal;
-        }
-        
-        printf "%s%-80.80s%s\n", white, "-- Component: " r[7] " " padding_dash, normal;
-      
-        printf "%s%-80.80s%s\n", white, "-- Technique: " r[2] " " padding_dash, normal;
-        
-        printf "%s%-80.80s%s\n\n", white, padding, normal;
+
+        print_report_multiline();
         
         if (!last_line) {
           printf "%s%-80.80s%s\n", white, padding, normal;
         }
-      }
-      else {
-        if (!header_printed)
-        {
+      } else {
+        if (!header_printed) {
+	        printf "%s", white;
+
           header_printed = 1;
-          if(multihost)
-          {
-            printf "%s%-10.10s %-8.8s %-25.25s %-25.25s %-18.18s %s%s\n", white, "Hostname", "Result", "Technique", "Component", "Key", "Message", normal;
-          }
-          else
-          {
-            printf "%s%-8.8s %-25.25s %-25.25s %-18.18s %s%s\n", white, "Result", "Technique", "Component", "Key", "Message", normal;
-          }
-        }
-      
-        if(multihost)
-        {
-          printf "%s%-10.10s ", normal, hostname;
-        }
-
-        printf "%s%-8.8s%s ", color, result, normal;
-
-        if (full_strings)
-        {
-          printf "%-25s %-25s %-18s", r[2], r[7], r[8];
-        }
-        else
-        {
-          if (length(r[2]) > 25)
-          {
-            printf "%-24.24s| ", r[2];
-          } else {
-            printf "%-25.25s ", r[2];
+          if (multihost) {
+            printf "%-10.10s ", "Hostname";
           }
 
-          if (length(r[7]) > 25)
-          {
-            printf "%-24.24s| ", r[7];
-          } else {
-            printf "%-25.25s ", r[7];
-          }
+          if (full_strings) {
+            printf "%-7.7s ", "Mode";
+       	  } else {
+            printf "%-1.1s| ", "Mode";
+       	  }
 
-          if (length(r[8]) > 18)
-          {
-            printf "%-17.17s| ", r[8];
-          } else {
-            printf "%-18.18s ", r[8];
-          }
+       	  printf "%-13.13s %-25.25s %-25.25s %-18.18s %s%s\n", "State", "Technique", "Component", "Key", "Message", normal;
+
         }
 
-        printf "%s\n", message
+        print_report_singleline();
       }
-      if (has_fflush) 
-      {
+      if (has_fflush) {
         fflush();
       }
     }
   }
 }
 END {
+  #### 6/ End of the run, time to compute result and display summary
+
   "date +%s.%N" | getline endtime;
 
   # Check if agent run finished correctly
-  if (!end_run)
-  {
-    error++;
+  if (!end_run) {
+    run_error++;
     printf "%s", red;
-    if (multiline)
-    {
+    if (multiline) {
       printf "error: Rudder agent was interrupted during execution by a fatal error.";
       if (!info) {
         printf " Run with -i to see log messages.";
       }
-    }
-    else
-    {
+    } else {
       printf "error    Rudder agent was interrupted during execution by a fatal errors";
       if (!info) {
         printf "\n         Run with -i to see log messages.";
@@ -253,18 +304,14 @@ END {
   }
 
   # Check for unparsable reports
-  if (broken_reports)
-  {
+  if (broken_reports) {
     printf "%s", magenta;
-    if (multiline)
-    {
+    if (multiline) {
       printf "warning: %d reports were not parsable.", broken_reports;
       if (!info) {
         printf " Run with -i to see log messages.";
       }
-    }
-    else
-    {
+    } else {
       printf "warning  %d reports were not parsable.", broken_reports;
       if (!info) {
         printf "\n         Run with -i to see log messages.";
@@ -273,27 +320,54 @@ END {
     printf "%s\n", normal;
   }
 
-  printf "\n%s%-80.80s%s\n", white, "## Summary " padding, normal
+  # Begin summary display
+  printf "\n%s%-80.80s%s\n", white, "## Summary " padding, normal;
 
-  if (success > 0)
-  {
-    printf "success: %s%6s%s\n", green, success, normal
+  audit_components = audit_compliant+audit_noncompliant+audit_error+audit_notapplicable;
+  enforce_components = enforce_compliant+enforce_notapplicable+enforce_error+enforce_repaired;
+
+  printf "%s components verified in %s directives\n", audit_components+enforce_components, alen(directive_array);
+
+  if (enforce_components > 0) {
+    print_count_offset(3, "=>", dgreen, enforce_components, "components in " dgreen "Enforce" normal " mode");
+
+    if (enforce_compliant > 0) {
+      print_count_offset(6, "->", green, enforce_compliant, "compliant");
+    }
+    if (enforce_repaired > 0) {
+      print_count_offset(6, "->", yellow, enforce_repaired, "repaired");
+    }
+    if (enforce_notapplicable > 0) {
+      print_count_offset(6, "->", green, enforce_notapplicable, "not-applicable");
+    }
+    if (enforce_error > 0) {
+      print_count_offset(6, "->", red, enforce_error, "error");
+    }
   }
-  if (repaired > 0)
-  {
-    printf "repaired: %s%5s%s\n", yellow, repaired, normal
-  }
-  if (error > 0)
-  {
-    printf "error: %s%8s%s\n", red, error, normal;
+
+  if (audit_components > 0) {
+    print_count_offset(3, "=>", dblue, audit_components, "components in " dblue "Audit" normal " mode");
+  
+    if (audit_compliant > 0) {
+      print_count_offset(6, "->", green, audit_compliant, "compliant");
+    }
+    if (audit_notapplicable > 0) { 
+      print_count_offset(6, "->", green, audit_notapplicable, "not-applicable");
+    }
+    if (audit_noncompliant > 0) {
+      print_count_offset(6, "->", magenta, audit_noncompliant, "non-compliant");
+    }
+    if (audit_error > 0) {
+      print_count_offset(6, "->", red, audit_error, "error");
+    }
   }
 
   printf "execution time: %.2fs\n", endtime - starttime, endtime, starttime;
 
-  printf "%s%-80.80s%s\n", white, padding, normal
+  printf "%s%-80.80s%s\n", white, padding, normal;
 
-  if (error != 0)
-  {
-    exit 1;  
+  # Set return code
+  if (run_error+audit_error+audit_noncompliant+enforce_error != 0) {
+    exit 1;
   }
 }

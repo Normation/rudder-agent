@@ -12,6 +12,8 @@ clear_colors() {
     YELLOW=""
     CYAN=""
     NORMAL=""
+    DBLUE=""
+    DGREEN=""
 }
 
 # Command used to start/stop/restart a service
@@ -88,7 +90,9 @@ if [ -t 1 ]; then
     MAGENTA="\\033[1;35m"
     YELLOW="\\033[1;33m"
     CYAN="\\033[1;36m"
-    NORMAL="\\033[0;39m"
+    NORMAL="\\033[0;39m\\033[0;49m"
+    DBLUE="\\033[0;34m"
+    DGREEN="\\033[0;32m"
 else
     clear_colors
 fi
