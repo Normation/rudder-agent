@@ -22,6 +22,7 @@
 VERBOSITY=""
 FORCE=false
 DEBUG_CLASS="-D debug"
+QUIET=false
 
 while getopts "iIvdqcf" opt; do
   case $opt in
