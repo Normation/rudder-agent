@@ -98,7 +98,7 @@ while getopts "iIvdqwrRmcb:D:j:at:u:C:" opt; do
       MULTILINE=1
       ;;
     D)
-      CLASS="-D ${OPTARG}"
+      CLASSES="${CLASSES},${OPTARG}"
       ;;
     j)
       if ! type parallel >/dev/null 2>/dev/null
@@ -158,5 +158,12 @@ get_group_hostids() {
   done | sed -e 's/"\(.*\)"/\1/'
 }
 
+
+if [ -n "${CLASSES}" ]
+then
+  # remove the first comma, yes it's posix
+  CLASS="-D ${CLASSES#,}"
+fi
+
 # Aggregate everything
-${NODELIST} | ${LOOP} "${RUDDER_VAR}/cfengine-community/bin/cf-runagent" -H "{}:${PORT}" ${VERBOSITY} ${COLOR} | eval ${PRETTY}
+${NODELIST} | ${LOOP} "${RUDDER_VAR}/cfengine-community/bin/cf-runagent" -H "{}:${PORT}" ${VERBOSITY} ${COLOR} ${CLASS} | eval ${PRETTY}
