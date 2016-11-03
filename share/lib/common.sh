@@ -38,9 +38,9 @@ service_action() {
     if [ "${action}" = "start" ] || [ "${action}" = "stop" ]; then
       if [ $RET -eq 0 ]
       then
-        [ "$QUIET" = false ] && printf "${GREEN}ok${NORMAL}: service ${service} has been ${action}ed\n"
+        [ "$QUIET" = false ] && printf "${GREEN}ok${NORMAL}: ${action} service ${service} succeeded\n"
       else
-        [ "$QUIET" = false ] && printf "${RED}error${NORMAL}: service ${service} could not be ${action}ed\n"
+        [ "$QUIET" = false ] && printf "${RED}error${NORMAL}: ${action} service ${service} failed\n"
       fi
     fi
     return $RET
