@@ -228,7 +228,7 @@ END {
     }
     else
     {
-      printf "error    Rudder agent was interrupted during execution by a fatal errors";
+      printf "error    Rudder agent was interrupted during execution by a fatal error";
       if (!info) {
         printf "\n         Run with -i to see log messages.";
       }
