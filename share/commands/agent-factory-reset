@@ -10,6 +10,8 @@
 # @man +
 # @man *Options*:
 # @man +
+# @man *-f*: force the reinitialization without asking for confirmation
+# @man +
 # @man *-i*: run the agent in information mode, prints basic information
 # @man +
 # @man *-v*: run the agent in verbose mode, prints detailed information
@@ -30,6 +32,7 @@
 
 VERBOSE=false
 QUIET=false
+FORCE=0
 
 while getopts "iIvdqc" opt; do
   case $opt in
@@ -52,6 +55,21 @@ then
   echo "Reinitializing the root server breaks the agents. ABORTING!" >&2
   exit 1
 fi
+
+if [ ${FORCE} -eq 0 ]
+then
+  echo "Reinitializing a node removes its UUID, its keys and its associated directives!"
+  echo "Do yo really want to do it?"
+  echo "Type ctrl-c to abort now or enter to continue"
+  read a
+fi
+
+# Backup essential files
+[ "$VERBOSE" = true ] && echo "Making a backup copy of essential files into /var/backups/rudder"
+mkdir -p /var/backups/rudder
+cp -f /opt/rudder/etc/uuid.hive /var/backups/rudder/uuid-$(date +%Y%m%d).hive
+cp -f /var/rudder/cfengine-community/policy_server.dat /var/backups/rudder/policy_server.dat-$(date +%Y%m%d)
+cp -af /var/rudder/cfengine-community/ppkeys/ /var/backups/rudder/ppkeys-$(date +%Y%m%d)
 
 # - replace ppkeys
 [ "$VERBOSE" = true ] && echo "Removing the agent keys..."
