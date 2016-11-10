@@ -1,7 +1,5 @@
 # This file provide helpers to make API call from Rudder commands
 
-. "${BASEDIR}/../lib/common.sh"
-
 if type curl >/dev/null 2>/dev/null
 then
   DOWNLOAD_COMMAND="curl --silent --show-error --insecure --location --proxy ''"

@@ -8,6 +8,8 @@
 # @man  put this line in your nrpe.cfg to use it
 # @man  command[check_rudder]=/opt/rudder/bin/rudder agent health -n
 
+. "${BASEDIR}/../lib/common.sh"
+
 CFE_DIR=/var/rudder/cfengine-community
 ENTERPRISE_CFE_DIR=/var/cfengine
 CFE_DISABLE_FILE=/opt/rudder/etc/disable-agent

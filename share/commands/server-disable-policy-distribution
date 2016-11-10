@@ -3,6 +3,8 @@
 # @man This is useful when you want to temporarily prevent your Rudder server
 # @man from doing any changes on your agents
 
+. "${BASEDIR}/../lib/common.sh"
+
 # First, prevent the agent from restarting cf-serverd
 touch /opt/rudder/etc/disable-policy-distribution
 

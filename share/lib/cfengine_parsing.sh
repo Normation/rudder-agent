@@ -1,6 +1,4 @@
 
-. "${BASEDIR}/../lib/common.sh"
-
 PRETTY_FILTER="${BASEDIR}/../lib/reports.awk"
 
 BUNDLE=""

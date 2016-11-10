@@ -9,6 +9,7 @@
 # @man +
 # @man *-c*: run the agent without color output
 
+. "${BASEDIR}/../lib/common.sh"
 . "${BASEDIR}/../lib/api_call.sh"
 
 DISPLAY_COMMAND=false

@@ -2,6 +2,8 @@
 # @description get the agent version
 # @man Displays the version of the Rudder agent and of the underlying CFEngine agent.
 
+. "${BASEDIR}/../lib/common.sh"
+
 if [ -e /usr/bin/dpkg ]; then
     AGENT_VERSION=$(dpkg-query -W --showformat='${Version}' rudder-agent)
 elif [ -e /bin/rpm ]; then
