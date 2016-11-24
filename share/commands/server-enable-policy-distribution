@@ -4,6 +4,8 @@
 # @man to allow the agent to restart the policy server.
 # @man This will restart the policy server immediately.
 
+. "${BASEDIR}/../lib/common.sh"
+
 # Allow the agent from restarting cf-serverd
 rm -f /opt/rudder/etc/disable-policy-distribution
 

@@ -4,6 +4,8 @@
 # @man what defines the node (hostname, uuid and key hash) and its
 # @man policy server.
 
+. "${BASEDIR}/../lib/common.sh"
+
 OS=$(uname -s)
 
 if [ "${OS}" = "Linux" ]; then

@@ -30,6 +30,8 @@
 # @man +
 # @man *-m*: run the agent with multiline output
 
+. "${BASEDIR}/../lib/common.sh"
+
 VERBOSE=false
 QUIET=false
 FORCE=0

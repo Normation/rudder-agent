@@ -1,3 +1,9 @@
+# Warn on potentially invalid arguments
+if grep -- -- "$*" > /dev/null 
+then
+  echo "Warning: Long arguments are not supported, you probably tried to use one!"
+fi
+
 # Reset colors
 clear_colors() {
     COLOR=""

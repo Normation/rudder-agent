@@ -31,6 +31,7 @@
 # @man +
 # @man *-f*: run the agent even if it is disabled
 
+. "${BASEDIR}/../lib/common.sh"
 . "${BASEDIR}/../lib/cfengine_parsing.sh"
 
 UPDATE=false

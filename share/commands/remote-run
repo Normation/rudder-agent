@@ -42,7 +42,7 @@
 # @man +
 # @man *-C*: provide an alternate config section in ~/.rudder for group query (default to first found)
 
-
+. "${BASEDIR}/../lib/common.sh"
 . "${BASEDIR}/../lib/cfengine_parsing.sh"
 . "${BASEDIR}/../lib/api_call.sh"
 

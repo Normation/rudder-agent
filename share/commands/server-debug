@@ -14,6 +14,8 @@
 # @man +
 # @man *node*: IP or hostname of the host you want to debug
 
+. "${BASEDIR}/../lib/common.sh"
+
 DEBUG_PORT=5310
 SERVER_PORT=5309
 DAEMON=/var/rudder/cfengine-community/bin/cf-serverd
