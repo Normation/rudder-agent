@@ -1,5 +1,5 @@
 # Warn on potentially invalid arguments
-if grep -- -- "$*" > /dev/null 
+if echo "$*" | grep "\-\-" > /dev/null 2>&1
 then
   echo "Warning: Long arguments are not supported, you probably tried to use one!"
 fi
