@@ -131,6 +131,12 @@ then
   exit 0
 fi
 
+# Test if we are root
+if [ "$(id -u)" != "0" ]
+then
+  echo "WARNING: Not running as root, this may cause problem"
+fi
+
 # OK GO !
 exec "${BASEDIR}/${role}-${command}" "$@"
 
