@@ -62,7 +62,7 @@ need_jq() {
 while getopts "iIvdqwrRmcb:D:j:at:u:C:" opt; do
   case $opt in
     i|I)
-      VERBOSITY="-I ${DEBUG_CLASS}"
+      VERBOSITY="-I ${INFO_CLASS}"
       DISPLAY_INFO=1
       QUIET=0
       ;;

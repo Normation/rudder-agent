@@ -99,3 +99,8 @@ fi
 
 # Paths
 RUDDER_VAR="/var/rudder"
+
+# Standard classes for verbosity
+DEBUG_CLASS="-D trace,debug,info"
+INFO_CLASS="-D info"
+

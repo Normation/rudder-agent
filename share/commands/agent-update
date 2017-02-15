@@ -21,13 +21,12 @@
 
 VERBOSITY=""
 FORCE=false
-DEBUG_CLASS="-D debug"
 QUIET=false
 
 while getopts "iIvdqcf" opt; do
   case $opt in
     i|I)
-      VERBOSITY="-I ${DEBUG_CLASS}"
+      VERBOSITY="-I ${INFO_CLASS}"
       QUIET=false
       ;;
     v)

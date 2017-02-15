@@ -6,7 +6,6 @@ PRETTY_FILTER="${BASEDIR}/../lib/reports.awk"
 BUNDLE=""
 CLASS=""
 VERBOSITY=""
-DEBUG_CLASS="-D debug"
 # Use multiline formatting
 MULTILINE=0
 # Display logs between Rudder reports
