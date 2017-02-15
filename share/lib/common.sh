@@ -108,5 +108,6 @@ RUDDER_VAR="/var/rudder"
 
 # Standard classes for verbosity
 DEBUG_CLASS="-D trace,debug,info"
+VERBOSE_CLASS="-D debug,info"
 INFO_CLASS="-D info"
 

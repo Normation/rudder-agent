@@ -53,7 +53,7 @@ while getopts "uiIvdqwrRmcb:D:f" opt; do
       UPDATE_OPTIONS="${UPDATE_OPTIONS} -i"
       ;;
     v)
-      VERBOSITY="-v ${DEBUG_CLASS}"
+      VERBOSITY="-v ${VERBOSE_CLASS}"
       DISPLAY_INFO=1
       QUIET=0
       UPDATE_OPTIONS="${UPDATE_OPTIONS} -v"

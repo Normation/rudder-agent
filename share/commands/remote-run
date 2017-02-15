@@ -67,7 +67,7 @@ while getopts "iIvdqwrRmcb:D:j:at:u:C:" opt; do
       QUIET=0
       ;;
     v)
-      VERBOSITY="-v ${DEBUG_CLASS}"
+      VERBOSITY="-v ${VERBOSE_CLASS}"
       DISPLAY_INFO=1
       QUIET=0
       ;;

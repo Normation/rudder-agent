@@ -30,7 +30,7 @@ while getopts "iIvdqcf" opt; do
       QUIET=false
       ;;
     v)
-      VERBOSITY="-v ${DEBUG_CLASS}"
+      VERBOSITY="-v ${VERBOSE_CLASS}"
       QUIET=false
       ;;
     d)
