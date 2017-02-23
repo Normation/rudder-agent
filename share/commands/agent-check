@@ -95,6 +95,20 @@ check_and_fix_cfengine_processes() {
     echo " Done"
   fi
 
+  # List cf-serverd processes running
+  CF_SERVER_RUNNING=`${PS_COMMAND} | sed -ne "\\%${CFE_BIN_DIR}/\\(cf-serverd\\)%p" | cat`
+  # Count the number of server processes running, filtering empty lines
+  NB_CF_SERVER_RUNNING=`echo "${CF_SERVER_RUNNING}" | sed -e '/^$/d' | wc -l`
+
+  # If no disable file AND no process of CFEngine server from Rudder, then relaunch cf-serverd with a failsafe first
+  # But this is applied only on servers or nodes already initialized (policy server set)
+  if [ ! -f "${CFE_DISABLE_FILE}" ] && [ "${NB_CF_SERVER_RUNNING}" -eq 0 ] && [ -f "${CFE_DIR}/policy_server.dat" ]; then
+    printf "WARNING: No disable file detected and no CFEngine server process either. Relaunching CFEngine server process..."
+    ${CFE_BIN_DIR}/cf-agent -f failsafe.cf >/dev/null 2>&1
+    ${CFE_BIN_DIR}/cf-serverd >/dev/null 2>&1
+    echo " Done"
+  fi
+
   # Get the value of rudder-agent run interval from file /var/rudder/cfengine-community/inputs/run_interval
   if [ -f "${CFE_DIR}/inputs/run_interval" ]; then
     RUN_INTERVAL=`cat "${CFE_DIR}/inputs/run_interval"`
