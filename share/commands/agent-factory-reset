@@ -61,6 +61,7 @@ fi
 if [ ${FORCE} -eq 0 ]
 then
   echo "Reinitializing a node removes its UUID, its keys and its associated directives!"
+  echo "You will need to remove this node from the server and accept it again if it was already accepted."
   echo "Do yo really want to do it?"
   echo "Type ctrl-c to abort now or enter to continue"
   read a
