@@ -1,5 +1,5 @@
 BEGIN {
-  FS = "@#";
+  FS = "[^@]@#";
   nf_report = 0;
   is_report = 0;
   broken_reports = 0;
