@@ -25,6 +25,7 @@ function anomaly_handler() {
   iptables -t nat -D PREROUTING -p tcp -s ${NODE} --dport ${SERVER_PORT} -j DNAT --to-destination :${DEBUG_PORT}
   echo ""
   echo "Debug has been stopped on step: ${STEP}"
+  exit 1
 }
 
 trap anomaly_handler ERR INT TERM
