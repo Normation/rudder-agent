@@ -1,0 +1,75 @@
+#!/bin/sh
+# @description read log of old agent runs
+# @man This command will output historic logs of agent runs.
+# @man +
+# @man *Options*:
+# @man +
+# @man *-w*: show full strings, never cut output
+# @man +
+# @man *-c*: show log without color output
+# @man +
+# @man *-r*: show log with raw output
+# @man +
+# @man *-R*: show log in completely unparsed mode, with no return code of 1 in case of error. A little faster.
+# @man +
+# @man *-m*: show log with multiline output
+# @man +
+# @man *-l*: show log from the given file
+# @man +
+# @man *-n*: show log from the nth run before the last one
+# @man +
+# @man *-d*: show log from a given date
+# @man +
+
+. "${BASEDIR}/../lib/common.sh"
+. "${BASEDIR}/../lib/cfengine_parsing.sh"
+
+UPDATE=false
+UPDATE_OPTIONS=""
+# default logfile is last run
+BASE_PATH="/var/rudder/cfengine-community/outputs"
+LOGFILE="${BASE_PATH}/previous"
+
+while getopts "wrRmcl:n:d:" opt; do
+  case $opt in
+    w)
+      FULL_STRINGS=1
+      ;;
+    c)
+      clear_colors
+      UPDATE_OPTIONS="${UPDATE_OPTIONS} -c"
+      ;;
+    r)
+      SUMMARY_ONLY=1
+      DISPLAY_INFO=1
+      ;;
+    R)
+      PRETTY="cat"
+      ;;
+    m)
+      MULTILINE=1
+      ;;
+    l)
+      LOGFILE="${OPTARG}"
+      ;;
+    n)
+      name=`ls -tr "${BASE_PATH}" | grep -v previous | tail -n ${OPTARG} | head -n 1`
+      LOGFILE="${BASE_PATH}/${name}"
+      ;;
+    d)
+      date=`LANG=C date -d "${OPTARG}" +"%a_%b_%_d_%H_%M" | sed 's/ /_/'`
+      name=`ls -tr "${BASE_PATH}" | grep "${date}" | tail -n 1`
+      LOGFILE="${BASE_PATH}/${name}"
+      ;;
+  esac
+done
+
+if [ ! -f "${LOGFILE}" ]
+then
+  echo "Given logfile ${LOGFILE} doesn't exist"
+  exit 1
+fi
+
+printf "${VERSION}\nNode uuid: ${UUID}\n"
+
+eval ${PRETTY} < "${LOGFILE}"
