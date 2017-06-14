@@ -1,6 +1,4 @@
 BEGIN {
-  FS = "@#";
-  nf_report = 0;
   is_report = 0;
   broken_reports = 0;
 
@@ -113,28 +111,38 @@ function print_report_multiline() {
 
   is_report = 0;
 
-  if (NF > 1) {
-    # $1 is the report, the rest is the message
-    # split the first part of the report
-    nf_report = split($1, r, "##|@@");
-
+  n = split($0, r, /@@/);
+  if (n) {
+    # 1 is R:
     technique = r[2];
     state = r[3];
+    # 4 is rule ID
+    directiveid = r[5];
+    # 6 is generation
     component = r[7];
     key = r[8];
-    directiveid = r[5];
+    # take the rest
+    rest = "";
+    for(i=9;i<=n;i++) {
+      rest = rest "@@" r[i];
+    }
+
+    if (match(rest, /##/)) { # match the first ##
+      # date then rest
+      rest = substr(rest,RSTART+RLENGTH)
+      if (match(rest, /@#/)) { # match the first @#
+        # node id then message
+        message = substr(rest,RSTART+RLENGTH)
+        # line has been parsed as a valid report
+        is_report = 1;
+      }
+    }
 
     if (directive_array[directiveid] != 1)  {
       directive_array[directiveid] = 1;
     }
 
-    # the rest is the message
-    message = substr($0, length($1) + 3);
 
-    if (nf_report == 10 && match(r[1], /.*R: $/)) {
-      # line has been parsed as a valid report
-      is_report = 1;
-    }
   }
   
   if (summary_only) {
@@ -154,8 +162,8 @@ function print_report_multiline() {
   }
 
   # Parse hostname
-  if (match($1, /.*> ->/)) {
-    hostname=substr($1, RSTART, RLENGTH-4);
+  if (match($0, /.*> ->/)) {
+    hostname=substr($0, RSTART, RLENGTH-4);
   }
   
   #### 2/ Parse start and end of the run
