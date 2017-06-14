@@ -27,7 +27,9 @@ service_action() {
   service="$1"
   action="$2"
 
-  if [ -x /usr/sbin/service ]; then
+  if systemctl list-units --type service --all ${service}.service 2>&1 | grep -q "^${service}.service"; then
+    CMD="systemctl ${action} ${service}"
+  elif [ -x /usr/sbin/service ]; then
     CMD="service ${service} ${action}"
   elif [ -x /etc/init.d/${service} ]; then
     CMD="/etc/init.d/${service} ${action}"
