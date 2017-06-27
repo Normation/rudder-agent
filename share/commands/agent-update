@@ -66,6 +66,7 @@ fi
 
 if [ $? -eq 0 ]; then
   [ "$QUIET" = false ] && printf "${GREEN}ok${NORMAL}: Rudder agent promises were updated.\n"
+  exit 0
 else
   printf "${RED}error${NORMAL}: Rudder agent promises could not be updated.\n" 1>&2
   exit 1
