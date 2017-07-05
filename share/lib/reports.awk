@@ -116,7 +116,7 @@ function print_report_multiline() {
     # 1 is R:
     technique = r[2];
     state = r[3];
-    # 4 is rule ID
+    ruleid = r[4];
     directiveid = r[5];
     # 6 is generation
     component = r[7];
@@ -141,7 +141,6 @@ function print_report_multiline() {
     if (directive_array[directiveid] != 1)  {
       directive_array[directiveid] = 1;
     }
-
 
   }
   
@@ -180,14 +179,14 @@ function print_report_multiline() {
   }
 
   # New control log introduced in 4.2
-  if (r[3] == "control" && r[4] == "rudder" && r[5] == "run")
+  if (state == "control" && ruleid == "rudder" && directiveid == "run" )
   {
-    if (r[7] == "start")
+    if (component == "start")
     {
-      printf "Start execution with config [%s]\n\n", r[8];
+      printf "Start execution with config [%s]\n\n", key;
       next
     }
-    if (r[7] == "end")
+    if (component == "end")
     {
       end_run = 1;
       # skip this one
