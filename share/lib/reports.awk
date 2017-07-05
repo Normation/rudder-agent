@@ -76,6 +76,22 @@ BEGIN {
     # skip this one
     next
   }
+
+  # New control log introduced in 4.2
+  if (r[3] == "control" && r[4] == "rudder" && r[5] == "run")
+  {
+    if (r[7] == "start")
+    {
+      printf "Start execution with config [%s]\n\n", r[8];
+      next
+    }
+    if (r[7] == "end")
+    {
+      end_run = 1;
+      # skip this one
+      next
+    }
+  }
   
   if (r[3] == "result_success")
   {
