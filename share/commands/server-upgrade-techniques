@@ -1,0 +1,85 @@
+#!/bin/bash
+# @description upgrade techniques in the configuration repository from the packaged ones
+# @man This command will replace the techniques in /var/rudder/configuration-repository/techniques
+# @man by the techniques found in /opt/rudder/share/techniques which is installed by rudder-technique package.
+# @man The upgrade can take care of used defined changes if a proper tag has been set during previous upgrade.
+# @man +
+# @man *Options*:
+# @man +
+# @man *-o*: override existing technique without looking for local changes
+# @man +
+# @man *-t*: do not upgrade, but tag the repository to make next upgrade easier
+# @man +
+# @man *-c*: take the given commit id as a starting point for merging
+# @man +
+
+. "${BASEDIR}/../lib/common.sh"
+. "${BASEDIR}/../lib/api_call.sh"
+
+DISPLAY_COMMAND=false
+
+while getopts "otc:" opt; do
+  case $opt in
+    o)
+      OVERRIDE=true
+      ;;
+    t)
+      TAG=true
+      ;;
+    c)
+      COMMIT_ID=${OPTARG}
+      ;;
+  esac
+done
+
+REPO="/var/rudder/configuration-repository"
+BASE="/opt/rudder/share/techniques"
+TAG_MESSAGE="-upgrade-"
+if [ "${OVERRIDE}" = "true" ]
+then
+  cd "${REPO}"
+  cp -a "${BASE}"/* techniques/
+  git add techniques/
+  git commit -q -m "${TAG_MESSAGE} Forced technique upgrade from version ${package_version} on $(date)"
+  rudder server reload-techniques
+elif [ "${TAG}" = "true" ]
+then
+  cd "${REPO}"
+  git commit --allow-empty -q -m "${TAG_MESSAGE} No technique upgrade on $(date)"
+else
+  if [ "${COMMIT_ID}" = "" ]
+  then
+    commit=$(git log --oneline | grep "^[0-9a-f]* ${TAG_MESSAGE}" | head -n1)
+    if [ "${commit}" = "" ]
+    then
+      echo "Upgrade without override not supported without tag message!"
+      echo "You first need to tag the last upgrade with a '${TAG_MESSAGE}' comment"
+      exit 1
+    fi
+    echo "Last upgrade message: ${commit}"
+    echo "Take it as a starting point ? [Yn]"
+    read a
+    if [ "${a}" = "Y" ] || [ "${a}" = "y" ] || [ "${a}" = "" ]
+    then
+      COMMIT_ID=$(echo "${commit}" | awk '{print $1}')
+    else
+      exit 1
+    fi
+  fi
+  cd "${REPO}"
+  # checkout the last upgrade commit
+  git checkout "${COMMIT_ID}"
+  # preventively remove existing branch
+  git branch -D "upgrade/${COMMIT_ID}" 2>/dev/null
+  # create a branch from the last upgrade
+  git checkout -b "upgrade/${COMMIT_ID}"
+  # upgrade techniques in this branch
+  cp -a "${BASE}"/* techniques/
+  git add techniques/
+  git commit -q -m "New technique version from package"
+  # merge the branch into master
+  git checkout master
+  git merge --commit -m "${TAG_MESSAGE} Technique upgrade via merge on $(date)" "upgrade/${COMMIT_ID}"
+  rudder server reload-techniques
+fi
+
