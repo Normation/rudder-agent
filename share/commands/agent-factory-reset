@@ -55,7 +55,7 @@ while getopts "iIvdqc" opt; do
   esac
 done
 
-if [ $(cat /opt/rudder/etc/uuid.hive 2>/dev/null) = "root" ]
+if [ "$(cat /opt/rudder/etc/uuid.hive 2>/dev/null)" = "root" ]
 then
   echo "Reinitializing the root server breaks the agents. ABORTING!" >&2
   exit 1
