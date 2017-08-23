@@ -60,6 +60,5 @@ fi
 # Add the class to force inventory if requested
 [ ${FORCE} -eq 1 ] && OPTS="-D ignore_disable_inventory"
 
-# We need the startExecution and endExecution bundles to be able to parse the run output like a normal one
-${RUDDER_BIN} agent run -D force_inventory -b startExecution,doInventory,endExecution "$@" ${OPTS}
+${RUDDER_BIN} agent run -D force_inventory -b doInventory "$@" ${OPTS}
 

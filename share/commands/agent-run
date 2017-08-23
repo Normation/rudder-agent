@@ -89,6 +89,8 @@ while getopts "uiIvdqwrRmcb:D:f" opt; do
       ;;
     b)
       BUNDLE="-b ${OPTARG}"
+      # Tell the parser we don't expect a full run
+      FULL_COMPLIANCE=0
       ;;
     D)
       CLASSES="${CLASSES},${OPTARG}"
