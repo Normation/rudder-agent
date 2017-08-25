@@ -120,6 +120,7 @@ PROMISES_CF="${RUDDER_VAR}/cfengine-community/inputs/promises.cf"
 if [ -f "${RUDDER_JSON}" ]
 then
   RUDDER_REPORT_MODE=$(grep 'RUDDER_REPORT_MODE' "${RUDDER_JSON}" | sed 's/.*"RUDDER_REPORT_MODE":"\(.*\)",.*/\1/')
+  AGENT_RUN_INTERVAL=$(grep 'AGENT_RUN_INTERVAL' "${RUDDER_JSON}" | sed 's/.*"AGENT_RUN_INTERVAL":"\(.*\)",.*/\1/')
 elif [ -f "${PROMISES_CF}" ]
   # To be compatible with old promises. This should be removed once rudder.json is everywhere.
   RUDDER_REPORT_MODE=$(grep -E '"changes_only" *expression' "${PROMISES_CF}" | sed 's/.*strcmp("\(.*\)", "changes-only".*/\1/')

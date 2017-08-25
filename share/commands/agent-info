@@ -62,7 +62,16 @@ echo "UUID: ${UUID}"
 echo "Key Hash: ${HASH}"
 echo "Policy server: ${POLICY}"
 echo "Roles: ${ROLES}"
+if [ -n "${RUDDER_REPORT_MODE}" ]
+then
+  echo "Report mode: ${RUDDER_REPORT_MODE}"
+fi
+if [ -n "${AGENT_RUN_INTERVAL}" ]
+then
+  echo "Run interval: ${AGENT_RUN_INTERVAL} min"
+fi
 echo "Agent is ${ENABLED}"
 echo "Policy updated: ${POLICY_FETCHED}"
 echo "Inventory sent: ${INVENTORY_SENT}"
 echo "Version: ${VERSION}"
+
