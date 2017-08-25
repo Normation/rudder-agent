@@ -309,7 +309,7 @@ END {
   "date +%s.%N" | getline endtime;
 
   # Check if agent run finished correctly
-  if (!end_run) {
+  if (!end_run && full_compliance) {
     run_error++;
     printf "%s", red;
     if (multiline) {
