@@ -349,7 +349,10 @@ END {
   audit_components = audit_compliant+audit_noncompliant+audit_error+audit_notapplicable;
   enforce_components = enforce_compliant+enforce_notapplicable+enforce_error+enforce_repaired;
 
-  printf "%s components verified in %s directives\n", audit_components+enforce_components, alen(directive_array);
+  # Component count makes no sense when not in full compliance
+  if (full_compliance) {
+    printf "%s components verified in %s directives\n", audit_components+enforce_components, alen(directive_array);
+  }
 
   if (enforce_components > 0) {
     print_count_offset(3, "=>", dgreen, enforce_components, "components in " dgreen "Enforce" normal " mode");
