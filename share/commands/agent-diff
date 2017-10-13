@@ -1,0 +1,76 @@
+#!/bin/sh
+# @description show diff between current file and the one before agent modification
+# @man This command will output file change in a diff format
+# @man +
+# @man *Options*:
+# @man +
+# @man *-l*: show diff from the given backup
+# @man +
+# @man *-n*: show diff from the nth backup before the last one
+# @man +
+# @man *-d*: show diff from a given date in the date command format (man date for details)
+# @man +
+# @man *filename*: the file to show diff from
+# @man +
+
+. "${BASEDIR}/../lib/common.sh"
+. "${BASEDIR}/../lib/cfengine_parsing.sh"
+
+# default logfile is last run
+canonify() {
+  printf "$1" | tr -c '[A-Za-z0-9_]' '_'
+}
+BASE_PATH="/var/rudder/modified-files/"
+BASE_NAME=""
+
+while getopts "l:n:d:" opt; do
+  case $opt in
+    l)
+      BASE_NAME="${OPTARG}"
+      ;;
+    n)
+      nth="${OPTARG}"
+      ;;
+    d)
+      timestamp=`LANG=C date -d "${OPTARG}" +"%s"`
+      date=`LANG=C date -d "${OPTARG}" +"%s_%a_%b_%_d_%H_%M_%S_%Y" | sed 's/ /_/'`
+      ;;
+  esac
+done
+
+shift $(($OPTIND-1))
+FILE="$1"
+CFILE=`canonify "${FILE}"`
+
+if [ ! -f "${FILE}" ]
+then
+  echo "You must provide a valid absolute file path argument"
+  exit 1
+fi
+if [ "${BASE_NAME}" = "" ]
+then
+  if [ "${nth}" != "" ]
+  then
+    BASE_NAME=`ls -tr "${BASE_PATH}" | grep "^${CFILE}_.*_cf_before_edit" | tail -n ${OPTARG} | head -n 1`
+  elif [ "${timestamp}" != "" ]
+  then
+    for file in `ls -tr "${BASE_PATH}" | grep "^${CFILE}_.*_cf_before_edit"`
+    do
+      file_ts=`printf ${file} | sed "s/${CFILE}_\\([0-9]*\\)_.*_cf_before_edit/\\1/"`
+      if [ ${timestamp} -le ${file_ts} ]
+      then
+        BASE_NAME="${file}"
+      fi
+    done
+  else
+    BASE_NAME=$(ls -tr "${BASE_PATH}" | grep "^${CFILE}_.*_cf_before_edit" | tail -n 1)
+  fi
+fi
+
+if [ "${BASE_NAME}" = "" ]
+then
+  echo "This file file has not been modified recently or no backup has been found in ${BASE_PATH}"
+  exit 1
+fi
+
+diff -u "${BASE_PATH}/${BASE_NAME}" "${FILE}"

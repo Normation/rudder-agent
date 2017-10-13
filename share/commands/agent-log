@@ -18,7 +18,7 @@
 # @man +
 # @man *-n*: show log from the nth run before the last one
 # @man +
-# @man *-d*: show log from a given date
+# @man *-d*: show log from a given date in the date command format (man date for details)
 # @man +
 
 . "${BASEDIR}/../lib/common.sh"
