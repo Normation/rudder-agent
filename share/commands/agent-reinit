@@ -26,8 +26,9 @@ else
   uuidgen > /opt/rudder/etc/uuid.hive
 fi
 
-# - remove old inventory
+# - remove old inventories
 rm -rf /opt/rudder/var/fusioninventory/*
+rm -rf /var/rudder/tmp/inventory/*
 
 # - reset cfengine status
 ${RUDDER_BIN} agent reset
