@@ -95,6 +95,7 @@ fi
 # - remove old inventory
 [ "$VERBOSE" = true ] && echo "Removing old inventory..."
 rm -rf /opt/rudder/var/fusioninventory/*
+rm -rf /var/rudder/tmp/inventory/*
 
 # - reset cfengine status
 ${RUDDER_BIN} agent reset
