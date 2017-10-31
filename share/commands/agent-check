@@ -87,9 +87,9 @@ check_and_fix_cfengine_processes() {
   # If no disable file AND no process of CFEngine from Rudder, then relaunch cf-agent with a failsafe first
   # But this is applied only on servers or nodes already initialized (policy server set)
   if [ ! -f "${CFE_DISABLE_FILE}" ] && [ "${NB_CF_PROCESS_RUNNING}" -eq 0 ] && [ -f "${CFE_DIR}/policy_server.dat" ]; then
-    printf "WARNING: No disable file detected and no CFEngine process either. Relaunching CFEngine processes..."
-    ${CFE_BIN_DIR}/cf-agent -f failsafe.cf
-    ${CFE_BIN_DIR}/cf-agent >/dev/null
+    printf "WARNING: No disable file detected and no agent executor process either. Restarting agent service..."
+    rudder agent stop
+    rudder agent start
     echo " Done"
   fi
 
