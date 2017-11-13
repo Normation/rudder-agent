@@ -86,24 +86,10 @@ check_and_fix_cfengine_processes() {
 
   # If no disable file AND no process of CFEngine from Rudder, then relaunch cf-agent with a failsafe first
   # But this is applied only on servers or nodes already initialized (policy server set)
-  if [ ! -f "${CFE_DISABLE_FILE}" ] && [ "${NB_CF_PROCESS_RUNNING}" -eq 0 ] && [ -f "${CFE_DIR}/policy_server.dat" ]; then
+  if [ ! -f "${CFE_DISABLE_FILE}" ] && [ "${NB_CF_PROCESS_RUNNING}" -eq 0 ]; then
     printf "WARNING: No disable file detected and no agent executor process either. Restarting agent service..."
     rudder agent stop
     rudder agent start
-    echo " Done"
-  fi
-
-  # List cf-serverd processes running
-  CF_SERVER_RUNNING=`${PS_COMMAND} | sed -ne "\\%${CFE_BIN_DIR}/\\(cf-serverd\\)%p" | cat`
-  # Count the number of server processes running, filtering empty lines
-  NB_CF_SERVER_RUNNING=`echo "${CF_SERVER_RUNNING}" | sed -e '/^$/d' | wc -l`
-
-  # If no disable file AND no process of CFEngine server from Rudder, then relaunch cf-serverd with a failsafe first
-  # But this is applied only on servers or nodes already initialized (policy server set)
-  if [ ! -f "${CFE_DISABLE_FILE}" ] && [ "${NB_CF_SERVER_RUNNING}" -eq 0 ] && [ -f "${CFE_DIR}/policy_server.dat" ]; then
-    printf "WARNING: No disable file detected and no CFEngine server process either. Relaunching CFEngine server process..."
-    ${CFE_BIN_DIR}/cf-agent -f failsafe.cf
-    ${CFE_BIN_DIR}/cf-serverd
     echo " Done"
   fi
 
@@ -138,9 +124,8 @@ check_and_fix_cfengine_processes() {
   if [ "${NB_CF_PROCESS_RUNNING}" -gt 8 ]; then
     printf "WARNING: Too many instance of CFEngine processes running. Killing them, and purging the CFEngine lock database..."
     echo "${CF_PROCESS_RUNNING}" | awk 'BEGIN { OFS=" "} {print -$2 }' | xargs kill -9 || true
-    if [ -e /etc/init.d/rudder-agent ] && [ "${OS_FAMILY}" != "AIX" ] || [ "${OS_FAMILY}" = "SunOS" ]; then
-      /etc/init.d/rudder-agent forcestop || true
-    fi
+    rudder agent stop
+    rudder agent start
     clean_cf_lock_files
     echo " Done"
   fi
@@ -197,31 +182,6 @@ check_and_fix_rudder_uuid() {
       # Generate a new one
       /opt/rudder/bin/rudder-uuidgen > ${UUID_FILE}
       echo " Done."
-    fi
-  fi
-}
-
-
-check_and_fix_specific_rudder_agent_file() {
-  FILE_TO_RESTORE=$1
-  FILE_BACKUP_NAME=$2
-  RESOLUTION=$3
-  MANDATORY=$4
-
-  LATEST_BACKUPED_FILES=""
-  
-  if [ ! -f ${FILE_TO_RESTORE} ]; then
-    if [ -d ${BACKUP_DIR} ]; then
-      LATEST_BACKUPED_FILES=`ls -v1 ${BACKUP_DIR}${FILE_BACKUP_NAME}-* | tail -n1`
-    fi
-    if [ "${LATEST_BACKUPED_FILES}" != "" ]; then
-      printf "WARNING: The file ${FILE_TO_RESTORE} does not exist. The lastest backup (${LATEST_BACKUPED_FILES}) will be recovered..."
-      ${CP_A} ${LATEST_BACKUPED_FILES} ${FILE_TO_RESTORE} >/dev/null
-      echo " Done"
-    else
-      if [ "${MANDATORY}" = "mandatory" ]; then
-        echo "ERROR: The file ${FILE_TO_RESTORE} does not exist and no backup exists. ${RESOLUTION}"
-      fi
     fi
   fi
 }
@@ -288,13 +248,6 @@ then
   check_and_fix_cfengine_processes
   check_and_fix_cf_lock
   check_and_fix_inputs
-fi
-
-# The following files are not present on AIX systems
-if [ "${NEED_INIT_FILES}" = "true" ] && [ "${OS_FAMILY}" != "AIX" ] || [ "${OS_FAMILY}" = "SunOS" ]; then
-  check_and_fix_specific_rudder_agent_file /etc/init.d/rudder-agent rudder-agent.init "Please reinstall the rudder-agent package." "mandatory"
-  check_and_fix_specific_rudder_agent_file /etc/default/rudder-agent rudder-agent.default "Please reinstall the rudder-agent package." "mandatory"
-  check_and_fix_specific_rudder_agent_file /etc/cron.d/rudder-agent rudder-agent.cron "Please reinstall the rudder-agent package." "mandatory"
 fi
 
 # Since we are in set -e there was no error here
