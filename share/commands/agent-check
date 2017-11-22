@@ -262,16 +262,22 @@ then
   check_and_fix_inputs
 fi
 
-# Once for enterprise cfengine
+# Once for enterprise cfengine, only if managed by Rudder
+# We count the number of file containing "rudder"; if there are more than 3, then it's Rudder managed
 if [ -e "${ENTERPRISE_CFE_DIR}/bin/cf-agent" ]
 then
   CFE_DIR="${ENTERPRISE_CFE_DIR}"
   CFE_BIN_DIR="${CFE_DIR}/bin"
   LAST_UPDATE_FILE="${CFE_DIR}/last_successful_inputs_update"
-  check_and_fix_cfengine_keys
-  check_and_fix_cfengine_processes
-  check_and_fix_cf_lock
-  check_and_fix_inputs
+  # Check number of file starting by rudder in the folder
+  COUNT_RUDDER_FILE=`find ${CFE_DIR}/inputs | grep rudder | wc -l`
+  if [ ${COUNT_RUDDER_FILE} -gt 3 ]
+    then
+    check_and_fix_cfengine_keys
+    check_and_fix_cfengine_processes
+    check_and_fix_cf_lock
+    check_and_fix_inputs
+  fi
 fi
 
 # Since we are in set -e there was no error here
