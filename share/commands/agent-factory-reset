@@ -36,7 +36,7 @@ VERBOSE=false
 QUIET=false
 FORCE=0
 
-while getopts "iIvdqc" opt; do
+while getopts "iIvdqcf" opt; do
   case $opt in
     i|I|v|d)
       VERBOSE=true
