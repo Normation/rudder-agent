@@ -3,8 +3,23 @@
 # @man Outputs detailed information about the agent configuration, especially
 # @man what defines the node (hostname, uuid and key hash) and its
 # @man policy server.
+# @man +
+# @man *Options*:
+# @man +
+# @man *-v*: run the agent in verbose mode, prints detailed information
+
 
 . "${BASEDIR}/../lib/common.sh"
+
+VERBOSE=false
+
+while getopts "v" opt; do
+  case $opt in
+    v)
+      VERBOSE=true
+      ;;
+  esac
+done
 
 OS=$(uname -s)
 
@@ -74,4 +89,10 @@ echo "Agent is ${ENABLED}"
 echo "Policy updated: ${POLICY_FETCHED}"
 echo "Inventory sent: ${INVENTORY_SENT}"
 echo "Version: ${VERSION}"
+
+# Display system classes in verbose mode
+if [ "${VERBOSE}" = "true" ]; then
+  echo "Defined system conditions:"
+  "${RUDDER_VAR}/cfengine-community/bin/cf-promises" --show-classes | grep "hardclass$" | awk '{ print "  " $1 }'
+fi
 
