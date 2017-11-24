@@ -19,6 +19,8 @@
 # @man +
 # @man *-c*: run the agent without color output
 # @man +
+# @man *-T*: display timing information
+# @man +
 # @man *-r*: run the agent with raw output
 # @man +
 # @man *-R*: run the agent in completely unparsed mode, with no return code of 1 in case of error. A little faster.
@@ -41,7 +43,7 @@ CLASSES=""
 # Ignore disable-agent flag
 FORCE=0
 
-while getopts "uiIvdqwrRmcb:D:f" opt; do
+while getopts "uiIvdqwrRmcTb:D:f" opt; do
   case $opt in
     u)
       UPDATE=true
@@ -76,6 +78,9 @@ while getopts "uiIvdqwrRmcb:D:f" opt; do
     c)
       clear_colors
       UPDATE_OPTIONS="${UPDATE_OPTIONS} -c"
+      ;;
+    T)
+      TIMING=1
       ;;
     r)
       SUMMARY_ONLY=1

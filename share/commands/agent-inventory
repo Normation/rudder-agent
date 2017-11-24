@@ -19,6 +19,8 @@
 # @man +
 # @man *-c*: run the agent without color output
 # @man +
+# @man *-T*: display timing information
+# @man +
 # @man *-r*: run the agent with raw output
 # @man +
 # @man *-R*: run the agent in completely unparsed mode, with no return code of 1 in case of error. A little faster.

@@ -32,6 +32,8 @@ BEGIN {
   "date +%s.%N" | getline starttime;
   # needed to be able to call the same command a second time
   close("date +%s.%N");
+  # Initialize timer to allow computing time taken for parsing the policies
+  timer()
 }
 
 # We need it because length() only exists in gawk
@@ -40,6 +42,14 @@ function alen (a) {
   for (i in a)
     k++;
   return k;
+}
+
+function timer() {
+  "date +%s.%N" | getline component_end_time;
+  close("date +%s.%N");
+  tmp_time = component_end_time - component_begin_time;
+  component_begin_time = component_end_time;
+  return tmp_time
 }
 
 function print_count_offset(offset, marker, color, count, text) {
@@ -52,6 +62,14 @@ function print_count_offset(offset, marker, color, count, text) {
 function print_report_singleline() {
   if (hostname) {
     printf "%s%-10.10s ", normal, hostname;
+  }
+
+  if (timing) {
+    if (mode != "") {
+      printf "%6.2fs ", component_time;
+    } else {
+      printf "%6.6s  ", "";
+    }
   }
 
   if (full_strings) {
@@ -92,6 +110,12 @@ function print_report_singleline() {
 
 function print_report_multiline() {
   printf "%s%s%s: %s\n", state_color[result], state, normal, message;
+
+  if (timing) {
+    if (mode != "") {
+      printf "%s%s%6.2fs%-74.74s%s\n", white , "-- Time: ", component_time, " " padding_dash, normal;
+    }
+  }
       
   printf "%s%-80.80s%s\n", white, "-- Mode: " mode " " padding_dash, normal;
 
@@ -169,6 +193,10 @@ function print_report_multiline() {
 
   # Wait for the StartRun to display the config id
   if (key == "StartRun") {
+    if (timing) {
+      parsing_time = timer();
+      printf "Parsing time: %.2fs\n", parsing_time;
+    }
     printf "%s\n\n", message;
     next
   }
@@ -183,6 +211,10 @@ function print_report_multiline() {
   {
     if (component == "start")
     {
+      if (timing) {
+        parsing_time = timer();
+        printf "Parsing time: %.2fs\n", parsing_time;
+      }
       printf "Start execution with config [%s]\n\n", key;
       next
     }
@@ -203,6 +235,13 @@ function print_report_multiline() {
   } else {
     # a simple log 
     mode = "";
+  }
+
+  # Compute time
+  if (mode != "" && timing) {
+    component_time = timer();
+  } else {
+    component_time = ""
   }
 
   #### 4/ Check report type
@@ -283,6 +322,10 @@ function print_report_multiline() {
           header_printed = 1;
           if (multihost) {
             printf "%-10.10s ", "Hostname";
+          }
+
+          if (timing) {
+            printf "%8.8s", "Time "          
           }
 
           if (full_strings) {
@@ -388,7 +431,7 @@ END {
     }
   }
 
-  printf "execution time: %.2fs\n", endtime - starttime, endtime, starttime;
+  printf "Execution time: %.2fs\n", endtime - starttime;
 
   printf "%s%-80.80s%s\n", white, padding, normal;
 
