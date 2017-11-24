@@ -12,4 +12,4 @@ else
     AGENT_VERSION='unknown version'
 fi
 
-echo "Rudder agent ${AGENT_VERSION} ($(/var/rudder/cfengine-community/bin/cf-agent -V))"
+echo "Rudder agent ${AGENT_VERSION}"
