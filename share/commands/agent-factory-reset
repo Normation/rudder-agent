@@ -24,6 +24,8 @@
 # @man +
 # @man *-c*: run the agent without color output
 # @man +
+# @man *-T*: display timing information
+# @man +
 # @man *-r*: run the agent with raw output
 # @man +
 # @man *-R*: run the agent in completely unparsed mode, with no return code of 1 in case of error. A little faster.
@@ -36,7 +38,7 @@ VERBOSE=false
 QUIET=false
 FORCE=0
 
-while getopts "iIvdqcf" opt; do
+while getopts "iIvdqcTf" opt; do
   case $opt in
     i|I|v|d)
       VERBOSE=true
@@ -48,6 +50,9 @@ while getopts "iIvdqcf" opt; do
       ;;
     c)
       clear_colors
+      ;;
+    T)
+      TIMING=1
       ;;
     f)
       FORCE=1
