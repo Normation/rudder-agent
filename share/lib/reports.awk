@@ -108,28 +108,6 @@ function print_report_singleline() {
   printf "%s\n", message;
 }
 
-function print_report_multiline() {
-  printf "%s%s%s: %s\n", state_color[result], state, normal, message;
-
-  if (timing) {
-    if (mode != "") {
-      printf "%s%s%6.2fs%-74.74s%s\n", white , "-- Time: ", component_time, " " padding_dash, normal;
-    }
-  }
-      
-  printf "%s%-80.80s%s\n", white, "-- Mode: " mode " " padding_dash, normal;
-
-  if (key != "") {
-    printf "%s%-80.80s%s\n", white, "-- Key: " key " " padding_dash, normal;
-  }
-        
-  printf "%s%-80.80s%s\n", white, "-- Component: " component " " padding_dash, normal;
-     
-  printf "%s%-80.80s%s\n", white, "-- Technique: " technique " " padding_dash, normal;
-        
-  printf "%s%-80.80s%s\n\n", white, padding, normal;
-}
-
 {
   #### 1/ Parse the line
 
@@ -304,42 +282,30 @@ function print_report_multiline() {
   #### 5/ Display reports
   { 
     if (!summary_only) {
-      if (multiline) {
-        if (!header_printed) {
-          header_printed = 1;
-          printf "%s%-80.80s%s\n", white, padding, normal;
+
+      if (!header_printed) {
+	printf "%s", white;
+
+        header_printed = 1;
+        if (multihost) {
+          printf "%-10.10s ", "Hostname";
         }
 
-        print_report_multiline();
-        
-        if (!last_line) {
-          printf "%s%-80.80s%s\n", white, padding, normal;
-        }
-      } else {
-        if (!header_printed) {
-	        printf "%s", white;
-
-          header_printed = 1;
-          if (multihost) {
-            printf "%-10.10s ", "Hostname";
-          }
-
-          if (timing) {
-            printf "%8.8s", "Time "          
-          }
-
-          if (full_strings) {
-            printf "%-7.7s ", "Mode";
-       	  } else {
-            printf "%-1.1s| ", "Mode";
-       	  }
-
-       	  printf "%-13.13s %-25.25s %-25.25s %-18.18s %s%s\n", "State", "Technique", "Component", "Key", "Message", normal;
-
+        if (timing) {
+          printf "%8.8s", "Time "          
         }
 
-        print_report_singleline();
+        if (full_strings) {
+          printf "%-7.7s ", "Mode";
+       	} else {
+          printf "%-1.1s| ", "Mode";
+       	}
+
+       	printf "%-13.13s %-25.25s %-25.25s %-18.18s %s%s\n", "State", "Technique", "Component", "Key", "Message", normal;
       }
+
+      print_report_singleline();
+
       if (has_fflush) {
         fflush();
       }
@@ -355,34 +321,24 @@ END {
   if (!end_run && full_compliance) {
     run_error++;
     printf "%s", red;
-    if (multiline) {
-      printf "error: Rudder agent was interrupted during execution by a fatal error.";
-      if (!info) {
-        printf " Run with -i to see log messages.";
-      }
-    } else {
-      printf "error    Rudder agent was interrupted during execution by a fatal error";
-      if (!info) {
-        printf "\n         Run with -i to see log messages.";
-      }
+
+    printf "error    Rudder agent was interrupted during execution by a fatal error";
+    if (!info) {
+      printf "\n         Run with -i to see log messages.";
     }
+
     printf "%s\n", normal;
   }
 
   # Check for unparsable reports
   if (broken_reports) {
     printf "%s", magenta;
-    if (multiline) {
-      printf "warning: %d reports were not parsable.", broken_reports;
-      if (!info) {
-        printf " Run with -i to see log messages.";
-      }
-    } else {
-      printf "warning  %d reports were not parsable.", broken_reports;
-      if (!info) {
-        printf "\n         Run with -i to see log messages.";
-      }
+    
+    printf "warning  %d reports were not parsable.", broken_reports;
+    if (!info) {
+      printf "\n         Run with -i to see log messages.";
     }
+
     printf "%s\n", normal;
   }
 
