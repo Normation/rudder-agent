@@ -12,8 +12,6 @@
 # @man +
 # @man *-R*: show log in completely unparsed mode, with no return code of 1 in case of error. A little faster.
 # @man +
-# @man *-m*: show log with multiline output
-# @man +
 # @man *-l*: show log from the given file
 # @man +
 # @man *-n*: show log from the nth run before the last one

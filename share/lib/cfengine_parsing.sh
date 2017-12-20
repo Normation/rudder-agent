@@ -4,8 +4,6 @@ PRETTY_FILTER="${BASEDIR}/../lib/reports.awk"
 BUNDLE=""
 CLASS=""
 VERBOSITY=""
-# Use multiline formatting
-MULTILINE=0
 # Display logs between Rudder reports
 DISPLAY_INFO=0
 # Only display a summary at the end of the run, keep the logs unmodified
@@ -31,6 +29,6 @@ then
   AWK_OPTS="-u"
 fi
 
-PRETTY="awk -v info=\"\${DISPLAY_INFO}\" -v full_strings=\"\${FULL_STRINGS}\" -v summary_only=\"\${SUMMARY_ONLY}\" -v quiet=\"\${QUIET}\" -v multiline=\"\${MULTILINE}\" -v multihost=\"\${MULTIHOST}\" \
+PRETTY="awk -v info=\"\${DISPLAY_INFO}\" -v full_strings=\"\${FULL_STRINGS}\" -v summary_only=\"\${SUMMARY_ONLY}\" -v quiet=\"\${QUIET}\" -v multihost=\"\${MULTIHOST}\" \
             -v green=\"\${GREEN}\" -v darkgreen=\"\${DARKGREEN}\" -v red=\"\${RED}\" -v yellow=\"\${YELLOW}\" -v magenta=\"\${MAGENTA}\" -v normal=\"\${NORMAL}\" -v white=\"\${WHITE}\" -v cyan=\"\${CYAN}\" \
             -v dblue=\"\${DBLUE}\" -v dgreen=\"\${DGREEN}\" -v timing=\"\${TIMING}\" -v has_fflush=\"\${AWK_FFLUSH}\" ${AWK_OPTS} -f ${PRETTY_FILTER}"
