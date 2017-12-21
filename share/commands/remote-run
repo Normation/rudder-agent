@@ -49,6 +49,7 @@
 PORT=5309
 LOOP="xargs -I{}"
 MULTIHOST=1
+TIMEOUT="-t 300"
 
 # Check for js presence
 need_jq() {
@@ -169,4 +170,4 @@ then
 fi
 
 # Aggregate everything
-${NODELIST} | ${LOOP} "${RUDDER_VAR}/cfengine-community/bin/cf-runagent" -H "{}:${PORT}" ${VERBOSITY} ${COLOR} ${CLASS} | eval ${PRETTY}
+${NODELIST} | ${LOOP} "${RUDDER_VAR}/cfengine-community/bin/cf-runagent" -H "{}:${PORT}" ${TIMEOUT} ${VERBOSITY} ${COLOR} ${CLASS} | eval ${PRETTY}
