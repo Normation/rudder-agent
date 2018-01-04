@@ -80,7 +80,7 @@ check_and_fix_cfengine_processes() {
   fi
 
   # List the CFEngine processes running
-  CF_PROCESS_RUNNING=`${PS_COMMAND} | sed -ne "\\%${CFE_BIN_DIR}/\\(cf-execd\\|cf-agent\\)%p" | cat`
+  CF_PROCESS_RUNNING=`${PS_COMMAND} | grep -E "${CFE_BIN_DIR}/cf-(agent|execd)" | cat`
   # Count the number of processes running, filtering empty lines
   NB_CF_PROCESS_RUNNING=`echo "${CF_PROCESS_RUNNING}" | sed -e '/^$/d' | wc -l`
 
