@@ -32,6 +32,9 @@ while getopts "sqc" opt; do
 done
 
 rm -f /opt/rudder/etc/disable-agent
+
+[ $? -ne 0 ] && printf "${RED}error${NORMAL}: Rudder agent could not be enabled.\n" && exit 1
+
 if [ "${START}" = "y" ]
 then
   [ "$QUIET" = false ] && printf "${GREEN}ok${NORMAL}: Rudder agent has been enabled.\n"
