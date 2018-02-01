@@ -1,0 +1,137 @@
+#!/bin/bash
+# @description upgrade techniques in the configuration repository from the packaged ones
+# @man This command will replace the techniques in /var/rudder/configuration-repository/techniques
+# @man by the techniques found in /opt/rudder/share/techniques which is installed by rudder-technique package.
+# @man The upgrade can take care of user defined changes.
+# @man +
+# @man *Options*:
+# @man +
+# @man *-u*: merge updated techniques into the configuration repository
+# @man +
+# @man *-i*: create the initial version of the update branch
+# @man +
+# @man *-o*: override existing technique without looking for local changes
+# @man +
+# @man *-f*: suppress any warning and run without prompting for input
+# @man +
+# @man *-c*: use the givent commit id as the update branch origin
+# @man +
+
+. "${BASEDIR}/../lib/common.sh"
+. "${BASEDIR}/../lib/api_call.sh"
+
+UPGRADE=false
+INITIAL=false
+OVERRIDE=false
+FORCE=false
+PARENT_COMMIT=""
+
+while getopts "uiofc:" opt; do
+  case $opt in
+    u)
+      UPGRADE=true
+      ;;
+    i)
+      INITIAL=true
+      ;;
+    o)
+      OVERRIDE=true
+      ;;
+    f)
+      FORCE=true
+      ;;
+    c)
+      PARENT_COMMIT="${OPTARG}"
+      ;;
+  esac
+done
+
+# Exactly one option is allowed
+[ "${UPGRADE}" = "false" ] && [ "${INITIAL}" = "false" ] && [ "${OVERRIDE}" = "false" ] && err="error"
+[ "${UPGRADE}" = "true" ] && [ "${INITIAL}" = "true" ] && err="error"
+[ "${UPGRADE}" = "true" ] && [ "${OVERRIDE}" = "true" ] && err="error"
+[ "${INITIAL}" = "true" ] && [ "${OVERRIDE}" = "true" ] && err="error"
+
+if [ "${err}" != "" ]
+then
+  echo "I need exactly one option. Available options: -u -i -o"
+  exit 1
+fi
+
+REPO="/var/rudder/configuration-repository"
+BASE="/opt/rudder/share/techniques"
+UPDATE_BRANCH="rudder_update"
+
+cd "${REPO}"
+if [ "${UPGRADE}" = "true" ]
+then
+  # Upgrading needs the upgrade branch
+  if git rev-parse --verify --quiet "${UPDATE_BRANCH}" > /dev/null
+  then
+    git checkout "${UPDATE_BRANCH}"
+    cp -a "${BASE}"/* techniques/
+    git add techniques/
+    git commit -q -m "${TAG_MESSAGE} Standard technique upgrade from version ${package_version} on $(date)"
+    git checkout master
+    git merge "${UPDATE_BRANCH}"
+    # TODO Now's a god time for a user shell
+    rudder server reload-techniques
+  else
+    echo "You need and update branch."
+    echo "- If you have not made any change in the techniques, you can override techniques with the updated ones using the -o option."
+    echo "- If you have made changes you would like to keep, you should first create the initial branch with the -i option."
+    exit 1
+  fi
+  exit 0
+fi
+
+if [ "${INITIAL}" = "true" ]
+then
+  echo "Creating initial branch from an early commit"
+  if git rev-parse --verify --quiet "${UPDATE_BRANCH}" > /dev/null
+  then
+    echo "The upgrade branch '${UPDATE_BRANCH}' already exists, aborting"
+    exit 1
+  fi
+  # find the first commit with the techniques directory in it to minimize merging difficulties
+  if [ "${PARENT_COMMIT}" = "" ]
+  then
+    if [ "${FORCE}" != "true" ]
+    then
+      echo "You have not provided an initial commit, we will use the first commit with techniques."
+      echo "This can make the upgrade merge complex."
+      echo "Use -c option to specify a more recent commit with no patch."
+      echo ""
+      echo "Type ctrl-c to abort now and return to continue."
+      read a
+    fi
+    PARENT_COMMIT=$(git log --pretty=oneline --no-abbrev-commit -- techniques | tail -1 | awk '{print $1}')
+  fi
+  git branch "${UPDATE_BRANCH}" "${PARENT_COMMIT}"
+  exit 0
+fi
+
+if [ "${OVERRIDE}" = "true" ]
+then
+  echo "Overriding existing techniques"
+  if [ "${FORCE}" != "true" ]
+  then
+    echo "Please keep in mind that if you did manual modifications on the Techniques in existing directories, they will be overwritten."
+    echo ""
+    echo "Type ctrl-c to abort now and return to continue."
+    read a
+  fi
+  cp -a "${BASE}"/* techniques/
+  git add techniques/
+  git commit -q -m "${TAG_MESSAGE} Forced technique upgrade from version ${package_version} on $(date)"
+  # consider this commit as the common ancestor for futur update
+  # TODO: better ?
+  if git rev-parse --verify --quiet "${UPDATE_BRANCH}" > /dev/null
+  then
+    # it's easier to remove then create the branch
+    git branch -D "${UPDATE_BRANCH}"
+  fi
+  git branch "${UPDATE_BRANCH}"
+  rudder server reload-techniques
+fi
+
