@@ -51,7 +51,7 @@ function print_count_offset(offset, marker, color, count, text) {
 
 function print_report_singleline() {
   if (hostname) {
-    printf "%s%-10.10s ", normal, hostname;
+    printf "%s%-15.15s ", normal, hostname;
   }
 
   if (full_strings) {
@@ -282,7 +282,7 @@ function print_report_multiline() {
 
           header_printed = 1;
           if (multihost) {
-            printf "%-10.10s ", "Hostname";
+            printf "%-15.15s ", "Hostname";
           }
 
           if (full_strings) {
