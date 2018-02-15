@@ -29,7 +29,16 @@ BEGIN {
   end_run = 0;
   padding_dash = "--------------------------------------------------------------------------------";
   padding =      "################################################################################";
-  "date +%s.%N" | getline starttime;
+  broken_date = 0
+  "date +%s -d 2018-01-01 2>/dev/null" | getline fixed_date
+  if(fixed_date != 1514761200) {
+    broken_date=1
+  }
+  if(broken_date) {
+    "date +%s" | getline starttime;
+  } else {
+    "date +%s.%N" | getline starttime;
+  }
   # needed to be able to call the same command a second time
   close("date +%s.%N");
   # Initialize timer to allow computing time taken for parsing the policies
@@ -145,8 +154,19 @@ function print_report_singleline() {
     }
 
   }
+
+  # not output at all, for summary mode
+  if (no_report) {
+    if (!original_time) {
+      if (match(r[9], /##/)) { # match the first ##
+        original_time = substr(r[9],0,RSTART-1)
+        "date +%s.%N -d \"" original_time "\" 2>/dev/null" | getline original_time_s;
+      }
+    }
+  }
   
-  if (summary_only) {
+  # for raw mode
+  if (summary_only && !no_report) {
     print $0;
   }
 
@@ -156,7 +176,7 @@ function print_report_singleline() {
       broken_reports++;
     } 
 
-    if (info) {
+    if (info && !no_report) {
       print darkgreen $0 normal;
     }
     next
@@ -279,12 +299,15 @@ function print_report_singleline() {
     key = "";
   }
 
+  if(no_report) {
+    next
+  }
   #### 5/ Display reports
   { 
     if (!summary_only) {
 
       if (!header_printed) {
-	printf "%s", white;
+        printf "%s", white;
 
         header_printed = 1;
         if (multihost) {
@@ -315,7 +338,24 @@ function print_report_singleline() {
 END {
   #### 6/ End of the run, time to compute result and display summary
 
-  "date +%s.%N" | getline endtime;
+  # Print a single line of summary
+  if (short_summary) {
+    if(broken_date) {
+      duration=0
+    } else {
+      duration=endtime-original_time_s
+    }
+    printf "%s (%3.0fs) ", original_time, duration
+    printf "%sEnforce%s: %s%3d%s compliant, %s%3d%s repaired, %s%3d%s N/A, %s%3d%s errors  ", dgreen, normal, green, enforce_compliant, normal, yellow, enforce_repaired, normal, green, enforce_notapplicable, normal, red, enforce_error, normal
+    printf "%sAudit%s: %s%3d%s compliant, %s%3d%s non-compliant, %s%3d%s N/A, %s%3d%s errors\n", dblue, normal, green, audit_compliant, normal, magenta, audit_noncompliant, normal, green, audit_notapplicable, normal, red, audit_error, normal
+    exit 0
+  }
+
+  if(broken_date) {
+    "date +%s" | getline endtime;
+  } else {
+    "date +%s.%N" | getline endtime;
+  }
 
   # Check if agent run finished correctly
   if (!end_run && full_compliance) {
