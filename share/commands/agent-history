@@ -1,0 +1,40 @@
+#!/bin/sh
+# @description read log of old agent runs
+# @man This command will output historic logs of agent runs.
+# @man +
+# @man *Options*:
+# @man +
+# @man *-c*: show history without color output
+# @man +
+# @man *-n*: show maximum n lines of history
+# @man +
+
+. "${BASEDIR}/../lib/common.sh"
+. "${BASEDIR}/../lib/cfengine_parsing.sh"
+
+BASE_PATH="/var/rudder/cfengine-community/outputs"
+# Display 25 lines by default
+max=25
+
+while getopts "cn:" opt; do
+  case $opt in
+    c)
+      clear_colors
+      ;;
+    n)
+      max="${OPTARG}"
+      ;;
+  esac
+done
+
+
+for file in $(ls -1 ${BASE_PATH}/cf* | sort | tail -n ${max})
+do
+  if type stat >/dev/null 2>/dev/null
+  then
+    endtime=$(stat -c "%Y" "${file}")
+  else
+    endtime=$(/opt/rudder/bin/perl -e'@a=stat $ARGV[0]; print $a[9]' "${file}")
+  fi
+  eval ${PRETTY} -v no_report=1 -v short_summary=1 -v endtime=${endtime} < "${file}"
+done
