@@ -61,12 +61,16 @@ if [ "${FORCE}" = "true" ]; then
   rm -f ${RUDDER_VAR}/ncf/local/ncf_hash_file
 fi
 
-"${RUDDER_VAR}/cfengine-community/bin/cf-agent" ${VERBOSITY} ${COLOR} -K -f failsafe.cf
+# The awk part is the workaround for update not exiting with a 1 in case of error
+# It will be necessary to remove it once the exit it back in cf-agent
+# It must be changed if the error messages are back to stderr
+"${RUDDER_VAR}/cfengine-community/bin/cf-agent" ${VERBOSITY} ${COLOR} -K -f failsafe.cf | awk 'BEGIN{e=0}{print; if(match($0,/^ *error:/)){e=1}}END{exit e}'
+code=$?
 
-if [ $? -eq 0 ]; then
+if [ $code -eq 0 ]; then
   [ "$QUIET" = false ] && printf "${GREEN}ok${NORMAL}: Rudder agent promises were updated.\n"
   exit 0
 else
   printf "${RED}error${NORMAL}: Rudder agent promises could not be updated.\n" 1>&2
-  exit 1
+  exit $code
 fi

@@ -122,8 +122,10 @@ then
   CLASS="-D ${CLASSES#,}"
 fi
 
+code1=0
 if [ "${UPDATE}" = "true" ]; then
   ${RUDDER_BIN} agent update "${UPDATE_OPTIONS}"
+  code1=$?
 fi
 
 # keep same name structure as cf-execd
@@ -131,3 +133,7 @@ logfile=$(echo "cf_$(hostname)__$(date +%s)_$(LANG=C date +"%a %b %e %H %M %S %Y
 logdir=/var/rudder/cfengine-community/outputs
 ln -sf ${logdir}/${logfile} ${logdir}/previous
 "${RUDDER_VAR}/cfengine-community/bin/cf-agent" ${VERBOSITY} ${COLOR} -K ${BUNDLE} ${CLASS} | tee ${logdir}/${logfile} | eval ${PRETTY}
+# merge exit codes (this is the eval exit code ... POSIX ...)
+code2=$?
+[ $code1 -ne 0 ] && exit $code1
+exit $code2
