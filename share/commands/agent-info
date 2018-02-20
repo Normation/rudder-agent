@@ -10,6 +10,7 @@
 
 
 . "${BASEDIR}/../lib/common.sh"
+. "${BASEDIR}/../lib/cfengine_parsing.sh"
 
 VERBOSE=false
 
@@ -20,15 +21,6 @@ while getopts "v" opt; do
       ;;
   esac
 done
-
-OS=$(uname -s)
-
-if [ "${OS}" = "Linux" ]; then
-  HOSTNAME=$(hostname --fqdn)
-else
-  HOSTNAME=$(hostname)
-fi
-[ $? -ne 0 ] && HOSTNAME="not found"
 
 UUID=$(cat /opt/rudder/etc/uuid.hive 2>/dev/null)
 [ $? -ne 0 ] && UUID="Not yet configured"
