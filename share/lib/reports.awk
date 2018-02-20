@@ -30,8 +30,8 @@ BEGIN {
   padding_dash = "--------------------------------------------------------------------------------";
   padding =      "################################################################################";
   broken_date = 0
-  "date +%s -d 2018-01-01 2>/dev/null" | getline fixed_date
-  if(fixed_date != 1514761200) {
+  "date +%s -d \"2018-01-01 00:00:00+00:00\" 2>/dev/null" | getline fixed_date
+  if(fixed_date != 1514764800) {
     broken_date=1
   }
   if(broken_date) {
