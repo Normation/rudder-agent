@@ -158,7 +158,9 @@ function print_report_multiline() {
     if (!original_time) {
       if (match(r[9], /##/)) { # match the first ##
         original_time = substr(r[9],0,RSTART-1)
-        "date +%s.%N -d \"" original_time "\" 2>/dev/null" | getline original_time_s;
+        # Needed to correctly eval complete command with some versions of awk
+        command = "date +%s.%N -d \"" original_time "\""
+        command | getline original_time_s;
       }
     }
   }
