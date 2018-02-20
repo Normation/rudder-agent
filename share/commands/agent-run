@@ -128,8 +128,10 @@ fi
 # keep same name structure as cf-execd
 logfile=$(echo "cf_${HOSTNAME}__$(date +%s)_$(LANG=C date +"%a %b %e %H %M %S %Y")_0" | sed 's/[^a-zA-Z0-9]/_/g')
 logdir=/var/rudder/cfengine-community/outputs
-ln -sf ${logdir}/${logfile} ${logdir}/previous
+touch ${logdir}/${logfile}
+chmod 600 ${logdir}/${logfile}
 "${RUDDER_VAR}/cfengine-community/bin/cf-agent" ${VERBOSITY} ${COLOR} -K ${BUNDLE} ${CLASS} | tee ${logdir}/${logfile} | eval ${PRETTY}
+ln -sf ${logdir}/${logfile} ${logdir}/previous
 # merge exit codes (this is the eval exit code ... POSIX ...)
 code2=$?
 [ $code1 -ne 0 ] && exit $code1
