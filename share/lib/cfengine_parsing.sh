@@ -27,7 +27,7 @@ HOSTNAME=$(uname -n)
 
 if [ "${OS}" = "Linux" ]; then
    fqname=$(hostname --fqdn)
-   if $? -eq 0 && echo "${fqname}" | grep -q '.' 2>/dev/null; then
+   if [ $? -eq 0 ] && echo "${fqname}" | grep -q '.' 2>/dev/null; then
      HOSTNAME="${fqname}"
   fi
 fi
