@@ -15,7 +15,6 @@
 # @man *-f*: suppress any warning and run without prompting for input
 # @man +
 # @man *-c*: use the givent commit id as the update branch origin
-# @man +
 
 . "${BASEDIR}/../lib/common.sh"
 . "${BASEDIR}/../lib/api_call.sh"
