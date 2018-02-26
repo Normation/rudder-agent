@@ -85,6 +85,22 @@ init_commands() {
   fi
 }
 
+# To be used instead of the hostame command
+get_hostname() {
+  # Try to mimic CFEngine behavior, at least on Linux
+  # Necessary for log files names
+  OS=$(uname -s)
+  HOSTNAME=$(uname -n)
+  
+  if [ "${OS}" = "Linux" ]; then
+     fqname=$(hostname --fqdn)
+     if [ $? -eq 0 ] && echo "${fqname}" | grep -q '.' 2>/dev/null; then
+       HOSTNAME="${fqname}"
+    fi
+  fi
+  echo "${HOSTNAME}"
+}
+
 # Colors configuration (enable colors only if stdout is a terminal)
 if [ -t 1 ]; then
     COLOR="-Calways"

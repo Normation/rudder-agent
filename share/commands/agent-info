@@ -64,7 +64,7 @@ fi
 
 VERSION=`${RUDDER_BIN} agent version`
 
-echo "Hostname: ${HOSTNAME}"
+echo "Hostname: $(get_hostname)"
 echo "UUID: ${UUID}"
 echo "Key Hash: ${HASH}"
 echo "Policy server: ${POLICY}"
