@@ -20,18 +20,6 @@ TIMING=0
 UUID=$(cat /opt/rudder/etc/uuid.hive 2>/dev/null)
 [ $? -ne 0 ] && UUID="Not yet configured"
 
-# Try to mimic CFEngine behavior, at least on Linux
-# Necessary for log files names
-OS=$(uname -s)
-HOSTNAME=$(uname -n)
-
-if [ "${OS}" = "Linux" ]; then
-   fqname=$(hostname --fqdn)
-   if [ $? -eq 0 ] && echo "${fqname}" | grep -q '.' 2>/dev/null; then
-     HOSTNAME="${fqname}"
-  fi
-fi
-
 VERSION=`${RUDDER_BIN} agent version`
 # Some awk version crash miserably when fflush is not defined
 # Since there is no way to detect it within awk, detect it here and pass it a parameter
