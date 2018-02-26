@@ -153,15 +153,17 @@ function print_report_multiline() {
 
   }
 
-  # not output at all, for summary mode
-  if (no_report) {
+  # get original time from report in summary mode
+  if (short_summary) {
     if (!original_time) {
       if (match(r[9], /##/)) { # match the first ##
         original_time = substr(r[9],0,RSTART-1)
-        # Needed to correctly eval complete command with some versions of awk
-        command = "date +%s.%N -d \"" original_time "\""
-        command | getline original_time_s;
       }
+    }
+    if (!broken_date && original_time) {
+      # Needed to correctly eval complete command with some versions of awk
+      command = "date +%s.%N -d \"" original_time "\""
+      command | getline original_time_s;
     }
   }
   
@@ -337,12 +339,14 @@ END {
 
   # Print a single line of summary
   if (short_summary) {
-    if(broken_date) {
-      duration=0
-    } else {
+    if(original_time_s) {
       duration=endtime-original_time_s
+    } else {
+      duration=0
     }
-    printf "%s (%3.0fs) ", original_time, duration
+    if(original_time) {
+      printf "%s (%3.0fs) ", original_time, duration
+    }
     printf "%sEnforce%s: %s%3d%s compliant, %s%3d%s repaired, %s%3d%s N/A, %s%3d%s errors  ", dgreen, normal, green, enforce_compliant, normal, yellow, enforce_repaired, normal, green, enforce_notapplicable, normal, red, enforce_error, normal
     printf "%sAudit%s: %s%3d%s compliant, %s%3d%s non-compliant, %s%3d%s N/A, %s%3d%s errors\n", dblue, normal, green, audit_compliant, normal, magenta, audit_noncompliant, normal, green, audit_notapplicable, normal, red, audit_error, normal
     exit 0
