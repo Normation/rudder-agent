@@ -217,7 +217,9 @@ function print_report_singleline() {
         parsing_time = timer();
         printf "Parsing time: %.2fs\n", parsing_time;
       }
-      printf "Start execution with config [%s]\n\n", key;
+      if (!short_summary) {
+        printf "Start execution with config [%s]\n\n", key;
+      }
       next
     }
     if (component == "end")
