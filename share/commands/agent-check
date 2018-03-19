@@ -255,7 +255,7 @@ check_and_fix_inputs() {
   fi
 
   # Ensure main promises are not broken, and clean ncf cache and force a new download if so
-  if ! ${CFE_BIN_DIR}/cf-promises
+  if ${CFE_BIN_DIR}/cf-promises | grep error > /dev/null
   then
     rm -rf ${CFE_DIR}/state/ncf-exclude-cache-*
     rm -f ${CFE_DIR}/inputs/rudder_promises_updated
