@@ -42,13 +42,15 @@ then
   exit 2 # error
 fi
 
-# test policy server value
-cat "${CFE_DIR}/policy_server.dat" | xargs getent hosts > /dev/null
-if [ $? -ne 0 ]
-then
-  echo "Unknown Rudder policy server"
-  [ -z "${NRPE}" ] && echo "Rudder server name must be in the DNS or in /etc/hosts"
-  exit 2 # error
+# test policy server value if it's not an ip
+if ! grep -E "^[0-9.]+$|^[0-9a-fA-F:]+$" "${CFE_DIR}/policy_server.dat">/dev/null; then
+  cat "${CFE_DIR}/policy_server.dat" | xargs getent hosts > /dev/null
+  if [ $? -ne 0 ]
+  then
+    echo "Unknown Rudder policy server"
+    [ -z "${NRPE}" ] && echo "Rudder server name must be in the DNS or in /etc/hosts"
+    exit 2 # error
+  fi
 fi
 
 # test failsafe promises
