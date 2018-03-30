@@ -259,6 +259,7 @@ check_and_fix_inputs() {
   then
     rm -rf ${CFE_DIR}/state/ncf-exclude-cache-*
     rm -f ${CFE_DIR}/inputs/rudder_promises_updated
+    ${CFE_BIN_DIR}/cf-agent -K -f failsafe.cf
   fi
 }
 
