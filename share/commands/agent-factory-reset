@@ -84,7 +84,7 @@ cp -af /var/rudder/cfengine-community/ppkeys/ /var/backups/rudder/ppkeys-$(date 
 [ "$VERBOSE" = true ] && echo "Removing the agent keys..."
 rm -f /var/rudder/cfengine-community/ppkeys/localhost*
 [ "$VERBOSE" = true ] && echo "Generating a new key pair..."
-/var/rudder/cfengine-community/bin/cf-key
+/var/rudder/cfengine-community/bin/cf-key -T 4096
 
 # - generate a new uuid
 [ "$VERBOSE" = true ] && echo "Generating a new uuid..."
