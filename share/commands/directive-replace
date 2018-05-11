@@ -1,0 +1,84 @@
+#!/bin/bash
+
+. "${BASEDIR}/../lib/api_call.sh"
+. "${BASEDIR}/../lib/common.sh"
+
+TECHNIQUES_DIRECTORY="${CONFIGURATION_DIRECTORY}/technique"
+TOKEN="$(cat /var/rudder/run/api-token)"
+DISPLAY_COMMAND=false
+
+while getopts "iIvdqc:o:n:" opt; do
+  case $opt in
+    i|I|v|d)
+      DISPLAY_COMMAND=true
+      ;;
+    o)
+      OLD_DIRECTIVE="${OPTARG}"
+      ;;
+    n)
+      NEW_DIRECTIVE="${OPTARG}"
+      ;;
+    c)
+      clear_colors
+      ;;
+  esac
+done
+# to keep the argument as $1
+shift  $((OPTIND-1))
+
+if [[ -z ${OLD_DIRECTIVE} || -z ${NEW_DIRECTIVE} ]]
+then
+  echo "Usage: rudder directive replace [-iIvdq] [-c] -o <old-directive> -n <new-directive>"
+  exit 1
+fi
+
+echo "DIRECTIVE ${OLD_DIRECTIVE} will be replaced by ${NEW_DIRECTIVE}"
+echo ""
+
+# Find the rules using the old directive
+RULES=$(complete_api_call "${API_URL}/api/latest/rules" "${TOKEN}" "GET" "| jq -r ' .data.rules[] | select(.directives[] | contains(\"${OLD_DIRECTIVE}\")) | {\"id\":.id, \"displayName\":.displayName, \"directives\":.directives}'" "${DISPLAY_COMMAND}")
+
+echo "Directives ${OLD_DIRECTIVE} will be replaced by ${NEW_DIRECTIVE} in the following rules:"
+printf "${RULES}\n\n"
+
+# Adding the new directive in the local JSON with jq
+RULES=$(echo "${RULES}" | jq '.directives |= (. +["'${NEW_DIRECTIVE}'"] |unique)')
+# Removing the old directive in the local JSON with jq
+RULES=$(echo "${RULES}" | jq '.directives |= (. -["'${OLD_DIRECTIVE}'"] |unique)')
+echo ""
+if [ -z "${RULES}" ];
+then
+  printf "${RED}  No rules found using the directive ${BLUE}${OLD_DIRECTIVE}${RED}, aborting.${NORMAL}\n\n"
+else
+  while IFS= read
+  do
+      echo "Treating $REPLY"
+      # Adding the new directive
+      DIRECTIVES=$( echo ${RULES} | jq -r 'select(.id=="'${REPLY}'") |.directives')
+      result=$(complete_api_call "${API_URL}/api/latest/rules/$REPLY" "${TOKEN}" "POST" "-H \"Content-Type: application/json\" -d '{\"directives\": $DIRECTIVES}'" "${DISPLAY_COMMAND}")
+      code=$?
+
+      #Looking for old directive
+      old_result=$(complete_api_call "${API_URL}/api/latest/rules/$REPLY" "${TOKEN}" "GET" " | jq '.data.rules[] | select(.directives[] | contains(\"${OLD_DIRECTIVE}\")) | {\"id\":.id, \"displayName\":.displayName, \"directives\":.directives}'" "${DISPLAY_COMMAND}")
+      if ! [ -z "${old_result}" ];
+      then
+        printf "${RED} Unexpected old directive found ${old_result}${NORMAL}\n\n"
+      fi
+
+      #Looking for new directive
+      new_result=$(complete_api_call "${API_URL}/api/latest/rules/$REPLY" "${TOKEN}" "GET" " | jq '.data.rules[] | select(.directives[] | contains(\"${NEW_DIRECTIVE}\")) | {\"id\":.id, \"displayName\":.displayName, \"directives\":.directives}'" "${DISPLAY_COMMAND}")
+      if  $DISPLAY_COMMAND ;
+      then
+        printf "${GREEN} New directive found ${new_result}${NORMAL}\n\n"
+      fi
+
+      if [ ${code} -eq 0 ] && [ -z "${old_result}" ]
+      then
+        printf "  ${GREEN}ok${NORMAL}: Add new directive ${NEW_DIRECTIVE} and removing old directive ${OLD_DIRECTIVE} to rule ${REPLY}\n"
+      else
+        printf "  ${RED}error${NORMAL}: Could not add new directive ${NEW_DIRECTIVE} and remove ${OLD_DIRECTIVE} to rule ${REPLY} \n"
+        echo "  ${result}"
+        exit 1
+      fi
+  done <<< "$(echo ${RULES} | jq -r '.id')"
+fi
