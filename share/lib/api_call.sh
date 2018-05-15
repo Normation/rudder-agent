@@ -1,8 +1,10 @@
 # This file provide helpers to make API call from Rudder commands
+API_URL="https://127.0.0.1/rudder"
+TECHNIQUES_DIRECTORY="${CONFIGURATION_DIRECTORY}/technique"
 
 if type curl >/dev/null 2>/dev/null
 then
-  DOWNLOAD_COMMAND="curl --silent --show-error --insecure --location --proxy ''"
+  DOWNLOAD_COMMAND="curl --silent --show-error --insecure --location --proxy '' --globoff"
   HEADER_OPT="--header"
 else
   DOWNLOAD_COMMAND="wget --quiet --no-check-certificate --no-proxy -O -"
@@ -48,6 +50,9 @@ full_api_call() {
   url="$2"
   conf="$3"
   token="$4"
+  display_command="$5"
+  action="$6"
+  no_header="$7"
 
   if [ -z "${url}" ]
   then
@@ -66,6 +71,42 @@ full_api_call() {
     echo "A token is mandatory to query the server"
     exit 1
   fi
-  eval ${DOWNLOAD_COMMAND} ${HEADER_OPT} "\"X-API-Token: ${token}\"" ${HEADER_OPT} "\"Content-Type: application/json;charset=utf-8\"" ${HEADER_OPT} "\"X-API-Version: latest\"" \"${url}${api}\"
+
+  if [ -z "${action}" ]
+  then
+    action="GET"
+  fi
+
+  if [ -z "${no_header}" ]
+  then
+    json="${HEADER_OPT} \"Content-Type: application/json;charset=utf-8\" "
+  else
+    json=""
+  fi
+
+  curl_command="${DOWNLOAD_COMMAND} ${HEADER_OPT} \"X-API-Token: ${token}\" ${json} ${HEADER_OPT} \"X-API-Version: latest\" -X ${action} \"${url}${api}\""
+
+  if ${display_command};
+  then
+    printf "${WHITE}${curl_command}${NORMAL}\n\n" >&2
+  fi
+
+  eval ${curl_command}
+}
+
+# This function make an API call
+complete_api_call() {
+  #set -x
+  url="$1"
+  token="$2"
+  action="$3"
+  filter="$4"
+  display_command="$5"
+  curl_command="${DOWNLOAD_COMMAND} -H \"X-API-Token: ${token}\" -X ${action} \"${url}\" ${filter}"
+  if ${display_command};
+  then
+    printf "${WHITE}${curl_command}${NORMAL}\n\n" >&2
+  fi
+  eval ${curl_command}
 }
 

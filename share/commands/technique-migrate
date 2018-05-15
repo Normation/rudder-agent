@@ -1,0 +1,78 @@
+#!/bin/bash
+
+. "${BASEDIR}/../lib/api_call.sh"
+. "${BASEDIR}/../lib/common.sh"
+
+TOKEN="$(cat /var/rudder/run/api-token)"
+DISPLAY_COMMAND=false
+
+while getopts "iIvdqcn:" opt; do
+  case $opt in
+    i|I|v|d)
+      DISPLAY_COMMAND=true
+      ;;
+    n)
+      TECHNIQUE_NAME="${OPTARG}"
+      ;;
+    c)
+      clear_colors
+      ;;
+  esac
+done
+# to keep the argument as $1
+shift  $((OPTIND-1))
+
+if [ -z "${TECHNIQUE_NAME}" ]
+then
+  echo "Usage: rudder technique migrate [-iIcvd] -n technique_name [target_technique_version]"
+  exit 1
+fi
+
+TECHNIQUE_VERSION="$1"
+if [ -z "${TECHNIQUE_VERSION}" ]
+then
+  TECHNIQUE_VERSION="latest"
+fi
+
+if [ "${TECHNIQUE_VERSION}" == "latest" ]
+then
+# Find the newest technique version
+  TECHNIQUE_VERSION=$(complete_api_call "${API_URL}/api/latest/techniques" "${TOKEN}" "GET" "| jq -r '.data | .techniques[] | select( .name == \"${TECHNIQUE_NAME}\") | .versions[]' | tail -n1" "${DISPLAY_COMMAND}")
+  if [ -z "${TECHNIQUE_VERSION}" ];
+  then
+    printf "${RED}No version found for the technique ${TECHNIQUE_NAME}${NORMAL}\n"
+    exit 1
+  fi
+fi
+
+echo "TECHNIQUE ${TECHNIQUE_NAME} will migrate to ${TECHNIQUE_VERSION}"
+echo ""
+
+# Find the directives using the given technique
+DIRECTIVES=$(complete_api_call "${API_URL}/api/latest/directives" "${TOKEN}" "GET" "| jq -r '.data.directives[] | select(.techniqueName==\"${TECHNIQUE_NAME}\") | .id' | sed 's/\"//g'" "${DISPLAY_COMMAND}" )
+
+echo "Directives using the '${TECHNIQUE_NAME}' technique:"
+printf "${BLUE}${DIRECTIVES}${NORMAL}\n\n"
+
+if [ -z "${DIRECTIVES}" ];
+then
+  printf "  ${RED}No directive found using the technique ${NORMAL}${TECHNIQUE_NAME}\n"
+else
+  while IFS= read
+  do
+    # Change the version parameter in the previously found directives (ie 1 directive = 1 technique)
+      echo "Treating $REPLY"
+      result=$(complete_api_call "${API_URL}/api/latest/directives/$REPLY" "${TOKEN}" "POST" "-d \"techniqueVersion=${TECHNIQUE_VERSION}\"" "${DISPLAY_COMMAND}")
+      code1=$?
+      post_result=$(complete_api_call "${API_URL}/api/latest/directives/$REPLY" "${TOKEN}" "GET" "| jq -r '.data.directives[].techniqueVersion'" "${DISPLAY_COMMAND}" )
+
+      if [ ${code1} -eq 0 ] && [ "${post_result}" = "${TECHNIQUE_VERSION}" ]
+      then
+        printf "  ${GREEN}ok${NORMAL}: Changed technique version to ${GREEN}${post_result}${NORMAL} for directive: '$REPLY'.\n\n"
+      else
+        printf "  ${RED}error${NORMAL}: Could not change technique version for directive: '$REPLY'.\n"
+        echo "  ${result}"
+        exit 1
+      fi
+  done <<< "${DIRECTIVES}"
+fi
