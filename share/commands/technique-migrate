@@ -37,7 +37,7 @@ fi
 if [ "${TECHNIQUE_VERSION}" == "latest" ]
 then
 # Find the newest technique version
-  TECHNIQUE_VERSION=$(complete_api_call "${API_URL}/api/latest/techniques" "${TOKEN}" "GET" "| jq -r '.data | .techniques[] | select( .name == \"${TECHNIQUE_NAME}\") | .versions[]' | tail -n1" "${DISPLAY_COMMAND}")
+  TECHNIQUE_VERSION=$(filtered_api_call "${API_URL}/api/latest/techniques" "${TOKEN}" "GET" "" "${DISPLAY_COMMAND}" | jq -r ".data | .techniques[] | select( .name == \"${TECHNIQUE_NAME}\") | .versions[]" | tail -n1 )
   if [ -z "${TECHNIQUE_VERSION}" ];
   then
     printf "${RED}No version found for the technique ${TECHNIQUE_NAME}${NORMAL}\n"
@@ -49,7 +49,7 @@ echo "TECHNIQUE ${TECHNIQUE_NAME} will migrate to ${TECHNIQUE_VERSION}"
 echo ""
 
 # Find the directives using the given technique
-DIRECTIVES=$(complete_api_call "${API_URL}/api/latest/directives" "${TOKEN}" "GET" "| jq -r '.data.directives[] | select(.techniqueName==\"${TECHNIQUE_NAME}\") | .id' | sed 's/\"//g'" "${DISPLAY_COMMAND}" )
+DIRECTIVES=$(filtered_api_call "${API_URL}/api/latest/directives" "${TOKEN}" "GET" "" "${DISPLAY_COMMAND}" | jq -r ".data.directives[] | select(.techniqueName==\"${TECHNIQUE_NAME}\") | .id" | sed 's/\"//g' )
 
 echo "Directives using the '${TECHNIQUE_NAME}' technique:"
 printf "${BLUE}${DIRECTIVES}${NORMAL}\n\n"
@@ -62,9 +62,9 @@ else
   do
     # Change the version parameter in the previously found directives (ie 1 directive = 1 technique)
       echo "Treating $REPLY"
-      result=$(complete_api_call "${API_URL}/api/latest/directives/$REPLY" "${TOKEN}" "POST" "-d \"techniqueVersion=${TECHNIQUE_VERSION}\"" "${DISPLAY_COMMAND}")
+      result=$(filtered_api_call "${API_URL}/api/latest/directives/$REPLY" "${TOKEN}" "POST" "-d \"techniqueVersion=${TECHNIQUE_VERSION}\"" "${DISPLAY_COMMAND}")
       code1=$?
-      post_result=$(complete_api_call "${API_URL}/api/latest/directives/$REPLY" "${TOKEN}" "GET" "| jq -r '.data.directives[].techniqueVersion'" "${DISPLAY_COMMAND}" )
+      post_result=$(filtered_api_call "${API_URL}/api/latest/directives/$REPLY" "${TOKEN}" "GET" "" "${DISPLAY_COMMAND}" | jq -r ".data.directives[].techniqueVersion")
 
       if [ ${code1} -eq 0 ] && [ "${post_result}" = "${TECHNIQUE_VERSION}" ]
       then
