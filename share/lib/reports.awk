@@ -402,6 +402,8 @@ END {
   # Component count makes no sense when not in full compliance
   if (full_compliance) {
     printf "%s components verified in %s directives\n", audit_components+enforce_components, alen(directive_array);
+  } else {
+    printf "Not all components were displayed because we are not in full compliance mode. Please run with -g to force full compliance mode.\n";
   }
 
   if (enforce_components > 0) {

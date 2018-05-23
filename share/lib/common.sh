@@ -141,3 +141,9 @@ elif [ -f "${PROMISES_CF}" ]; then
   RUDDER_REPORT_MODE=$(grep -E '"changes_only" *expression' "${PROMISES_CF}" | sed 's/.*strcmp("\(.*\)", "changes-only".*/\1/')
 fi
 
+if [ "${RUDDER_REPORT_MODE}" = "changes-only" ] || [ "${RUDDER_REPORT_MODE}" = "reports-disabled" ]
+then
+  FULL_COMPLIANCE=0
+else
+  FULL_COMPLIANCE=1
+fi
