@@ -6,6 +6,8 @@
 
 if [ -e /usr/bin/dpkg ]; then
     AGENT_VERSION=$(dpkg-query -W --showformat='${Version}' rudder-agent)
+elif [ -e /usr/sbin/slackpkg ]; then
+    AGENT_VERSION=$(ls -1 /var/log/packages | sed -n '/^rudder-agent-[0-9.]\+/s/^.*agent-\([0-9.]*\).*$/\1/p') 
 elif [ -e /bin/rpm ]; then
     AGENT_VERSION=$(rpm -q --queryformat '%{version}' rudder-agent)
 else
