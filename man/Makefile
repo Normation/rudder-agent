@@ -1,15 +1,12 @@
 NAME = rudder
 
-all: $(NAME).8 $(NAME).html
+all: $(NAME).8
 
-sourcefile: $(NAME).asciidoc.sh
-	sh $(NAME).asciidoc.sh
+$(NAME).adoc: $(NAME).adoc.sh
+	sh $(NAME).adoc.sh > $(NAME).adoc
 
-$(NAME).8: sourcefile
-	a2x --doctype manpage --format manpage $(NAME).asciidoc
-
-$(NAME).html: sourcefile
-	asciidoctor -d manpage $(NAME).asciidoc
+$(NAME).8: $(NAME).adoc
+	asciidoctor -b manpage $(NAME).adoc
 
 clean:
-	$(RM) $(NAME).1 $(NAME).html $(NAME).asciidoc
+	$(RM) $(NAME).8 $(NAME).adoc

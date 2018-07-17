@@ -54,5 +54,5 @@ docs/_build/
 target/
 
 # Man pages
-*.1
-*.html
+*.8
+*.adoc

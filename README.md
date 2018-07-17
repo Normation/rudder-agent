@@ -42,7 +42,6 @@ Build man pages
 ---------------
 
 In order to build the man pages, you will need:
-- [asciidoc](http://www.methods.co.nz/asciidoc/) for man pages: probably packaged by your distribution
-- [asciidoctor](http://www.asciidoctor.org) for the HTML output: `gem install asciidoctor`
+- [asciidoctor](http://www.asciidoctor.org) for the man output: `gem install asciidoctor`
 
-Then run `make` in the man folder. It will generate `rudder.1` and `rudder.html`.
+Then run `make` in the man folder. It will generate `rudder.8`.

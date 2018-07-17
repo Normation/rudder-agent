@@ -2,7 +2,6 @@
 
 set -e
 BASEDIR="../share/commands"
-OUTPUT="rudder.asciidoc"
 
 echo "= rudder(8)
 :doctype: manpage
@@ -39,14 +38,14 @@ node configuration tasks you can use the rudder-cli tool.
 == COMMANDS
 
 The commands below are listed by component.
-" > ${OUTPUT}
+"
 
 for role in `ls "${BASEDIR}" | sed 's/\([A-Za-z_]*\)-.*/\1/' | uniq`
 do
 echo "=== ${role}
 
 commands for rudder ${role}, run with *rudder* *${role}* _command_
-" >> ${OUTPUT}
+"
 
 for file in `cd "${BASEDIR}"; find . -type f -name "${role}-*" | sort`
    do
@@ -55,7 +54,7 @@ for file in `cd "${BASEDIR}"; find . -type f -name "${role}-*" | sort`
    name=`echo "${file}" | sed -e "s/\.\/${role}-//"`
 echo "*${name}*::
   ${doc}. ${man}
-" >> ${OUTPUT}
+"
 
 done
 done
@@ -72,4 +71,4 @@ Sources of the rudder command-line: https://github.com/Normation/rudder-agent/
 
 == COPYING
 
-Copyright \(C) 2014-2015 Normation SAS." >> ${OUTPUT}
+Copyright \(C) 2014-$(date +"%Y") Normation SAS."
