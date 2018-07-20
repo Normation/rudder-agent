@@ -60,7 +60,7 @@ need_jq() {
   fi
 }
 
-while getopts "iIvdqwrRmcb:D:j:at:u:C:" opt; do
+while getopts "iIvdqwrRmcb:D:j:g:at:u:C:" opt; do
   case $opt in
     i|I)
       VERBOSITY="-I ${INFO_CLASS}"
