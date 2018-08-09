@@ -73,8 +73,9 @@ full_api_call() {
 
 }
 
-# This function make an API call
-complete_api_call() {
+# This function makes an API call and will add the filter param after the bash call to the api.
+# Also if display_command is set to "true", the executed command will be printed
+filtered_api_call() {
   #set -x
   url="$1"
   token="$2"
