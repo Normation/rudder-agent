@@ -1,4 +1,18 @@
 #!/bin/bash
+# @description Upgrade directives to use latest technique version available
+# @man This command will migrate directives based on a given technique to the given version.
+# @man If the directive version cannot be changed for any reason, the directive is skipped.
+# @man +
+# @man *Options*:
+# @man +
+# @man *-v*: run the agent in verbose mode, prints detailed information
+# @man +
+# @man *-n*: upgrade directves based on given technique (mandatory)
+# @man +
+# @man *-c*: run the agent without color output
+# @man +
+# @man *-V*: migrate to given version
+
 
 . "${BASEDIR}/../lib/api_call.sh"
 . "${BASEDIR}/../lib/common.sh"
@@ -6,9 +20,9 @@
 TOKEN="$(cat /var/rudder/run/api-token)"
 DISPLAY_COMMAND=false
 
-while getopts "iIvdqcn:" opt; do
+while getopts "vcn:V:" opt; do
   case $opt in
-    i|I|v|d)
+    v)
       DISPLAY_COMMAND=true
       ;;
     n)
@@ -17,16 +31,10 @@ while getopts "iIvdqcn:" opt; do
     c)
       clear_colors
       ;;
+    V)
+      TECHNIQUE_VERSION="${OPTARG}"
   esac
 done
-# to keep the argument as $1
-shift  $((OPTIND-1))
-
-if [ -z "${TECHNIQUE_NAME}" ]
-then
-  echo "Usage: rudder technique migrate [-iIcvd] -n technique_name [target_technique_version]"
-  exit 1
-fi
 
 TECHNIQUE_VERSION="$1"
 if [ -z "${TECHNIQUE_VERSION}" ]
@@ -76,3 +84,4 @@ else
       fi
   done <<< "${DIRECTIVES}"
 fi
+

@@ -1,5 +1,5 @@
 #!/bin/bash
-# @description upgrade techniques in the configuration repository from the packaged ones
+# @description Upgrade techniques in the configuration repository from the packaged ones
 # @man This command will replace the techniques in /var/rudder/configuration-repository/techniques
 # @man by the techniques found in /opt/rudder/share/techniques which is installed by rudder-technique package.
 # @man The upgrade can take care of user defined changes.
