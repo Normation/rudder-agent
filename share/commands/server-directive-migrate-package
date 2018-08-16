@@ -1,0 +1,132 @@
+#!/bin/bash
+# @description create a new package directive based on an out-to-date package directive.
+# @man create a new package directive based on an out-to-date package directive.
+# @man +
+# @man Out-to-date package techniques are {"aptPackageInstallation", "rpmPackageInstallation"}.
+# @man Not all of the options present in the old package techniques are still available.
+# @man The script will stop and do nothing if one parameter is not translatable.
+# @man +
+# @man If the script succeed, it will create a new directive, without rule assignement
+# @man and the old directive will not be changed to ensure human verification on the
+# @man parameters translation.
+# @man +
+# @man *Arguments*:
+# @man +
+# @man *-o*: old directive id
+# @man +
+# @man *-c*: raw color mode, all output are non-colored text
+# @man +
+# @man *-i*: verbose mode, display more detailed informations of the execution
+
+. "${BASEDIR}/../lib/api_call.sh"
+. "${BASEDIR}/../lib/common.sh"
+
+TECHNIQUES_DIRECTORY="${CONFIGURATION_DIRECTORY}/technique"
+TOKEN="$(cat /var/rudder/run/api-token)"
+DISPLAY_COMMAND=false
+
+# Fancy print for the API call
+# $1 = API answer
+print_result() {
+  STATUS=$(echo "$1" | jq -r '.result')
+
+  if [ "${STATUS}" == "success" ]
+  then
+    NEW_DIRECTIVE_ID=$(filtered_api_call "${API_URL}/api/latest/directives" "${TOKEN}" "GET" "" "${DISPLAY_COMMAND}" | jq -r " .data.directives[] | select(.displayName==\"${DISPLAY_NAME}_migrated\") | .id")
+    printf "[${GREEN}SUCCESS${NORMAL}] Directive created. You can execute the following command to change all occurence of the old directive to the new one in your rules:\n"
+    printf "${WHITE}rudder server directive-replace -o ${OLD_DIRECTIVE_ID} -n ${NEW_DIRECTIVE_ID}${NORMAL}\n"
+  elif [ "${STATUS}" == "error" ]
+  then
+    ERROR_DETAILS=$(echo "$1" | jq -r '.errorDetails')
+    printf "[${RED}ERROR${NORMAL}] ${ERROR_DETAILS}\n"
+  else
+    printf "${RED}$1${NORMAL}\n"
+  fi
+}
+
+# Build the new directive by calling the python script
+# $1 old package directive
+# $2 new sections
+_make_new_directive() {
+  DISPLAY_NAME=$(echo $1 | jq -r '.displayName')
+  SHORT_DESCRIPTION=$(echo $1 | jq -r '.shortDescription')
+  LONG_DESCRIPTION=$(echo $1 | jq -r '.longDescription')
+  PRIORITY=$(echo $1 | jq -r '.priority')
+  ENABLED=$(echo $1 | jq -r '.enabled')
+  POLICY_MODE=$(echo $1 | jq -r '.policyMode')
+  TAGS=$(echo $1 | jq -r '.tags')
+  BASE_JSON='{
+    "displayName": "'${DISPLAY_NAME}'_migrated",
+    "shortDescription": "'${SHORT_DESCRIPTION}'",
+    "longDescription": "'${LONG_DESCRIPTION}'",
+    "techniqueName": "packageManagement",
+    "techniqueVersion": "1.1",
+    "parameters": {
+      "section": {
+        "name": "sections",
+        "sections": []
+      }
+    },
+    "priority": '${PRIORITY}',
+    "enabled": '${ENABLED}',
+    "system": false,
+    "policyMode": "'${POLICY_MODE}'",
+    "tags": '${TAGS}'
+  }'
+  echo ${BASE_JSON} | jq ".parameters.section.sections=[$2]"
+}
+
+_jq() {
+  echo ${row} | base64 --decode | jq -r '.[]'
+}
+
+while getopts "iIvdco:" opt; do
+  case $opt in
+    i|I|v|d)
+      DISPLAY_COMMAND=true
+      ;;
+    c)
+      clear_colors
+      ;;
+    o)
+      OLD_DIRECTIVE_ID="${OPTARG}"
+      ;;
+  esac
+done
+# to keep the argument as $1
+shift  $((OPTIND-1))
+
+if [ -z ${OLD_DIRECTIVE_ID} ]
+then
+  echo "Usage: rudder server directive-migrate-package [-iIvd] [-c] -o <old-package-directive-id>" 
+  exit 1
+fi
+
+# Get the directive
+DIRECTIVE=$(filtered_api_call "${API_URL}/api/latest/directives/${OLD_DIRECTIVE_ID}" "${TOKEN}" "GET" "" "${DISPLAY_COMMAND}" | jq -r " .data.directives[]")
+# Get its sections
+DIRECTIVE_SECTIONS=$(echo "${DIRECTIVE}" | jq -r '.parameters[] | .sections')
+
+SECTIONS=""
+for row in $(echo "${DIRECTIVE_SECTIONS}" | jq -r '.[] | @base64'); do
+    # To iterate over the different directive sections
+
+    # Only handle the valued sections
+    SECTION=$(echo $(_jq) | ${BASEDIR}/../lib/package_upgrade.py)
+    code=$?
+    if [ "${code}" -eq 1 ]
+    then
+      printf "[${RED}WARNING${NORMAL}] ${SECTION}\n"
+      exit
+    elif [ -n "$SECTION" ];
+    then
+      SECTIONS="$SECTIONS,$SECTION"
+    fi
+done
+
+# ${SECTIONS:1} to remove the starting ','
+_make_new_directive "${DIRECTIVE}" "${SECTIONS:1}" > package_directive.json.temp
+
+RESULT=$(filtered_api_call "${API_URL}/api/latest/directives" "${TOKEN}" "PUT" "-H \"Content-Type: application/json\" -d @package_directive.json.temp" "${DISPLAY_COMMAND}")
+
+print_result "${RESULT}"
