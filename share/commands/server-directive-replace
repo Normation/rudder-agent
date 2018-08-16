@@ -1,4 +1,16 @@
 #!/bin/bash
+# @description replace a directive occurence in all the Rudder rules by another directive.
+# @man replace a directive occurence in all the Rudder rules by another directive.
+# @man +
+# @man *Arguments*:
+# @man +
+# @man *-o*: old directive id
+# @man +
+# @man *-n*: new directive id
+# @man +
+# @man *-c*: raw color mode, all output are non-colored text
+# @man +
+# @man *-i*: verbose mode, display more detailed informations of the execution
 
 . "${BASEDIR}/../lib/api_call.sh"
 . "${BASEDIR}/../lib/common.sh"
@@ -28,7 +40,7 @@ shift  $((OPTIND-1))
 
 if [[ -z ${OLD_DIRECTIVE} || -z ${NEW_DIRECTIVE} ]]
 then
-  echo "Usage: rudder directive replace [-iIvd] [-c] -o <old-directive> -n <new-directive>"
+  echo "Usage: rudder server directive-replace [-iIvd] [-c] -o <old-directive> -n <new-directive>"
   exit 1
 fi
 
