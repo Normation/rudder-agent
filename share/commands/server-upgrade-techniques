@@ -3,6 +3,7 @@
 # @man This command will replace the techniques in /var/rudder/configuration-repository/techniques
 # @man by the techniques found in /opt/rudder/share/techniques which is installed by rudder-technique package.
 # @man The upgrade can take care of user defined changes.
+# @man This command creates an update branch "rudder_update" with the content of current techniques first time is it run
 # @man +
 # @man *Options*:
 # @man +
@@ -14,7 +15,13 @@
 # @man +
 # @man *-f*: suppress any warning and run without prompting for input
 # @man +
-# @man *-c*: use the givent commit id as the update branch origin
+# @man *-c*: use the given commit id as the update branch origin
+# @man +
+# @man *-a --autoupdate-technique-library*: automatically update technique library if autoupdate-technique-library is true by doing an override of existing Techniques
+# @man +
+# @man *--set-autoupdate-technique-library=true/false*: set the auto update technique library option at upgrade to true or false (for Rudder 5+)
+# @man +
+# @man *-s --show*: Display the currently defined options
 
 . "${BASEDIR}/../lib/common.sh"
 . "${BASEDIR}/../lib/api_call.sh"
@@ -24,38 +31,184 @@ INITIAL=false
 OVERRIDE=false
 FORCE=false
 PARENT_COMMIT=""
+SET_OPTION=false
+KEY_OPTION=""
+VALUE_OPTION=""
+CONFIGURATION_FILE=/opt/rudder/etc/rudder.conf
 
-while getopts "uiofc:" opt; do
-  case $opt in
-    u)
-      UPGRADE=true
-      ;;
-    i)
-      INITIAL=true
-      ;;
-    o)
+# Output usage
+function usage()
+{
+  echo "rudder server upgrade-techniques"
+  echo "upgrade techniques in the configuration repository from the packaged ones"
+  echo "This command will replace the techniques in /var/rudder/configuration-repository/techniques"
+  echo "by the techniques found in /opt/rudder/share/techniques which is installed by rudder-technique package."
+  echo "The upgrade can take care of user defined changes."
+  echo "This command creates an update branch rudder_update with the content of current techniques first time is it run"
+  echo ""
+  echo "It can also control behaviour of automatic Techniques upgrades in Rudder 5.0 and later"
+  echo "By default, instance upgraded from Rudder 4 to 5 will not get automatic technique upgrade,"
+  echo "unless option autoupdate-technique-library as been set to true"
+
+  echo "Options:"
+  echo "--upgrade -u         : merge updated techniques into the configuration repository"
+  echo "--initial -i         : create the initial version of the update branch"
+  echo "--override -o        : override existing technique without looking for local changes"
+  echo "--force -f           : suppress any warning and run without prompting for input"
+  echo "--commit -c COMMITID : use the given commit id as the update branch origin"
+  echo "--autoupdate-technique-library -a            : automatically update technique library if autoupdate-technique-library is true by doing an override of existing Techniques"
+  echo "--set-autoupdate-technique-library=true/false: set the auto update technique library option at upgrade to true or false (for Rudder 5+)"
+  echo "--show -s                                    : Display the currently defined options"
+}
+
+# Check if the configuration file exists, and if not, create it with default content
+function check_configuration_file_exists()
+{
+  if [ ! -f ${CONFIGURATION_FILE} ]; then
+    cat <<EOF > ${CONFIGURATION_FILE}
+[server]
+# Configure the behavior for technique update (in Rudder 5+)
+# If set to true, Rudder upgrade will automatically replace active Techniques by those installed by rudder-techniques package
+autoupdate-technique-library=false
+EOF
+  fi
+}
+
+
+# Show all defined options in the configuration file
+function show_defined_option()
+{
+  if [ ! -f ${CONFIGURATION_FILE} ]
+  then
+    echo "Configuration file does not exists, no options set"
+  else
+    echo "Defined options are"
+    grep --color=never = ${CONFIGURATION_FILE} 
+  fi
+}
+
+function do_autoupdate_technique_library
+{
+  if [ ! -f ${CONFIGURATION_FILE} ]
+  then
+    echo "Configuration file does not exists, won't automatically update Techniques"
+  else
+    AUTO_UPDATE_TECHNIQUE_CONFIGURED=$(grep "^autoupdate-technique-library="  ${CONFIGURATION_FILE} | sed 's/.*=//')
+    if [ "${AUTO_UPDATE_TECHNIQUE_CONFIGURED}" = "true" ]
+    then
+      # it is an OVERRIDE + FORCE
       OVERRIDE=true
-      ;;
-    f)
       FORCE=true
+      UPGRADE=false
+      INITIAL=false
+    else
+      echo "Configuration file does not set auto update of Techniques by default (value is ${AUTO_UPDATE_TECHNIQUE_CONFIGURED}). Skipping"
+    fi
+  fi
+}
+
+# Defines available options
+OPTIONS=uiofc:a:s
+LONGOPTS=upgrade,initial,override,force,commit:,autoupdate-technique-library,set-autoupdate-technique-library:,show
+
+
+# Use ! to avoid failing with set -e
+# Use $PIPESTATUS to get the right return code even with !
+! PARSED=$(getopt --options=$OPTIONS --longoptions=$LONGOPTS --name "$0" -- "$@")
+
+if [[ ${PIPESTATUS[0]} -ne 0 ]]; then
+    # Wrong arguments 
+    echo "Wrong parameters for command rudder server upgrade-techniques"
+    usage
+    exit 1
+fi
+
+eval set -- "$PARSED"
+
+
+while true; do
+  case "$1" in
+    -u |--upgrade)
+      UPGRADE=true
+      shift
       ;;
-    c)
-      PARENT_COMMIT="${OPTARG}"
+    -i |--initial)
+      INITIAL=true
+      shift
+      ;;
+    -o |--override)
+      OVERRIDE=true
+      shift
+      ;;
+    -f |--force)
+      FORCE=true
+      shift
+      ;;
+    -c|--commit)
+      PARENT_COMMIT="$2"
+      shift 2
+      ;;
+    -a|--autoupdate-technique-library)
+      # we don't support others option with it
+      do_autoupdate_technique_library
+      break
+      ;;
+    --set-autoupdate-technique-library)
+      SET_OPTION=true
+      KEY_OPTION=autoupdate-technique-library
+      VALUE_OPTION="$2"
+      if [ "${VALUE_OPTION}" != "true" ] && [ "${VALUE_OPTION}" != "false" ]
+      then
+       echo "--set-autoupdate-technique-library requires 'true' or 'false' parameter, ${VALUE_OPTION} given"
+       exit 1
+      fi
+      shift 2
+      ;;
+    -s|--show)
+      show_defined_option
+      shift
+      ;;
+    --)
+      shift
+      break
+      ;;
+    *)
+      echo "Programming error - option not correctly handled"
+      exit 2
       ;;
   esac
 done
 
-# Exactly one option is allowed
-[ "${UPGRADE}" = "false" ] && [ "${INITIAL}" = "false" ] && [ "${OVERRIDE}" = "false" ] && err="error"
+# Exactly one option is allowed for upgrade of technique
 [ "${UPGRADE}" = "true" ] && [ "${INITIAL}" = "true" ] && err="error"
 [ "${UPGRADE}" = "true" ] && [ "${OVERRIDE}" = "true" ] && err="error"
 [ "${INITIAL}" = "true" ] && [ "${OVERRIDE}" = "true" ] && err="error"
 
 if [ "${err}" != "" ]
 then
-  echo "I need exactly one option. Available options: -u -i -o"
+  echo "To automaticaly upgrade Technique, this command needs exactly one choice. Available choice are:"
+  echo " -u: merge updated techniques into the configuration repository"
+  echo " -i: create the initial version of the update branch"
+  echo " -o: override existing technique without looking for local changes"
+  echo ""
+  echo "Additionnal option are :"
+  echo " -f: suppress any warning and run without prompting for input"
+  echo " -c COMMITID: use the given commit id as the update branch origin"
+
   exit 1
 fi
+
+# We are setting option in the configuration file
+if [ "${SET_OPTION}" = "true" ]
+then
+  check_configuration_file_exists
+  sed -i  "/^\[server\]/,/^\[/{s/^${KEY_OPTION}=.*/${KEY_OPTION}=${VALUE_OPTION}/}" ${CONFIGURATION_FILE}
+
+  echo "Correctly set option ${KEY_OPTION} to value ${VALUE_OPTION}"
+fi
+
+
+
 
 REPO="/var/rudder/configuration-repository"
 BASE="/opt/rudder/share/techniques"
@@ -67,16 +220,25 @@ then
   # Upgrading needs the upgrade branch
   if git rev-parse --verify --quiet "${UPDATE_BRANCH}" > /dev/null
   then
-    git checkout "${UPDATE_BRANCH}"
-    cp -a "${BASE}"/* techniques/
-    git add techniques/
-    git commit -q -m "${TAG_MESSAGE} Standard technique upgrade from version ${package_version} on $(date)"
-    git checkout master
-    git merge "${UPDATE_BRANCH}"
-    # TODO Now's a god time for a user shell
-    rudder server reload-techniques
+    # Checkout can fail because of unstaged change
+    if git checkout "${UPDATE_BRANCH}"
+    then
+      cp -a "${BASE}"/* techniques/
+      /opt/rudder/bin/rudder-fix-repository-permissions
+      git add techniques/
+      git commit -q -m "${TAG_MESSAGE} Standard technique upgrade from version ${package_version} on $(date)"
+      git checkout master
+      git merge "${UPDATE_BRANCH}"
+      /opt/rudder/bin/rudder-fix-repository-permissions
+      # TODO Now's a good time for a user shell
+      rudder server reload-techniques
+    else
+      echo "You have unstagged changes in current branch"
+      echo "Aborting"
+      exit 1
+    fi
   else
-    echo "You need and update branch."
+    echo "You need an update branch."
     echo "- If you have not made any change in the techniques, you can override techniques with the updated ones using the -o option."
     echo "- If you have made changes you would like to keep, you should first create the initial branch with the -i option."
     exit 1
@@ -86,13 +248,13 @@ fi
 
 if [ "${INITIAL}" = "true" ]
 then
-  echo "Creating initial branch from an early commit"
+  echo "Creating initial version of the branch for Techniques update"
   if git rev-parse --verify --quiet "${UPDATE_BRANCH}" > /dev/null
   then
     echo "The upgrade branch '${UPDATE_BRANCH}' already exists, aborting"
     exit 1
   fi
-  # find the first commit with the techniques directory in it to minimize merging difficulties
+  # find the first commit with the Techniques directory in it to minimize merging difficulties
   if [ "${PARENT_COMMIT}" = "" ]
   then
     if [ "${FORCE}" != "true" ]
@@ -107,6 +269,8 @@ then
     PARENT_COMMIT=$(git log --pretty=oneline --no-abbrev-commit -- techniques | tail -1 | awk '{print $1}')
   fi
   git branch "${UPDATE_BRANCH}" "${PARENT_COMMIT}"
+  # Fix permissions
+  /opt/rudder/bin/rudder-fix-repository-permissions
   exit 0
 fi
 
@@ -121,6 +285,7 @@ then
     read a
   fi
   cp -a "${BASE}"/* techniques/
+  /opt/rudder/bin/rudder-fix-repository-permissions
   git add techniques/
   git commit -q -m "${TAG_MESSAGE} Forced technique upgrade from version ${package_version} on $(date)"
   # consider this commit as the common ancestor for futur update
@@ -128,9 +293,10 @@ then
   if git rev-parse --verify --quiet "${UPDATE_BRANCH}" > /dev/null
   then
     # it's easier to remove then create the branch
-    git branch -D "${UPDATE_BRANCH}"
+    git branch -D "${UPDATE_BRANCH}" > /dev/null
   fi
   git branch "${UPDATE_BRANCH}"
   rudder server reload-techniques
+  echo "Techniques have been updated, and update branch set to current state of the Techniques"
 fi
 
