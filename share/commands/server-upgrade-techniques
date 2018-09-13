@@ -36,6 +36,12 @@ KEY_OPTION=""
 VALUE_OPTION=""
 CONFIGURATION_FILE=/opt/rudder/etc/rudder.conf
 
+AUTO_UPDATE_TECHNIQUE=false
+DURING_UPGRADE=false
+
+# detect if any option has been passed to the script
+ANY_OPTION_DEFINED=false
+
 # Output usage
 function usage()
 {
@@ -92,6 +98,8 @@ function do_autoupdate_technique_library
   if [ ! -f ${CONFIGURATION_FILE} ]
   then
     echo "Configuration file does not exists, won't automatically update Techniques"
+    # create default file
+    check_configuration_file_exists
   else
     AUTO_UPDATE_TECHNIQUE_CONFIGURED=$(grep "^autoupdate-technique-library="  ${CONFIGURATION_FILE} | sed 's/.*=//')
     if [ "${AUTO_UPDATE_TECHNIQUE_CONFIGURED}" = "true" ]
@@ -109,7 +117,7 @@ function do_autoupdate_technique_library
 
 # Defines available options
 OPTIONS=uiofc:a:s
-LONGOPTS=upgrade,initial,override,force,commit:,autoupdate-technique-library,set-autoupdate-technique-library:,show
+LONGOPTS=upgrade,initial,override,force,commit:,autoupdate-technique-library,set-autoupdate-technique-library:,show,during-upgrade
 
 
 # Use ! to avoid failing with set -e
@@ -130,42 +138,54 @@ while true; do
   case "$1" in
     -u |--upgrade)
       UPGRADE=true
+      ANY_OPTION_DEFINED=true
       shift
       ;;
     -i |--initial)
       INITIAL=true
+      ANY_OPTION_DEFINED=true
       shift
       ;;
     -o |--override)
       OVERRIDE=true
+      ANY_OPTION_DEFINED=true
       shift
       ;;
     -f |--force)
       FORCE=true
+      ANY_OPTION_DEFINED=true
       shift
       ;;
     -c|--commit)
       PARENT_COMMIT="$2"
+      ANY_OPTION_DEFINED=true
       shift 2
       ;;
     -a|--autoupdate-technique-library)
-      # we don't support others option with it
-      do_autoupdate_technique_library
-      break
+      AUTO_UPDATE_TECHNIQUE=true
+      ANY_OPTION_DEFINED=true
+      shift
       ;;
     --set-autoupdate-technique-library)
       SET_OPTION=true
       KEY_OPTION=autoupdate-technique-library
       VALUE_OPTION="$2"
+
       if [ "${VALUE_OPTION}" != "true" ] && [ "${VALUE_OPTION}" != "false" ]
       then
        echo "--set-autoupdate-technique-library requires 'true' or 'false' parameter, ${VALUE_OPTION} given"
        exit 1
       fi
+      ANY_OPTION_DEFINED=true
       shift 2
       ;;
     -s|--show)
+      ANY_OPTION_DEFINED=true
       show_defined_option
+      shift
+      ;;
+    --during-upgrade)
+      DURING_UPGRADE=true
       shift
       ;;
     --)
@@ -178,6 +198,18 @@ while true; do
       ;;
   esac
 done
+
+# No option given, need to show usage
+if [ "${ANY_OPTION_DEFINED}" = "false" ]
+then
+  usage
+  exit 1
+fi
+
+if [ "${AUTO_UPDATE_TECHNIQUE}" = "true" ]
+then
+  do_autoupdate_technique_library
+fi
 
 # Exactly one option is allowed for upgrade of technique
 [ "${UPGRADE}" = "true" ] && [ "${INITIAL}" = "true" ] && err="error"
@@ -296,7 +328,13 @@ then
     git branch -D "${UPDATE_BRANCH}" > /dev/null
   fi
   git branch "${UPDATE_BRANCH}"
-  rudder server reload-techniques
+  if [ "${DURING_UPGRADE}" = "false" ]
+  then
+    rudder server reload-techniques
+  else
+    # webapp is down, so we have to touch file for reloading after reboot
+    touch /opt/rudder/etc/force_technique_reload
+  fi
   echo "Techniques have been updated, and update branch set to current state of the Techniques"
 fi
 
