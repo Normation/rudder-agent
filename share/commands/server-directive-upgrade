@@ -36,7 +36,6 @@ while getopts "vcn:V:" opt; do
   esac
 done
 
-TECHNIQUE_VERSION="$1"
 if [ -z "${TECHNIQUE_VERSION}" ]
 then
   TECHNIQUE_VERSION="latest"
