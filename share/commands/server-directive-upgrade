@@ -5,11 +5,11 @@
 # @man +
 # @man *Options*:
 # @man +
-# @man *-v*: run the agent in verbose mode, prints detailed information
+# @man *-v*: run in verbose mode, prints detailed information
 # @man +
 # @man *-n*: upgrade directves based on given technique (mandatory)
 # @man +
-# @man *-c*: run the agent without color output
+# @man *-c*: run without colors
 # @man +
 # @man *-V*: migrate to given version
 
