@@ -93,7 +93,7 @@ function print_report_singleline() {
   }
 
   if (full_strings) {
-    printf "%-25s %-25s %-18s", technique, component, key;
+    printf "%-25s %-25s %-18s ", technique, component, key;
   } else {
     if (length(technique) > 25) {
       printf "%-24.24s| ", technique;
