@@ -45,6 +45,7 @@ if [ $(cat /opt/rudder/etc/uuid.hive 2>/dev/null) != "root" ]
 then
   rm -rf /var/rudder/cfengine-community/inputs/*
   cp -r /opt/rudder/share/initial-promises/* /var/rudder/cfengine-community/inputs
+  chmod -R u+rwX,g=,o= /var/rudder/cfengine-community/inputs
 fi
 
 # - restore initial ncf
