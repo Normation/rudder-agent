@@ -51,15 +51,6 @@ LOOP="xargs -I{}"
 MULTIHOST=1
 TIMEOUT="-t 300"
 
-# Check for js presence
-need_jq() {
-  if ! type jq >/dev/null 2>/dev/null
-  then
-    echo "ERROR: 'jq' must be installed to query hosts from server" 1>&2
-    exit 2
-  fi
-}
-
 while getopts "iIvdqwrRmcTb:D:j:g:at:u:C:" opt; do
   case $opt in
     i|I)
