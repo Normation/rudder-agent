@@ -19,6 +19,8 @@ TECHNIQUES_DIRECTORY="${CONFIGURATION_DIRECTORY}/technique"
 TOKEN="$(cat /var/rudder/run/api-token)"
 DISPLAY_COMMAND=false
 
+need_jq
+
 while getopts "iIvdc:o:n:" opt; do
   case $opt in
     i|I|v|d)

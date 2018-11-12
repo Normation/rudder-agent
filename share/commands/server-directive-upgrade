@@ -20,6 +20,8 @@
 TOKEN="$(cat /var/rudder/run/api-token)"
 DISPLAY_COMMAND=false
 
+need_jq
+
 while getopts "vcn:V:" opt; do
   case $opt in
     v)

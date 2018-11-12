@@ -25,6 +25,8 @@ TECHNIQUES_DIRECTORY="${CONFIGURATION_DIRECTORY}/technique"
 TOKEN="$(cat /var/rudder/run/api-token)"
 DISPLAY_COMMAND=false
 
+need_jq
+
 # Fancy print for the API call
 # $1 = API answer
 print_result() {

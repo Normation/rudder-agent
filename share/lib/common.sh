@@ -95,6 +95,15 @@ get_hostname() {
   echo "${HOSTNAME}"
 }
 
+# Check for jq presence
+need_jq() {
+  if ! type jq >/dev/null 2>/dev/null
+  then
+    printf "${RED}ERROR: 'jq' must be installed to query hosts from server${NORMAL}\n"
+    exit 2
+  fi
+}
+
 # Colors configuration (enable colors only if stdout is a terminal)
 if [ -t 1 ]; then
     COLOR="-Calways"
