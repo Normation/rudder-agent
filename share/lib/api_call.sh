@@ -63,7 +63,7 @@ full_api_call() {
   [ -z "${token}" ] && token=`_get_conf "${conf}" "token"`
   if [ -z "${token}" ]
   then
-    echo "A token is mandatory to query the server"
+    printf "${RED}A token is mandatory to query the server${NORMAL}\n" >&2
     exit 1
   fi
   eval ${DOWNLOAD_COMMAND} ${HEADER_OPT} "\"X-API-Token: ${token}\"" ${HEADER_OPT} "\"Content-Type: application/json;charset=utf-8\"" ${HEADER_OPT} "\"X-API-Version: latest\"" \"${url}${api}\"
