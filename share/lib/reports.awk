@@ -437,6 +437,10 @@ END {
     }
   }
 
+  if (run_error > 0) {
+    printf "%sThis summary is incomplete as the agent was interrupted during execution%s\n", red, normal;
+  }
+
   printf "Execution time: %.2fs\n", endtime - starttime;
 
   printf "%s%-80.80s%s\n", white, padding, normal;
