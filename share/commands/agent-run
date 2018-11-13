@@ -27,7 +27,7 @@
 # @man +
 # @man *-R*: run the agent in completely unparsed mode, with no return code of 1 in case of error. A little faster.
 # @man +
-# @man *-b*: run the agent on a specific bundle
+# @man *-b*: run the agent on a specific bundle, this is a debug command that should generally not be used
 # @man +
 # @man *-D*: define a class for this run
 # @man +
