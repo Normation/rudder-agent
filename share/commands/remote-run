@@ -121,9 +121,10 @@ while getopts "iIvdqwrRmcTb:D:j:g:at:u:C:" opt; do
       CONFID="${OPTARG}"
       ;;
   esac
-  # to keep the argument as $1
-  shift `expr ${OPTIND} - 1`
 done
+
+# to read remaing arguments with $*
+shift `expr ${OPTIND} - 1`
 
 # Define node list method 
 if [ -n "${ALL}" ]
