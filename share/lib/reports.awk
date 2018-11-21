@@ -365,8 +365,15 @@ END {
     "date +%s.%N" | getline endtime;
   }
 
+  # If we defined a custom bundlesequence, it is expected to not have everything
+  if (partial_run) {
+    printf "%s", cyan;
+    printf "info     Rudder agent was run on a subset of policies - not all policies were checked";
+    printf "%s\n", normal;
+  }
+
   # Check if agent run finished correctly
-  if (!end_run && full_compliance) {
+  if (!end_run && full_compliance  && !partial_run) {
     run_error++;
     printf "%s", red;
 
