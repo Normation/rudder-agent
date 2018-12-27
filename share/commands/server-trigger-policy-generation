@@ -1,0 +1,51 @@
+#!/bin/bash
+# @description trigger a policy generation
+# @man This command will trigger a policy generation, to generate
+# @man policies for any nodes that may have changed
+# @man +
+# @man *Options*:
+# @man +
+# @man *-i*: run the agent in information mode, displays all executed commands
+# @man +
+# @man *-c*: run the agent without color output
+
+. "${BASEDIR}/../lib/common.sh"
+. "${BASEDIR}/../lib/api_call.sh"
+
+TOKEN="$(cat /var/rudder/run/api-token)"
+DISPLAY_COMMAND=false
+
+while getopts "iIvdc" opt; do
+  case $opt in
+    i|I|v|d)
+      DISPLAY_COMMAND=true
+      ;;
+    c)
+      clear_colors
+      ;;
+  esac
+done
+
+# check if the API is available
+api_result=$(filtered_api_call "${API_URL}/api/latest/system/status" "${TOKEN}" "GET" "" "${DISPLAY_COMMAND}")
+api_code=$?
+
+if [ ${api_code} -eq 0 ]
+then
+  result=$(filtered_api_call "${API_URL}/api/latest/system/update/policies" "${TOKEN}" "POST" "" "${DISPLAY_COMMAND}")
+  code=$?
+  if [ ${code} -eq 0 ]
+  then
+    echo "Successfully triggered a new policy generation"
+  else
+    echo "Failed to trigger a policy" 1>&2
+    exit 1
+  fi
+else
+  echo "Web interface is down - requested a policy generation at its restart"
+  touch /opt/rudder/etc/trigger-policy-generation
+fi
+
+
+
+
