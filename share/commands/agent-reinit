@@ -1,7 +1,0 @@
-#!/bin/sh
-# @description alias of command "rudder agent factory-reset"
-# @man This command is a wrapper for "rudder agent factory-reset",
-# @man that has replaced it.
-
-# - trigger a factory reset
-${RUDDER_BIN} agent factory-reset
