@@ -48,6 +48,9 @@ ENTERPRISE_CFE_DIR=/var/cfengine
 CFE_DISABLE_FILE=/opt/rudder/etc/disable-agent
 UUID_FILE=/opt/rudder/etc/uuid.hive
 
+## Paths for Rudder Server Roles
+RUDDER_SERVER_ROLES=/opt/rudder/etc/server-roles.d
+
 # Get common commands from common.sh
 init_commands
 
@@ -224,24 +227,76 @@ check_and_fix_inputs() {
 }
 
 check_varspace() {
-  # check max space available for databases and stop if there is a risk
-  if [ -d /var/rudder/ldap/ ]; then
-    ldap_space=$(df /var/rudder/ | tail -n 1 | awk '{print $5}' | sed 's/%//')
-    if [ "${ldap_space}" -gt 98 ]; then
-      stop_now=1
+  # check max space available for databases and stop Rudder if there is a risk
+  if [ -f ${RUDDER_SERVER_ROLES}/rudder-ldap ]; then
+    if [ -d /var/rudder/ldap/ ]; then
+      ldap_space=$(df /var/rudder/ldap | tail -n 1 | awk '{print $5}' | sed 's/%//')
+      if [ "${ldap_space}" -gt 98 ]; then
+        stop_now=1
+      fi
     fi
   fi
-  if [ -d /var/lib/postgresql/ ]; then
-    psql_space=$(df /var/lib/postgresql/ | tail -n 1 | awk '{print $5}' | sed 's/%//')
-    if [ "${psql_space}" -gt 98 ]; then
-      stop_now=1
+
+  if [ -f ${RUDDER_SERVER_ROLES}/rudder-reports ]; then
+    # Get the run path of postgresql
+    PG_TABLES_PATH=$(su - postgres -c 'psql -t -c  "show data_directory;"')
+    if [ -z "${PG_TABLES_PATH}" ]; then
+      echo "FATAL: Cannot connect to PostgreSQL - please check its status" | logger -s
+    else
+      psql_space=$(df ${PG_TABLES_PATH} | tail -n 1 | awk '{print $5}' | sed 's/%//')
+
+      # If we are using TCP, we cannot stop postgresql otherwise all infra can go down - but we can stop rudder-jetty and disable rudder agent
+      use_tcp=0
+      NB_TCP=$(grep -r "TCP" /var/rudder/cfengine-community/inputs/promises.cf |  wc -l)
+      if [ 2 -eq "${NB_TCP}" ]; then
+        use_tcp=1
+      fi
+
+      if [ "${psql_space}" -gt 98 ]; then
+        stop_now=1
+      fi
     fi
   fi
   if [ "${stop_now}" = 1 ]; then
-    service rudder stop
     echo "FATAL: No space left on device" | logger -s
-    echo "FATAL: Rudder has been stopped to prevent data corruption" | logger -s
-    exit 1
+    rudder agent disable
+
+    # in TCP, we cannot stop Postgresql, but we can stop rudder-jetty and rudder-agent
+    if [ "${use_tcp}" = 1 ]; then
+      echo "FATAL: Please free space for Postgresql database" | logger -s
+      if [ -f ${RUDDER_SERVER_ROLES}/rudder-jetty ]; then
+        service rudder-jetty stop
+        echo "FATAL: Rudder has been stopped and disabled to prevent data corruption" | logger -s
+      fi
+      exit 1
+    else
+      # In UDP, we can stop everything
+      if [ -f ${RUDDER_SERVER_ROLES}/rudder-server-root ]; then
+        service rudder-server stop
+        echo "FATAL: Rudder has been stopped and disabled to prevent data corruption" | logger -s
+      else
+        if [ -f ${RUDDER_SERVER_ROLES}/rudder-jetty ]; then
+          service rudder-jetty stop
+          echo "FATAL: Rudder Web Interface has been stopped and disabled to prevent data corruption" | logger -s
+        fi
+        if [ -f ${RUDDER_SERVER_ROLES}/rudder-reports ]; then
+          if type systemctl >/dev/null 2>&1; then
+            POSTGRESQL_SERVICE_NAME=$(systemctl list-unit-files --type service | awk -F'.' '{print $1}' | grep -E "^postgresql[0-9]*$" | tail -n 1)
+          fi
+          if [ -z "${POSTGRESQL_SERVICE_NAME}" ] && type chkconfig >/dev/null 2>&1; then
+            POSTGRESQL_SERVICE_NAME=$(chkconfig 2>/dev/null | awk '{ print $1 }' | grep "postgresql" | tail -n 1)
+          fi
+          if [ -z "${POSTGRESQL_SERVICE_NAME}" ]; then
+            POSTGRESQL_SERVICE_NAME=$(ls -1 /etc/init.d | grep "postgresql" | tail -n 1)
+          fi
+
+          service ${POSTGRESQL_SERVICE_NAME} stop
+          echo "FATAL: PostgreSQL has been shut down to prevent data corruption" | logger -s
+        fi
+      fi
+      exit 1
+    fi
+
   fi
 }
 
