@@ -285,5 +285,11 @@ then
   fi
 fi
 
+# Check if cf-execd ou cf-serverd is listening on 8080 on a server (see #13982)
+if [ -f /opt/rudder/etc/server-roles.d/rudder-jetty ] && LANG=C ss -lnpt | grep "LISTEN.*:8080.*cf-"
+then
+  service rudder-agent restart
+fi
+
 # Since we are in set -e there was no error here
 [ "$QUIET" = false ] && printf "${GREEN}ok${NORMAL}: Rudder agent check ran without errors.\n"
