@@ -200,29 +200,15 @@ empty() {
 
 check_and_fix_inputs() {
   # if file is absent or empty there have been a problem with update
-  if empty "${CFE_DIR}/inputs/common/1.0/update.cf" || empty "${CFE_DIR}/inputs/failsafe.cf" || empty "${CFE_DIR}/inputs/promises.cf" || ${CFE_BIN_DIR}/cf-promises -f failsafe.cf | grep error > /dev/null
+  if empty "${CFE_DIR}/inputs/common/1.0/update.cf" || empty "${CFE_DIR}/inputs/failsafe.cf" || empty "${CFE_DIR}/inputs/promises.cf" || ${CFE_BIN_DIR}/cf-promises -f failsafe.cf | grep error > /dev/null || ${CFE_BIN_DIR}/cf-promises | grep error > /dev/null
   then
     printf "ERROR: There was an error during promises update. Reseting to initial promises and updating..."
     rm -rf ${CFE_DIR}/inputs/*
     if [ -d "/opt/rudder/share/initial-promises" ] # rudder package has been properly installed
     then
-      cp -r /opt/rudder/share/initial-promises/* ${CFE_DIR}/inputs/
-      ${CFE_BIN_DIR}/cf-agent -K -f failsafe.cf && ${CFE_BIN_DIR}/cf-agent
-    else # this is an enterprise only agent
-      if [ -e "${CFE_DIR}/policy_server.dat" ]
-      then
-        ${CFE_BIN_DIR}/cf-agent --bootstrap `cat "${CFE_DIR}/policy_server.dat"`
-      fi
+      rudder agent reset
     fi
     echo " Done"
-  fi
-
-  # Ensure main promises are not broken, and clean ncf cache and force a new download if so
-  if ${CFE_BIN_DIR}/cf-promises | grep error > /dev/null
-  then
-    rm -rf ${CFE_DIR}/state/ncf-exclude-cache-*
-    rm -f ${CFE_DIR}/inputs/rudder_promises_updated
-    ${CFE_BIN_DIR}/cf-agent -K -f failsafe.cf
   fi
 }
 

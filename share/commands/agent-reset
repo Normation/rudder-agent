@@ -44,14 +44,11 @@ done
 if [ $(cat /opt/rudder/etc/uuid.hive 2>/dev/null) != "root" ]
 then
   rm -rf /var/rudder/cfengine-community/inputs/*
-  cp -r /opt/rudder/share/initial-promises/* /var/rudder/cfengine-community/inputs
-  chmod -R u+rwX,g=,o= /var/rudder/cfengine-community/inputs
 fi
 
 # - restore initial ncf
 rm -rf /var/rudder/ncf/common/*
 rm -rf /var/rudder/ncf/local/*
-cp -r /opt/rudder/share/initial-ncf/* /var/rudder/ncf/common/
 
 
 # - remove state
@@ -71,5 +68,10 @@ rm -f /var/rudder/ncf/{common,local}/ncf_hash_file
 # - remove the disable status
 [ "$VERBOSE" = true ] && echo "Enabling the agent if needed..."
 rm -f /opt/rudder/etc/disable-agent
+
+# - update to make sure we have at least the initial promises
+[ "$VERBOSE" = true ] && echo "Getting initial promises..."
+# $@ to pass options through
+rudder agent update "$@"
 
 [ "$QUIET" = false ] && printf "${GREEN}ok${NORMAL}: Rudder agent state has been reset.\n"
