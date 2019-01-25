@@ -31,4 +31,4 @@ fi
 
 PRETTY="awk -v info=\"\${DISPLAY_INFO}\" -v full_strings=\"\${FULL_STRINGS}\" -v summary_only=\"\${SUMMARY_ONLY}\" -v quiet=\"\${QUIET}\" -v multihost=\"\${MULTIHOST}\" \
             -v green=\"\${GREEN}\" -v darkgreen=\"\${DARKGREEN}\" -v red=\"\${RED}\" -v yellow=\"\${YELLOW}\" -v magenta=\"\${MAGENTA}\" -v normal=\"\${NORMAL}\" -v white=\"\${WHITE}\" -v cyan=\"\${CYAN}\" \
-            -v dblue=\"\${DBLUE}\" -v dgreen=\"\${DGREEN}\" -v timing=\"\${TIMING}\" -v has_fflush=\"\${AWK_FFLUSH}\" -v full_compliance=\"\${FULL_COMPLIANCE}\" ${AWK_OPTS} -f ${PRETTY_FILTER}"
+            -v dblue=\"\${DBLUE}\" -v dgreen=\"\${DGREEN}\" -v timing=\"\${TIMING}\" -v has_fflush=\"\${AWK_FFLUSH}\" -v full_compliance=\"\${FULL_COMPLIANCE}\" -v partial_run=\"\${PARTIAL_RUN}\" ${AWK_OPTS} -f ${PRETTY_FILTER}"

@@ -42,6 +42,7 @@ UPDATE_OPTIONS=""
 CLASSES=""
 # Ignore disable-agent flag
 FORCE=0
+PARTIAL_RUN=0
 
 while getopts "uiIvdqgwrRmcTb:D:f" opt; do
   case $opt in
@@ -99,7 +100,7 @@ while getopts "uiIvdqgwrRmcTb:D:f" opt; do
     b)
       BUNDLE="-b ${OPTARG}"
       # Tell the parser we don't expect a full run
-      FULL_COMPLIANCE=0
+      PARTIAL_RUN=1
       ;;
     D)
       CLASSES="${CLASSES},${OPTARG}"
