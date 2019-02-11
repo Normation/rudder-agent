@@ -132,6 +132,9 @@ DEBUG_CLASS="-D trace,debug,info"
 VERBOSE_CLASS="-D debug,info"
 INFO_CLASS="-D info"
 
+# Default port for bootstrap
+BOOTSTRAP_PORT=5309
+
 # Information extracted from the policies
 RUDDER_JSON="${RUDDER_VAR}/cfengine-community/inputs/rudder.json"
 PROMISES_CF="${RUDDER_VAR}/cfengine-community/inputs/promises.cf"
