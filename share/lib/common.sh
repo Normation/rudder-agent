@@ -139,6 +139,7 @@ PROMISES_CF="${RUDDER_VAR}/cfengine-community/inputs/promises.cf"
 if [ -f "${RUDDER_JSON}" ]; then
   RUDDER_REPORT_MODE=$(grep 'RUDDER_REPORT_MODE' "${RUDDER_JSON}" | sed 's/.*"RUDDER_REPORT_MODE":"\(.*\)",.*/\1/')
   AGENT_RUN_INTERVAL=$(grep 'AGENT_RUN_INTERVAL' "${RUDDER_JSON}" | sed 's/.*"AGENT_RUN_INTERVAL":"\(.*\)",.*/\1/')
+  RUDDER_NODE_CONFIG_ID=$(grep 'RUDDER_NODE_CONFIG_ID' "${RUDDER_JSON}" | sed 's/.*"RUDDER_NODE_CONFIG_ID":"\(.*\)",.*/\1/')
 fi
 
 if [ "${RUDDER_REPORT_MODE}" = "changes-only" ] || [ "${RUDDER_REPORT_MODE}" = "reports-disabled" ]

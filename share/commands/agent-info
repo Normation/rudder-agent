@@ -78,6 +78,10 @@ then
   echo "Run interval: ${AGENT_RUN_INTERVAL} min"
 fi
 echo "Agent is ${ENABLED}"
+if [ -n "${RUDDER_NODE_CONFIG_ID}" ]
+then
+  echo "Configuration id: ${RUDDER_NODE_CONFIG_ID}"
+fi
 echo "Policy updated: ${POLICY_FETCHED}"
 echo "Inventory sent: ${INVENTORY_SENT}"
 echo "Version: ${VERSION}"
