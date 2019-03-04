@@ -7,24 +7,31 @@
 # @man - clean lock file if it is too big
 # @man - check and restore init files 
 # @man - check that promises have been properly copied
+# @man - will sleep a random time (max half the run interval) when not run in interactive mode prior checking agent
 # @man +
 # @man *Options*:
 # @man +
 # @man *-q*: run the agent in quiet mode (display only error messages)
 # @man +
 # @man *-c*: run the agent without color output
+# @man +
+# @man *-f*: prevent sleeping in non-interactive mode
 
 . "${BASEDIR}/../lib/common.sh"
 
 QUIET=false
+SLEEP=true
 
-while getopts "qc" opt; do
+while getopts "qcf" opt; do
   case $opt in
     q)
       QUIET=true
       ;;
     c)
       clear_colors
+      ;;
+    f)
+      SLEEP=false
       ;;
   esac
 done
@@ -53,6 +60,34 @@ RUDDER_SERVER_ROLES=/opt/rudder/etc/server-roles.d
 
 # Get common commands from common.sh
 init_commands
+
+# Ensure script is executed by root
+MYUID=`id | cut -d\( -f2 | cut -d\) -f1`
+if [ "${MYUID}" != 'root' ];then echo "You must be root"; exit; fi
+
+# Get the value of rudder-agent run interval from file /var/rudder/cfengine-community/inputs/run_interval
+if [ -f "${CFE_DIR}/inputs/run_interval" ]; then
+  RUN_INTERVAL=`cat "${CFE_DIR}/inputs/run_interval"`
+  # If the value is not a number, reset to 5
+  if ! test "${RUN_INTERVAL}" -gt 0 2>/dev/null
+  then
+    RUN_INTERVAL=5
+  fi
+else
+  # File does not exists, use default value 5
+  RUN_INTERVAL=5
+fi
+
+# sleep for a random time, if not interactive
+if [ ! -t 0 ]; then
+ if [ "$SLEEP" = true ]; then
+    # we splay on half the interval to avoid running at the same time twice the agent
+    MAX_SLEEP=`expr ${RUN_INTERVAL} \* 30`
+    SLEEP_DURATION=$(awk -v m="$MAX_SLEEP" 'BEGIN{print int(rand()*m)}')
+    sleep $SLEEP_DURATION
+  fi
+fi
+
 
 clean_cf_lock_files() {
   rm -f ${CFE_DIR}/state/cf_lock.${CFENGINE_DB_EXT}
@@ -94,19 +129,6 @@ check_and_fix_cfengine_processes() {
     rudder agent stop
     rudder agent start
     echo " Done"
-  fi
-
-  # Get the value of rudder-agent run interval from file /var/rudder/cfengine-community/inputs/run_interval
-  if [ -f "${CFE_DIR}/inputs/run_interval" ]; then
-    RUN_INTERVAL=`cat "${CFE_DIR}/inputs/run_interval"`
-    # If the value is not a number, reset to 5
-    if ! test "${RUN_INTERVAL}" -gt 0 2>/dev/null
-    then
-      RUN_INTERVAL=5
-    fi
-  else
-    # File does not exists, use default value 5
-    RUN_INTERVAL=5
   fi
 
   CHECK_INTERVAL=`expr ${RUN_INTERVAL} \* 2`
@@ -286,10 +308,6 @@ check_varspace() {
   fi
 }
 
-
-# Ensure script is executed by root
-MYUID=`id | cut -d\( -f2 | cut -d\) -f1`
-if [ "${MYUID}" != 'root' ];then echo "You must be root"; exit; fi
 
 # Launch each check with a certain order
 check_varspace
