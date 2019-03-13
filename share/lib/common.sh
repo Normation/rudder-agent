@@ -124,6 +124,12 @@ else
     clear_colors
 fi
 
+# Avoid loading system librairies
+if [ `uname -s 2>/dev/null` = 'AIX' ]
+then
+  export LIBPATH=""
+fi
+
 # Paths
 RUDDER_VAR="/var/rudder"
 
