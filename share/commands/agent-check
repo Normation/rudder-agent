@@ -16,13 +16,17 @@
 # @man *-c*: run the agent without color output
 # @man +
 # @man *-f*: prevent sleeping in non-interactive mode
+# @man +
+# @man *-u*: only check the uuid existence.
+
 
 . "${BASEDIR}/../lib/common.sh"
 
 QUIET=false
 SLEEP=true
+ONLY_UUID=false
 
-while getopts "qcf" opt; do
+while getopts "qcfu" opt; do
   case $opt in
     q)
       QUIET=true
@@ -32,6 +36,9 @@ while getopts "qcf" opt; do
       ;;
     f)
       SLEEP=false
+      ;;
+    u)
+      ONLY_UUID=true
       ;;
   esac
 done
@@ -309,6 +316,13 @@ check_varspace() {
   fi
 }
 
+if [ "${ONLY_UUID}" = true ]
+then
+  check_and_fix_rudder_uuid
+  # Since we are in set -e there was no error here
+  [ "$QUIET" = false ] && printf "${GREEN}ok${NORMAL}: Rudder agent check enforced the uuid without errors.\n"
+  exit 0
+fi
 
 # Launch each check with a certain order
 check_varspace
