@@ -195,7 +195,7 @@ check_and_fix_rudder_uuid() {
   # Generate a UUID if we don't have one yet
   if [ ! -f "${UUID_FILE}" ]; then
     if [ -d "${BACKUP_DIR}" ]; then
-      LATEST_BACKUPED_UUID=`ls -v1 ${BACKUP_DIR}uuid-*.hive | tail -n1`
+      LATEST_BACKUPED_UUID=`ls -1 ${BACKUP_DIR}uuid-*.hive | sort | tail -n1` || true
     fi
     if [ "${LATEST_BACKUPED_UUID}" != "" ]; then
       printf "WARNING: The UUID of the node does not exist. The lastest backup (${LATEST_BACKUPED_UUID}) will be recovered..."
