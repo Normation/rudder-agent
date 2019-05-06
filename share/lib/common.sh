@@ -104,6 +104,12 @@ need_jq() {
   fi
 }
 
+# get a single entry from rudder.json
+RUDDER_JSON="${RUDDER_VAR}/cfengine-community/inputs/rudder.json"
+rudder_json_value() {
+  grep "$1" "${RUDDER_JSON}" | sed 's/.*"'$1'":"\(.*\)",.*/\1/'
+}
+
 # Colors configuration (enable colors only if stdout is a terminal)
 if [ -t 1 ]; then
     COLOR="-Calways"
@@ -136,13 +142,13 @@ INFO_CLASS="-D info"
 BOOTSTRAP_PORT=5309
 
 # Information extracted from the policies
-RUDDER_JSON="${RUDDER_VAR}/cfengine-community/inputs/rudder.json"
 PROMISES_CF="${RUDDER_VAR}/cfengine-community/inputs/promises.cf"
 
 if [ -f "${RUDDER_JSON}" ]; then
-  RUDDER_REPORT_MODE=$(grep 'RUDDER_REPORT_MODE' "${RUDDER_JSON}" | sed 's/.*"RUDDER_REPORT_MODE":"\(.*\)",.*/\1/')
-  AGENT_RUN_INTERVAL=$(grep 'AGENT_RUN_INTERVAL' "${RUDDER_JSON}" | sed 's/.*"AGENT_RUN_INTERVAL":"\(.*\)",.*/\1/')
-  RUDDER_NODE_CONFIG_ID=$(grep 'RUDDER_NODE_CONFIG_ID' "${RUDDER_JSON}" | sed 's/.*"RUDDER_NODE_CONFIG_ID":"\(.*\)",.*/\1/')
+  RUDDER_REPORT_MODE=$(rudder_json_value 'RUDDER_REPORT_MODE')
+  AGENT_RUN_INTERVAL=$(rudder_json_value 'AGENT_RUN_INTERVAL')
+  RUDDER_NODE_CONFIG_ID=$(rudder_json_value 'RUDDER_NODE_CONFIG_ID')
+  RUDDER_SYSLOG_PROTOCOL=$(rudder_json_value 'RUDDER_SYSLOG_PROTOCOL')
 fi
 
 if [ "${RUDDER_REPORT_MODE}" = "changes-only" ] || [ "${RUDDER_REPORT_MODE}" = "reports-disabled" ]
