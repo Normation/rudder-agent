@@ -64,7 +64,7 @@ fi
 # The awk part is the workaround for update not exiting with a 1 in case of error
 # It will be necessary to remove it once the exit it back in cf-agent
 # It must be changed if the error messages are back to stderr
-"${RUDDER_VAR}/cfengine-community/bin/cf-agent" ${VERBOSITY} ${COLOR} -K -f failsafe.cf | awk 'BEGIN{e=0}{print; if(match($0,/^ *error:/)){e=1}}END{exit e}'
+"${RUDDER_VAR}/cfengine-community/bin/cf-agent" ${VERBOSITY} ${COLOR} -K -f failsafe.cf | awk 'BEGIN{e=0}{print; if(match($0,/rudder-agent could not get an updated configuration|error:/)){e=1}}END{exit e}'
 code=$?
 
 if [ $code -eq 0 ]; then
