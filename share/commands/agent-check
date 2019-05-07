@@ -24,14 +24,17 @@
 QUIET=false
 SLEEP=true
 ONLY_UUID=false
+OPT=""
 
 while getopts "qcfu" opt; do
   case $opt in
     q)
       QUIET=true
+      OPT="${OPT} -q"
       ;;
     c)
       clear_colors
+      OPT="${OPT} -c"
       ;;
     f)
       SLEEP=false
@@ -49,6 +52,7 @@ BACKUP_DIR=/var/backups/rudder/
 CFE_DIR=/var/rudder/cfengine-community
 CFE_DISABLE_FILE=/opt/rudder/etc/disable-agent
 UUID_FILE=/opt/rudder/etc/uuid.hive
+LAST_UPDATE_FILE="${CFE_DIR}/last_successful_inputs_update"
 
 ## Paths for Rudder Server Roles
 RUDDER_SERVER_ROLES=/opt/rudder/etc/server-roles.d
@@ -60,24 +64,11 @@ init_commands
 MYUID=`id | cut -d\( -f2 | cut -d\) -f1`
 if [ "${MYUID}" != 'root' ];then echo "You must be root"; exit; fi
 
-# Get the value of rudder-agent run interval from file /var/rudder/cfengine-community/inputs/run_interval
-if [ -f "${CFE_DIR}/inputs/run_interval" ]; then
-  RUN_INTERVAL=`cat "${CFE_DIR}/inputs/run_interval"`
-  # If the value is not a number, reset to 5
-  if ! test "${RUN_INTERVAL}" -gt 0 2>/dev/null
-  then
-    RUN_INTERVAL=5
-  fi
-else
-  # File does not exists, use default value 5
-  RUN_INTERVAL=5
-fi
-
 # sleep for a random time, if not interactive
 if [ ! -t 0 ]; then
  if [ "$SLEEP" = true ]; then
     # we half the interval in the hope of not running at the same time as the agent
-    MAX_SLEEP=`expr ${RUN_INTERVAL} \* 30` # in second
+    MAX_SLEEP=`expr ${AGENT_RUN_INTERVAL} \* 30` # in second
     SLEEP_DURATION=$(awk -v m="$MAX_SLEEP" 'BEGIN{print int(rand()*m)}')
     sleep $SLEEP_DURATION
   fi
@@ -93,13 +84,36 @@ clean_cf_lock_files() {
   rm -f ${CFE_DIR}/state/cf_lock.lmdb.lock
 }
 
-# CFEngine key directory must not be accessible by 'group' or 'other'
+# CFEngine keys must be present with a certificate and have proper access rights
 check_and_fix_cfengine_keys() {
+  # Agent must have keys
+  if [ ! -f ${CFE_DIR}/ppkeys/localhost.pub ] || [ ! -f ${CFE_DIR}/ppkeys/localhost.priv ]
+  then
+    ${CFE_DIR}/bin/cf-key -T 4096
+  fi
+  # TODO agent must also have a certificate
+  # CFEngine key directory must not be accessible by 'group' or 'other'
   if [ -d ${CFE_DIR}/ppkeys ]; then
     chmod 700 ${CFE_DIR}/ppkeys
     if [ `ls ${CFE_DIR}/ppkeys | wc -l` -gt 0 ]; then
       chmod 600 ${CFE_DIR}/ppkeys/*
     fi
+  fi
+}
+
+# There must be a policy server otherwise we can't do anything
+check_policy_server_or_exit() {
+  if [ ! -s ${CFE_DIR}/policy_server.dat ]
+  then
+    echo "********************************************************************************"
+    echo "rudder-agent has been installed (not started). This host can be a Rudder node."
+    echo "To get started, configure your Rudder server's hostname and continue the process:"
+    echo "# echo 'rudder.server' > ${CFE_DIR}/policy_server.dat"
+    echo "# rudder agent check"
+    echo "This node will then appear in the Rudder web interface under 'Accept new nodes'."
+    echo "********************************************************************************"
+    # This is not an error
+    exit 0
   fi
 }
 
@@ -113,9 +127,9 @@ check_and_fix_cfengine_processes() {
   CF_EXECD_RUNNING=`${PS_COMMAND} | grep "${CFE_DIR}/bin/cf-execd" | sed -e '/grep/d' | cat`
   NB_CF_EXECD_RUNNING=`echo "${CF_EXECD_RUNNING}" | sed -e '/^$/d' | wc -l`
   if [ ${NB_CF_EXECD_RUNNING} -gt 1 ]; then
-    printf "WARNING: Too many instance of CFEngine cf-execd processes running. Killing them..."
+    [ "$QUIET" = false ] && printf "${YELLOW}WARNING${NORMAL}: Too many instance of Rudder cf-execd processes running. Killing them..."
     echo "${CF_EXECD_RUNNING}" | awk 'BEGIN { OFS=" "} {print $2 }' | xargs kill -9 || true
-    echo " Done"
+    [ "$QUIET" = false ] && echo " Done"
   fi
 
   # List the CFEngine processes running
@@ -126,28 +140,28 @@ check_and_fix_cfengine_processes() {
   # If no disable file AND no process of CFEngine from Rudder, then relaunch cf-agent with a failsafe first
   # But this is applied only on servers or nodes already initialized (policy server set)
   if [ ! -f "${CFE_DISABLE_FILE}" ] && [ "${NB_CF_PROCESS_RUNNING}" -eq 0 ]; then
-    printf "WARNING: No disable file detected and no agent executor process either. Restarting agent service..."
-    rudder agent stop
-    rudder agent start
-    echo " Done"
+    [ "$QUIET" = false ] && printf "INFO: No disable file detected and no agent executor process either. Restarting agent service..."
+    rudder agent stop ${OPT}
+    rudder agent start ${OPT}
+    [ "$QUIET" = false ] && echo " Done"
   fi
 
   # Check for anomalous number of CFEngine processes
   # If there are more than 6 agent/executor processes, we should kill them, and purge the lock database
   # 6 means 1 cf-execd + 5 cf-agent
   if [ "${NB_CF_PROCESS_RUNNING}" -gt 6 ]; then
-    printf "WARNING: Too many instance of CFEngine processes running. Killing them, and purging the CFEngine lock database..."
+    [ "$QUIET" = false ] && printf "${YELLOW}WARNING${NORMAL}: Too many instance of Agent processes running. Killing them, and purging the Agent lock database..."
     echo "${CF_PROCESS_RUNNING}" | awk 'BEGIN { OFS=" "} {print -$2 }' | xargs kill -9 || true
-    rudder agent stop
+    rudder agent stop ${OPT}
     clean_cf_lock_files
-    rudder agent start
-    echo " Done"
+    rudder agent start ${OPT}
+    [ "$QUIET" = false ] && echo " Done"
   fi
 }
 
 # Agent must have been updated recently
 check_and_fix_last_update() {
-  CHECK_INTERVAL=`expr ${RUN_INTERVAL} \* 2`
+  CHECK_INTERVAL=`expr ${AGENT_RUN_INTERVAL} \* 2`
 
   # Check for the age of the last update file
   # if it is older than twice CHECK_INTERVAL minutes, and the disable file is not defined, we
@@ -159,9 +173,9 @@ check_and_fix_last_update() {
     # In both case, do nothing
     :
   elif test `find ${LAST_UPDATE_FILE} -mmin +${CHECK_INTERVAL}`; then
-    printf "WARNING: The file ${LAST_UPDATE_FILE} is older than twice ${CHECK_INTERVAL} minutes, the agent is probably stuck. Purging the CFEngine lock database..."
+    [ "$QUIET" = false ] && printf "${YELLOW}WARNING${NORMAL}: The file ${LAST_UPDATE_FILE} is older than twice ${CHECK_INTERVAL} minutes, the agent is probably stuck. Purging the CFEngine lock database..."
     clean_cf_lock_files
-    echo " Done";
+    [ "$QUIET" = false ] && echo " Done";
   fi
 }
 
@@ -176,9 +190,9 @@ check_and_fix_cf_lock() {
     fi
 
     if [ "${CF_LOCK_SIZE}" -ge "${MAX_CF_LOCK_SIZE}" ]; then
-      printf "WARNING: The file ${CFE_DIR}/state/cf_lock.lmdb is too big (${CF_LOCK_SIZE} bytes), purging it..."
+      [ "$QUIET" = false ] && printf "${YELLOW}WARNING${NORMAL}: The file ${CFE_DIR}/state/cf_lock.lmdb is too big (${CF_LOCK_SIZE} bytes), purging it..."
       clean_cf_lock_files
-      echo " Done"
+      [ "$QUIET" = false ] && echo " Done"
     fi
   fi
 }
@@ -195,21 +209,21 @@ check_and_fix_rudder_uuid() {
       LATEST_BACKUPED_UUID=`ls -1 ${BACKUP_DIR}uuid-*.hive | sort | tail -n1` || true
     fi
     if [ "${LATEST_BACKUPED_UUID}" != "" ]; then
-      printf "WARNING: The UUID of the node does not exist. The lastest backup (${LATEST_BACKUPED_UUID}) will be recovered..."
+      [ "$QUIET" = false ] && printf "INFO: The UUID of the node does not exist. The lastest backup (${LATEST_BACKUPED_UUID}) will be recovered..."
       ${CP_A} ${LATEST_BACKUPED_UUID} ${UUID_FILE} >/dev/null
-      echo " Done"
+      [ "$QUIET" = false ] && echo " Done"
     else
-      printf "WARNING: The UUID of the node does not exist and no backup exist. A new one will be generated..."
+      [ "$QUIET" = false ] && printf "INFO: The UUID of the node does not exist and no backup exist. A new one will be generated..."
       /opt/rudder/bin/rudder-uuidgen > ${UUID_FILE}
-      echo " Done"
+      [ "$QUIET" = false ] && echo " Done"
     fi
   else
     # UUID is valid only if it has been generetaed by uuidgen or if it is set to 'root' for policy server
     REGEX=`x="[a-f0-9][a-f0-9][a-f0-9][a-f0-9]" && echo "$x$x-$x-$x-$x-$x$x$x"`
-    CHECK_UUID=`cat /opt/rudder/etc/uuid.hive | egrep "^$REGEX|^root" | wc -l`
+    CHECK_UUID=`egrep "^$REGEX|^root" ${UUID_FILE} | wc -l`
     # If the UUID is not valid, regenerate it
     if [ ${CHECK_UUID} -ne 1 ]; then
-      printf "INFO: Creating a new UUID for Rudder as the existing one is invalid..."
+      [ "$QUIET" = false ] && printf "${YELLOW}WARNING${NORMAL}: Creating a new UUID for Rudder as the existing one is invalid..."
       # Keep a backup of UUID even if it is not valid
       mkdir -p "${BACKUP_DIR}"
       cp -f /opt/rudder/etc/uuid.hive ${BACKUP_DIR}/uuid-`date +%Y%m%d`.hive
@@ -221,20 +235,34 @@ check_and_fix_rudder_uuid() {
 }
 
 # Important CFEngine input files must exist and pass cf-promises test
+# This can run rudder agent update if necessary which will bootstrap then rerun to update ncf
 check_and_fix_inputs() {
   # if file is absent or empty there have been a problem with update
-  if [ -s "${CFE_DIR}/inputs/common/1.0/update.cf" ] || [ -s "${CFE_DIR}/inputs/failsafe.cf" ] || [ -s "${CFE_DIR}/inputs/promises.cf" ] || ! ${CFE_DIR}/bin/cf-promises -f failsafe.cf > /dev/null || ! ${CFE_DIR}/bin/cf-promises > /dev/null
+  if [ ! -s "${CFE_DIR}/inputs/common/1.0/update.cf" ] || [ ! -s "${CFE_DIR}/inputs/failsafe.cf" ] || [ ! -s "${CFE_DIR}/inputs/promises.cf" ]
   then
-    printf "ERROR: There was an error during promises update. Reseting to initial promises and updating..."
-    rm -rf ${CFE_DIR}/inputs/*
-    if [ -d "/opt/rudder/share/initial-promises" ] # rudder package has been properly installed
-    then
-      rudder agent reset
-    fi
-    echo " Done"
+    [ "$QUIET" = false ] && printf "INFO: Policies absent, restoring initial version, and updating ..."
+    rudder agent reset ${OPT}
+    [ "$QUIET" = false ] && echo " Done"
   fi
+  if ! ${CFE_DIR}/bin/cf-promises -f failsafe.cf > /dev/null || ! ${CFE_DIR}/bin/cf-promises > /dev/null
+  then
+    [ "$QUIET" = false ] && printf "${YELLOW}WARNING${NORMAL}: Policies invalid, reseting to initial promises and updating..."
+    rudder agent reset ${OPT}
+    [ "$QUIET" = false ] && echo " Done"
+  fi
+}
 
-
+# Inventory must have been sent less than 3 days ago
+check_and_fix_inventory() {
+  # age in hours
+  inventory_age=$(perl -e '(@i) = stat($ARGV[0]); printf "mtime=%ld\n", (time-$i[9])/3600' /var/rudder/tmp/inventory_sent)
+  # 72 hours = 3 days
+  if [ "${inventory_age}" -gt 72 ]
+  then
+    [ "$QUIET" = false ] && printf "INFO: Inventory older than 3 days, resending ..."
+    rudder agent inventory ${OPT}
+    [ "$QUIET" = false ] && echo " Done"
+  fi
 }
 
 # function used below to test if a directory has space
@@ -251,7 +279,7 @@ check_space() {
 }
 
 # There must be enough space for rudder components to run
-check_varspace() {
+check_varspace_or_exit() {
   # check max space available for databases and stop Rudder if there is a risk
   if [ -f ${RUDDER_SERVER_ROLES}/rudder-ldap ]; then
     check_space /var/rudder/ldap/ 98
@@ -268,7 +296,7 @@ check_varspace() {
   fi
 
   if [ "${stop_now}" = 1 ]; then
-    rudder agent disable -s
+    rudder agent disable -s ${OPT}
 
     if [ "${RUDDER_SYSLOG_PROTOCOL}" = 1 ]; then
       # If syslog is using TCP, we cannot stop postgresql otherwise all infra can go down - but we can stop rudder-jetty and disable rudder agent
@@ -295,7 +323,7 @@ check_varspace() {
           POSTGRESQL_SERVICE_NAME=$(chkconfig 2>/dev/null | awk '{ print $1 }' | grep "postgresql" | tail -n 1)
         fi
         
-        # If nothin try default name (should not happen)
+        # If nothing try default name (should not happen)
         if [ -z "${POSTGRESQL_SERVICE_NAME}" ]; then
           POSTGRESQL_SERVICE_NAME="postgresql"
         fi
@@ -304,7 +332,7 @@ check_varspace() {
         echo "FATAL: PostgreSQL has been shut down to prevent data corruption" | logger -s
       fi
     fi
-    [ "$QUIET" = false ] && printf "${GREEN}ok${NORMAL}: Rudder couldn't find enough space to run and stopped services. Please free up space!\n"
+    [ "$QUIET" = false ] && printf "${RED}ERROR${NORMAL}: Rudder couldn't find enough space to run and stopped services. Please free up space!\n"
     exit 1
   fi
 }
@@ -314,30 +342,27 @@ check_varspace() {
 #### TEST start here ####
 #########################
 
-if [ "${ONLY_UUID}" = true ]
-then
-  check_and_fix_rudder_uuid
-  # Since we are in set -e there was no error here
-  [ "$QUIET" = false ] && printf "${GREEN}ok${NORMAL}: Rudder agent check enforced the uuid without errors.\n"
-  exit 0
-fi
-
-# Check for free space and stop if there is not enough
-check_varspace
 # Agent must have an UUID
 check_and_fix_rudder_uuid
-
-LAST_UPDATE_FILE="${CFE_DIR}/last_successful_inputs_update"
-# Agent must have public and private keys
-check_and_fix_cfengine_keys
-# There must be exactly one cf-execd process and not too many agente
-check_and_fix_cfengine_processes
-# Agent must have been updated recently
-check_and_fix_last_update
-# Lock file must too big
-check_and_fix_cf_lock
-# Important CFEngine input files must exist and pass cf-promises test
-check_and_fix_inputs
+if [ "${ONLY_UUID}" != true ]
+then
+  # Agent must have public and private keys
+  check_and_fix_cfengine_keys
+  # Policy server must be declared or next checks are useless
+  check_policy_server_or_exit
+  # Check for free space and stop if there is not enough
+  check_varspace_or_exit
+  # There must be exactly one cf-execd process and not too many agente
+  check_and_fix_cfengine_processes
+  # Agent must have been updated recently
+  check_and_fix_last_update
+  # Lock file must too big
+  check_and_fix_cf_lock
+  # Important CFEngine input files must exist and pass cf-promises test
+  check_and_fix_inputs
+  # Inventory must have been sent recently
+  check_and_fix_inventory
+fi
 
 [ "$QUIET" = false ] && printf "FINISH: Rudder agent check ran properly, please look at messages above to see if there has been any error.\n"
 

@@ -22,9 +22,6 @@ while getopts "v" opt; do
   esac
 done
 
-UUID=$(cat /opt/rudder/etc/uuid.hive 2>/dev/null)
-[ $? -ne 0 ] && UUID="Not yet configured"
-
 HASH=$(openssl dgst -sha1 /var/rudder/cfengine-community/ppkeys/localhost.pub 2>/dev/null)
 [ $? -ne 0 ] && HASH="Not yet configured"
 HASH=$(echo "${HASH}" | sed -e 's/.*= //')
@@ -73,10 +70,7 @@ if [ -n "${RUDDER_REPORT_MODE}" ]
 then
   echo "Report mode: ${RUDDER_REPORT_MODE}"
 fi
-if [ -n "${AGENT_RUN_INTERVAL}" ]
-then
-  echo "Run interval: ${AGENT_RUN_INTERVAL} min"
-fi
+echo "Run interval: ${AGENT_RUN_INTERVAL} min"
 echo "Agent is ${ENABLED}"
 if [ -n "${RUDDER_NODE_CONFIG_ID}" ]
 then

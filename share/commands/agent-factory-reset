@@ -35,6 +35,8 @@
 VERBOSE=false
 QUIET=false
 FORCE=0
+OPTS=""
+
 
 while getopts "iIvdqcTf" opt; do
   case $opt in
@@ -45,9 +47,11 @@ while getopts "iIvdqcTf" opt; do
     q)
       VERBOSE=false
       QUIET=true
+      OPTS="${OPTS} -q"
       ;;
     c)
       clear_colors
+      OPTS="${OPTS} -c"
       ;;
     T)
       TIMING=1
@@ -58,7 +62,7 @@ while getopts "iIvdqcTf" opt; do
   esac
 done
 
-if [ "$(cat /opt/rudder/etc/uuid.hive 2>/dev/null)" = "root" ]
+if [ "${UUID}" = "root" ]
 then
   echo "Reinitializing the root server breaks the agents. ABORTING!" >&2
   exit 1
@@ -80,30 +84,18 @@ cp -f /opt/rudder/etc/uuid.hive /var/backups/rudder/uuid-$(date +%Y%m%d).hive 2>
 cp -f /var/rudder/cfengine-community/policy_server.dat /var/backups/rudder/policy_server.dat-$(date +%Y%m%d) 2>/dev/null
 cp -af /var/rudder/cfengine-community/ppkeys/ /var/backups/rudder/ppkeys-$(date +%Y%m%d) 2>/dev/null
 
-# - replace ppkeys
+# - remove ppkeys (check will recreate them)
 [ "$VERBOSE" = true ] && echo "Removing the agent keys..."
 rm -f /var/rudder/cfengine-community/ppkeys/localhost*
-[ "$VERBOSE" = true ] && echo "Generating a new key pair..."
-/var/rudder/cfengine-community/bin/cf-key -T 4096
 
-# - generate a new uuid
-[ "$VERBOSE" = true ] && echo "Generating a new uuid..."
-if [ -x /opt/rudder/bin/uuidgen ]
-then
-  /opt/rudder/bin/uuidgen > /opt/rudder/etc/uuid.hive
-else
-  uuidgen > /opt/rudder/etc/uuid.hive
-fi
+# - remove uuid (check will recreate it)
+[ "$VERBOSE" = true ] && echo "Removing UUID..."
+rm -f /opt/rudder/etc/uuid.hive
 
 # - remove old inventory
 [ "$VERBOSE" = true ] && echo "Removing old inventory..."
 rm -rf /opt/rudder/var/fusioninventory/*
 rm -rf /var/rudder/tmp/inventory/*
 
-# - reset cfengine status
-${RUDDER_BIN} agent reset
-
-[ "$VERBOSE" = true ] && echo "Triggering an inventory..."
-
-# - resend inventory
-${RUDDER_BIN} agent inventory "$@"
+# - check and repair everything missing (keys, uuid, reset, update, inventorry ...)
+${RUDDER_BIN} agent check -f ${OPTS}

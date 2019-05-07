@@ -17,9 +17,6 @@ MULTIHOST=0
 # Timing information
 TIMING=0
 
-UUID=$(cat /opt/rudder/etc/uuid.hive 2>/dev/null)
-[ $? -ne 0 ] && UUID="Not yet configured"
-
 VERSION=`${RUDDER_BIN} agent version`
 # Some awk version crash miserably when fflush is not defined
 # Since there is no way to detect it within awk, detect it here and pass it a parameter

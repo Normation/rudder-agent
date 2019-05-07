@@ -105,7 +105,6 @@ need_jq() {
 }
 
 # get a single entry from rudder.json
-RUDDER_JSON="${RUDDER_VAR}/cfengine-community/inputs/rudder.json"
 rudder_json_value() {
   grep "$1" "${RUDDER_JSON}" | sed 's/.*"'$1'":"\(.*\)",.*/\1/'
 }
@@ -142,7 +141,7 @@ INFO_CLASS="-D info"
 BOOTSTRAP_PORT=5309
 
 # Information extracted from the policies
-PROMISES_CF="${RUDDER_VAR}/cfengine-community/inputs/promises.cf"
+RUDDER_JSON="${RUDDER_VAR}/cfengine-community/inputs/rudder.json"
 
 if [ -f "${RUDDER_JSON}" ]; then
   RUDDER_REPORT_MODE=$(rudder_json_value 'RUDDER_REPORT_MODE')
@@ -150,6 +149,12 @@ if [ -f "${RUDDER_JSON}" ]; then
   RUDDER_NODE_CONFIG_ID=$(rudder_json_value 'RUDDER_NODE_CONFIG_ID')
   RUDDER_SYSLOG_PROTOCOL=$(rudder_json_value 'RUDDER_SYSLOG_PROTOCOL')
 fi
+# run interval default value
+[ "${AGENT_RUN_INTERVAL}" = "" ] && AGENT_RUN_INTERVAL=5
+
+# Rudder uuid
+UUID=$(cat /opt/rudder/etc/uuid.hive 2>/dev/null)
+[ $? -ne 0 ] && UUID="Not yet configured"
 
 if [ "${RUDDER_REPORT_MODE}" = "changes-only" ] || [ "${RUDDER_REPORT_MODE}" = "reports-disabled" ]
 then

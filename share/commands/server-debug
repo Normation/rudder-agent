@@ -8,8 +8,6 @@
 # @man +
 # @man *Arguments*:
 # @man +
-# @man *-e*: debug the cfengine enterprise server
-# @man +
 # @man *-i*: run a debug server for the given node
 # @man +
 # @man *node*: IP or hostname of the host you want to debug
@@ -18,7 +16,6 @@
 
 DEBUG_PORT=5310
 SERVER_PORT=5309
-DAEMON=/var/rudder/cfengine-community/bin/cf-serverd
 
 set -e
 
@@ -43,10 +40,6 @@ while getopts ":ei:" opt; do
     i)
       NODE="${OPTARG}"
       ;;
-    e)
-      SERVER_PORT=5308
-      DAEMON=/var/cfengine/bin/cf-serverd
-      ;;
   esac
 done
 
@@ -60,7 +53,7 @@ STEP="Creating redirect iptables rule"
 iptables -t nat -I PREROUTING -p tcp -s ${NODE} --dport ${SERVER_PORT} -j DNAT --to-destination :${DEBUG_PORT}
 
 STEP="Running debug server"
-${DAEMON} -v --no-fork -D debug_port
+${RUDDER_VAR/cfengine-community/bin/cf-serverd} -v --no-fork -D debug_port
 
 STEP="Removing iptables rule"
 iptables -t nat -D PREROUTING -p tcp -s ${NODE} --dport ${SERVER_PORT} -j DNAT --to-destination :${DEBUG_PORT}

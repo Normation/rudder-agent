@@ -19,20 +19,34 @@
 
 . "${BASEDIR}/../lib/common.sh"
 
+VERBOSITY=""
 VERBOSE=false
 QUIET=false
 
 while getopts "iIvdqc" opt; do
   case $opt in
-    i|I|v|d)
+    i|I)
+      VERBOSITY="-I ${INFO_CLASS}"
+      VERBOSE=true
+      QUIET=false
+      ;;
+    v)
+      VERBOSITY="-v ${VERBOSE_CLASS}"
+      VERBOSE=true
+      QUIET=false
+      ;;
+    d)
+      VERBOSITY="-d ${DEBUG_CLASS}"
       VERBOSE=true
       QUIET=false
       ;;
     q)
+      VERBOSITY=""
       VERBOSE=false
       QUIET=true
       ;;
     c)
+      COLOR=""
       clear_colors
       ;;
   esac
@@ -41,15 +55,14 @@ done
 # Try to remove everything that can block
 # - restore initial promises
 [ "$VERBOSE" = true ] && echo "Restoring initial promises..."
-if [ $(cat /opt/rudder/etc/uuid.hive 2>/dev/null) != "root" ]
+if [ "${UUID}" != "root" ]
 then
   rm -rf /var/rudder/cfengine-community/inputs/*
 fi
 
-# - restore initial ncf
+# - remove ncf
 rm -rf /var/rudder/ncf/common/*
 rm -rf /var/rudder/ncf/local/*
-
 
 # - remove state
 [ "$VERBOSE" = true ] && echo "Resetting internal agent state..."
@@ -60,14 +73,24 @@ rm -f /var/rudder/cfengine-community/*.lmdb
 [ "$VERBOSE" = true ] && echo "Removing all agent locks..."
 rm -f /var/rudder/cfengine-community/*lock
 
-# - trigger ncf and tools update on next agent run
-[ "$VERBOSE" = true ] && echo "Trigger a policy and tools update..."
-rm -f /var/rudder/tools/rudder_tools_updated{,.tmp}
-rm -f /var/rudder/ncf/{common,local}/ncf_hash_file
-
 # - remove the disable status
 [ "$VERBOSE" = true ] && echo "Enabling the agent if needed..."
 rm -f /opt/rudder/etc/disable-agent
+
+# - bootstrap cfengine
+if [ -f "${RUDDER_VAR}/cfengine-community/policy_server.dat" ]
+then
+  SERVER=$(cat "${RUDDER_VAR}/cfengine-community/policy_server.dat")
+  # boostrap
+  "${RUDDER_VAR}/cfengine-community/bin/cf-agent" ${VERBOSITY} ${COLOR} --bootstrap "${SERVER}:${BOOTSTRAP_PORT}"
+  # remove port in policy_server.dat added by --bootstrap
+  sed -i 's/:[0-9]*//' "${RUDDER_VAR}/cfengine-community/policy_server.dat"
+  # now we must update ncf to make sure next update works properly
+  "${RUDDER_VAR}/cfengine-community/bin/cf-agent" ${VERBOSITY} ${COLOR} -D ncf_only -K -f failsafe.cf
+else
+  [ "${QUIET}" = false ] && echo "No policy server file, cannot update"
+  exit 1
+fi
 
 # - update to make sure we have at least the initial promises
 [ "$VERBOSE" = true ] && echo "Getting initial promises..."

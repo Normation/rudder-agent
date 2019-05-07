@@ -11,11 +11,8 @@
 . "${BASEDIR}/../lib/common.sh"
 
 CFE_DIR=/var/rudder/cfengine-community
-ENTERPRISE_CFE_DIR=/var/cfengine
 CFE_DISABLE_FILE=/opt/rudder/etc/disable-agent
-UUID_FILE=/opt/rudder/etc/uuid.hive
 
-[ -e "${ENTERPRISE_CFE_DIR}/bin/cf-agent" ] && CFE_DIR="${ENTERPRISE_CFE_DIR}"
 NRPE=
 
 while getopts "n" opt; do
