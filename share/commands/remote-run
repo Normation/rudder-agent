@@ -51,7 +51,7 @@ LOOP="xargs -I{}"
 MULTIHOST=1
 TIMEOUT="-t 300"
 
-while getopts "iIvdqwrRmcTb:D:j:g:at:u:C:" opt; do
+while getopts "iIvdqwrRmcTD:j:g:at:u:C:" opt; do
   case $opt in
     i|I)
       VERBOSITY="-I ${INFO_CLASS}"
