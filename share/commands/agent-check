@@ -84,20 +84,23 @@ clean_cf_lock_files() {
   rm -f ${CFE_DIR}/state/cf_lock.lmdb.lock
 }
 
-# Restore file from backup if it doesn't exist
+# Restore file from backup if it doesn't exist, return an error if there is no backup
 exist_or_restore() {
-  file="$1"
-  if [ ! -f "${file}" ] && [ -d "${BACKUP_DIR}" ]; then
-    last_backup=$(ls -1 ${BACKUP_DIR}${file}* | sort | tail -n1 || true)
-    if [ "${last_backup}" != "" ]; then
-      [ "$QUIET" = false ] && printf "INFO: The file '${file}' does not exist. The lastest backup '${last_backup}' will be recovered..."
-      ${CP_A} "${last_backup}" "${file}" >/dev/null
-      [ "$QUIET" = false ] && echo " Done"
+  file_path="$1"
+  file_name=$(basename ${file_path})
+  if [ ! -f "${file_path}" ] || [ ! -s "${file_path}" ]; then
+    if [ -d "${BACKUP_DIR}" ]; then
+      last_backup=$(ls -1 ${BACKUP_DIR}${file_name}-* | sort | tail -n1 || true)
+      if [ "${last_backup}" != "" ]; then
+        [ "$QUIET" = false ] && printf "INFO: The file '${file_path}' does not exist. The lastest backup '${last_backup}' will be recovered..."
+        ${CP_A} "${last_backup}" "${file_path}" >/dev/null
+        [ "$QUIET" = false ] && echo " Done"
+      else
+        return 1
+      fi
     else
       return 1
     fi
-  else
-    return 1
   fi
 }
 
@@ -128,7 +131,7 @@ check_and_fix_cfengine_keys() {
 
 # There must be a policy server otherwise we can't do anything
 check_policy_server_or_exit() {
-  if [ ! -s ${CFE_DIR}/policy_server.dat ]
+  if ! exist_or_restore ${CFE_DIR}/policy_server.dat
   then
     echo "********************************************************************************"
     echo "rudder-agent has been installed (not started). This host can be a Rudder node."

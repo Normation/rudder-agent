@@ -80,7 +80,7 @@ fi
 # Backup essential files
 [ "$VERBOSE" = true ] && echo "Making a backup copy of essential files into /var/backups/rudder"
 mkdir -p /var/backups/rudder
-cp -f /opt/rudder/etc/uuid.hive /var/backups/rudder/uuid-$(date +%Y%m%d).hive 2>/dev/null
+cp -f /opt/rudder/etc/uuid.hive /var/backups/rudder/uuid.hive-$(date +%Y%m%d) 2>/dev/null
 cp -f /var/rudder/cfengine-community/policy_server.dat /var/backups/rudder/policy_server.dat-$(date +%Y%m%d) 2>/dev/null
 cp -af /var/rudder/cfengine-community/ppkeys/ /var/backups/rudder/ppkeys-$(date +%Y%m%d) 2>/dev/null
 cp -f /opt/rudder/etc/ssl/agent.cert /var/backups/rudder/agent.cert-$(date +%Y%m%d) 2>/dev/null
