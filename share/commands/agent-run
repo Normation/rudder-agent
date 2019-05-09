@@ -27,6 +27,8 @@
 # @man +
 # @man *-R*: run the agent in completely unparsed mode, with no return code of 1 in case of error. A little faster.
 # @man +
+# @man *-N*: do not write log in outputs dir (used when called internally)
+# @man +
 # @man *-b*: run the agent on a specific bundle, this is a debug command that should generally not be used
 # @man +
 # @man *-D*: define a class for this run
@@ -35,6 +37,9 @@
 
 . "${BASEDIR}/../lib/common.sh"
 . "${BASEDIR}/../lib/cfengine_parsing.sh"
+. "${BASEDIR}/../lib/report.sh"
+
+REPORTING_PROTOCOL=$(rudder_json_value 'REPORTING_PROTOCOL')
 
 UPDATE=false
 UPDATE_OPTIONS=""
@@ -43,14 +48,20 @@ CLASSES=""
 # Ignore disable-agent flag
 FORCE=0
 PARTIAL_RUN=0
+OUTPUT_LOG="true"
 
-while getopts "uiIvdqgwrRmcTb:D:f" opt; do
+# By default, not to mess log file
+COLOR="-Cnever"
+
+# When debugging, reports will be huge, skip HTTP reporting
+DO_HTTP="true"
+
+while getopts "uiIvdqgwrRNcTb:D:f" opt; do
   case $opt in
     u)
       UPDATE=true
       ;;
     i|I)
-      VERBOSITY="-I ${INFO_CLASS}"
       DISPLAY_INFO=1
       QUIET=0
       UPDATE_OPTIONS="${UPDATE_OPTIONS} -i"
@@ -60,15 +71,18 @@ while getopts "uiIvdqgwrRmcTb:D:f" opt; do
       DISPLAY_INFO=1
       QUIET=0
       UPDATE_OPTIONS="${UPDATE_OPTIONS} -v"
+      COLOR="-Calways"
+      DO_HTTP="false"
       ;;
     d)
       VERBOSITY="-d ${DEBUG_CLASS}"
       DISPLAY_INFO=1
       QUIET=0
       UPDATE_OPTIONS="${UPDATE_OPTIONS} -d"
+      COLOR="-Calways"
+      DO_HTTP="false"
       ;;
     q)
-      VERBOSITY=""
       DISPLAY_INFO=0
       QUIET=1
       UPDATE_OPTIONS="${UPDATE_OPTIONS} -d"
@@ -94,8 +108,8 @@ while getopts "uiIvdqgwrRmcTb:D:f" opt; do
     R)
       PRETTY="cat"
       ;;
-    m)
-      MULTILINE=1
+    N)
+      OUTPUT_LOG="false"
       ;;
     b)
       BUNDLE="-b ${OPTARG}"
@@ -135,14 +149,42 @@ if [ "${UPDATE}" = "true" ]; then
   code1=$?
 fi
 
-# keep same name structure as cf-execd
-logfile=$(echo "cf_$(get_hostname)__$(date +%s)_$(LANG=C date +"%a %b %e %H %M %S %Y")_0" | sed 's/[^a-zA-Z0-9]/_/g')
-logdir=/var/rudder/cfengine-community/outputs
-touch ${logdir}/${logfile}
-chmod 600 ${logdir}/${logfile}
-"${RUDDER_VAR}/cfengine-community/bin/cf-agent" ${VERBOSITY} ${COLOR} -K ${BUNDLE} ${CLASS} | tee ${logdir}/${logfile} | eval ${PRETTY}
-ln -sf ${logdir}/${logfile} ${logdir}/previous
-# merge exit codes (this is the eval exit code ... POSIX ...)
+# If not launched from cf-execd, we need to take care of logging in outputs
+if [ "${OUTPUT_LOG}" = "true" ]; then
+  # keep same name structure as cf-execd
+  logfile=$(echo "cf_$(get_hostname)__$(date +%s)_$(LANG=C date +"%a %b %e %H %M %S %Y")_0" | sed 's/[^a-zA-Z0-9]/_/g')
+  logdir=/var/rudder/cfengine-community/outputs
+  touch "${logdir}/${logfile}"
+  chmod 600 "${logdir}/${logfile}"
+  log_outputs="tee ${logdir}/${logfile}"
+else
+  log_outputs="cat"
+fi
+
+# If reporting in HTTP, we need to take care of timestamped logging
+if [ "${REPORTING_PROTOCOL}" = "HTTPS" ] && [ "${DO_HTTP}" = "true" ]; then
+  timestamp="${BASEDIR}/../lib/timestamp"
+  report_file_name=$(/bin/date -u "+%Y-%m-%dT%T+00:00")@${UUID}.log
+  report_file="${TMP_REPORTS_DIR}/${report_file_name}"
+  touch "${report_file}"
+  chmod 600 "${report_file}"
+  runlog_output="tee ${report_file}"
+else
+  timestamp="cat"
+  runlog_output="cat"
+fi
+
+"${RUDDER_VAR}/cfengine-community/bin/cf-agent" ${VERBOSITY} ${COLOR} -K ${BUNDLE} ${CLASS} | $log_outputs | $timestamp | $runlog_output | eval ${PRETTY}
 code2=$?
+
+if [ "${OUTPUT_LOG}" = "true" ]; then
+  ln -sf ${logdir}/${logfile} ${logdir}/previous
+fi
+ 
+if [ "${REPORTING_PROTOCOL}" = "HTTPS" ] && [ "${DO_HTTP}" = "true" ]; then
+  compress_and_sign "${report_file_name}"
+fi
+
+# merge exit codes (this is the eval exit code ... POSIX ...)
 [ $code1 -ne 0 ] && exit $code1
 exit $code2

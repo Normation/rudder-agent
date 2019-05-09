@@ -28,7 +28,7 @@ UPDATE_OPTIONS=""
 BASE_PATH="/var/rudder/cfengine-community/outputs"
 LOGFILE="${BASE_PATH}/previous"
 
-while getopts "wrRmcl:n:d:" opt; do
+while getopts "wrRcl:n:d:" opt; do
   case $opt in
     w)
       FULL_STRINGS=1
@@ -43,9 +43,6 @@ while getopts "wrRmcl:n:d:" opt; do
       ;;
     R)
       PRETTY="cat"
-      ;;
-    m)
-      MULTILINE=1
       ;;
     l)
       LOGFILE="${OPTARG}"

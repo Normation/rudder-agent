@@ -51,10 +51,9 @@ LOOP="xargs -I{}"
 MULTIHOST=1
 TIMEOUT="-t 300"
 
-while getopts "iIvdqwrRmcTD:j:g:at:u:C:" opt; do
+while getopts "iIvdqwrRcTD:j:g:at:u:C:" opt; do
   case $opt in
     i|I)
-      VERBOSITY="-I ${INFO_CLASS}"
       DISPLAY_INFO=1
       QUIET=0
       ;;
@@ -69,7 +68,6 @@ while getopts "iIvdqwrRmcTD:j:g:at:u:C:" opt; do
       QUIET=0
       ;;
     q)
-      VERBOSITY=""
       DISPLAY_INFO=0
       QUIET=1
       ;;
@@ -88,9 +86,6 @@ while getopts "iIvdqwrRmcTD:j:g:at:u:C:" opt; do
       ;;
     R)
       PRETTY="cat"
-      ;;
-    m)
-      MULTILINE=1
       ;;
     D)
       CLASSES="${CLASSES},${OPTARG}"

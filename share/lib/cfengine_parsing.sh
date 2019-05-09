@@ -3,7 +3,8 @@ PRETTY_FILTER="${BASEDIR}/../lib/reports.awk"
 
 BUNDLE=""
 CLASS=""
-VERBOSITY=""
+# info as minimal verbosity level for complete reporting
+VERBOSITY="-I ${INFO_CLASS}"
 # Display logs between Rudder reports
 DISPLAY_INFO=0
 # Only display a summary at the end of the run, keep the logs unmodified

@@ -2,14 +2,8 @@
 API_URL="https://127.0.0.1/rudder"
 TECHNIQUES_DIRECTORY="${CONFIGURATION_DIRECTORY}/technique"
 
-if type curl >/dev/null 2>/dev/null
-then
-  DOWNLOAD_COMMAND="curl --silent --show-error --insecure --location --proxy '' --globoff"
-  HEADER_OPT="--header"
-else
-  DOWNLOAD_COMMAND="wget --quiet --no-check-certificate --no-proxy -O -"
-  HEADER_OPT="--header"
-fi
+DOWNLOAD_COMMAND="${RUDDER_CURL} --silent --show-error --insecure --location --proxy '' --globoff"
+HEADER_OPT="--header"
 
 # This functions tests if the API call returns "OK"
 simple_api_call() {
@@ -81,7 +75,7 @@ filtered_api_call() {
   action="$3"
   filter="$4"
   display_command="$5"
-  curl_command="${DOWNLOAD_COMMAND} -H \"X-API-Token: ${token}\" -X ${action} \"${url}\" ${filter}"
+  curl_command="${DOWNLOAD_COMMAND} --header \"X-API-Token: ${token}\" --request ${action} \"${url}\" ${filter}"
   if ${display_command};
   then
     printf "${WHITE}${curl_command}${NORMAL}\n\n" >&2

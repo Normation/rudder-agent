@@ -144,8 +144,8 @@ fi
 RUDDER_VAR="/var/rudder"
 
 # Standard classes for verbosity
-DEBUG_CLASS="-D trace,debug,info"
-VERBOSE_CLASS="-D debug,info"
+DEBUG_CLASS="-D trace"
+VERBOSE_CLASS="-D debug"
 INFO_CLASS="-D info"
 
 # Default port for bootstrap
