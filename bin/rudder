@@ -18,7 +18,9 @@ REL_PATH=`dirname "$0"`
 ABS_PATH=`cd "${REL_PATH}" && pwd`
 RUDDER_BIN="${ABS_PATH}/`basename $0`"
 export RUDDER_BIN
-PATH="$PATH:/sbin:/usr/sbin"
+# Prepend the path containing rudder binaries to use them if available
+# and append the sbin that sometimes is not there ...
+PATH="/opt/rudder/bin:$PATH:/sbin:/usr/sbin"
 export PATH
 role_list() {
   ls "${BASEDIR}" | sed 's/\([[:alpha:]_]*\)-.*/\1/' | uniq
