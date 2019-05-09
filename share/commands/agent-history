@@ -34,7 +34,7 @@ do
   then
     endtime=$(stat -c "%Y" "${file}")
   else
-    endtime=$(/opt/rudder/bin/perl -e'@a=stat $ARGV[0]; print $a[9]' "${file}")
+    endtime=$(perl -e'@a=stat $ARGV[0]; print $a[9]' "${file}")
   fi
   eval ${PRETTY} -v no_report=1 -v short_summary=1 -v endtime=${endtime} < "${file}"
 done

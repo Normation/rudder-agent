@@ -78,26 +78,51 @@ fi
 #### Test functions, skip to 'TEST' tag to read testing order ####
 ##################################################################
 
-# remofe cfengine lock files
+# remove cfengine lock files
 clean_cf_lock_files() {
   rm -f ${CFE_DIR}/state/cf_lock.lmdb
   rm -f ${CFE_DIR}/state/cf_lock.lmdb.lock
 }
 
+# Restore file from backup if it doesn't exist
+exist_or_restore() {
+  file="$1"
+  if [ ! -f "${file}" ] && [ -d "${BACKUP_DIR}" ]; then
+    last_backup=$(ls -1 ${BACKUP_DIR}${file}* | sort | tail -n1 || true)
+    if [ "${last_backup}" != "" ]; then
+      [ "$QUIET" = false ] && printf "INFO: The file '${file}' does not exist. The lastest backup '${last_backup}' will be recovered..."
+      ${CP_A} "${last_backup}" "${file}" >/dev/null
+      [ "$QUIET" = false ] && echo " Done"
+    else
+      return 1
+    fi
+  else
+    return 1
+  fi
+}
+
 # CFEngine keys must be present with a certificate and have proper access rights
 check_and_fix_cfengine_keys() {
   # Agent must have keys
-  if [ ! -f ${CFE_DIR}/ppkeys/localhost.pub ] || [ ! -f ${CFE_DIR}/ppkeys/localhost.priv ]
+  if ! exist_or_restore ${CFE_DIR}/ppkeys/localhost.pub || ! exist_or_restore ${CFE_DIR}/ppkeys/localhost.priv
   then
+    [ "$QUIET" = false ] && printf "INFO: Agent keys are missing, creating them ..."
     ${CFE_DIR}/bin/cf-key -T 4096
+    [ "$QUIET" = false ] && echo " Done"
   fi
-  # TODO agent must also have a certificate
   # CFEngine key directory must not be accessible by 'group' or 'other'
   if [ -d ${CFE_DIR}/ppkeys ]; then
     chmod 700 ${CFE_DIR}/ppkeys
     if [ `ls ${CFE_DIR}/ppkeys | wc -l` -gt 0 ]; then
       chmod 600 ${CFE_DIR}/ppkeys/*
     fi
+  fi
+  # Agent must have a certificate
+  if ! exist_or_restore /opt/rudder/etc/ssl/agent.cert
+  then
+    [ "$QUIET" = false ] && printf "INFO: Agent certificate is missing, creating it..."
+    openssl req -new -sha256 -key ${CFE_DIR}/ppkeys/localhost.priv -out /opt/rudder/etc/ssl/agent.cert -passin "pass:Cfengine passphrase" -x509 -days 3650 -extensions agent_cert -config /opt/rudder/etc/ssl/openssl-agent.cnf -subj "/UID=$(cat "${UUID_FILE}")"
+    [ "$QUIET" = false ] && echo " Done"
   fi
 }
 
@@ -204,34 +229,27 @@ check_and_fix_rudder_uuid() {
   LATEST_BACKUPED_UUID=""
   
   # Generate a UUID if we don't have one yet
-  if [ ! -f "${UUID_FILE}" ]; then
-    if [ -d "${BACKUP_DIR}" ]; then
-      LATEST_BACKUPED_UUID=`ls -1 ${BACKUP_DIR}uuid-*.hive | sort | tail -n1` || true
-    fi
-    if [ "${LATEST_BACKUPED_UUID}" != "" ]; then
-      [ "$QUIET" = false ] && printf "INFO: The UUID of the node does not exist. The lastest backup (${LATEST_BACKUPED_UUID}) will be recovered..."
-      ${CP_A} ${LATEST_BACKUPED_UUID} ${UUID_FILE} >/dev/null
-      [ "$QUIET" = false ] && echo " Done"
-    else
-      [ "$QUIET" = false ] && printf "INFO: The UUID of the node does not exist and no backup exist. A new one will be generated..."
-      /opt/rudder/bin/rudder-uuidgen > ${UUID_FILE}
-      [ "$QUIET" = false ] && echo " Done"
-    fi
-  else
-    # UUID is valid only if it has been generetaed by uuidgen or if it is set to 'root' for policy server
-    REGEX=`x="[a-f0-9][a-f0-9][a-f0-9][a-f0-9]" && echo "$x$x-$x-$x-$x-$x$x$x"`
-    CHECK_UUID=`egrep "^$REGEX|^root" ${UUID_FILE} | wc -l`
-    # If the UUID is not valid, regenerate it
-    if [ ${CHECK_UUID} -ne 1 ]; then
-      [ "$QUIET" = false ] && printf "${YELLOW}WARNING${NORMAL}: Creating a new UUID for Rudder as the existing one is invalid..."
-      # Keep a backup of UUID even if it is not valid
-      mkdir -p "${BACKUP_DIR}"
-      cp -f /opt/rudder/etc/uuid.hive ${BACKUP_DIR}/uuid-`date +%Y%m%d`.hive
-      # Generate a new one
-      /opt/rudder/bin/rudder-uuidgen > ${UUID_FILE}
-      echo " Done."
-    fi
+  if ! exist_or_restore "${UUID_FILE}"
+  then
+    [ "$QUIET" = false ] && printf "INFO: The UUID of the node does not exist and no backup exist. A new one will be generated..."
+    /opt/rudder/bin/rudder-uuidgen > ${UUID_FILE}
+    [ "$QUIET" = false ] && echo " Done"
   fi
+
+  # UUID is valid only if it has been generetaed by uuidgen or if it is set to 'root' for policy server
+  REGEX=`x="[a-f0-9][a-f0-9][a-f0-9][a-f0-9]" && echo "$x$x-$x-$x-$x-$x$x$x"`
+  CHECK_UUID=`egrep "^$REGEX|^root" ${UUID_FILE} | wc -l`
+  # If the UUID is not valid, regenerate it
+  if [ ${CHECK_UUID} -ne 1 ]; then
+    [ "$QUIET" = false ] && printf "${YELLOW}WARNING${NORMAL}: Creating a new UUID for Rudder as the existing one is invalid..."
+    # Keep a backup of UUID even if it is not valid
+    mkdir -p "${BACKUP_DIR}"
+    cp -f /opt/rudder/etc/uuid.hive ${BACKUP_DIR}/uuid-`date +%Y%m%d`.hive
+    # Generate a new one
+    /opt/rudder/bin/rudder-uuidgen > ${UUID_FILE}
+    echo " Done."
+  fi
+  
 }
 
 # Important CFEngine input files must exist and pass cf-promises test
