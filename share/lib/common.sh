@@ -104,6 +104,17 @@ need_jq() {
   fi
 }
 
+# stat -c %y compatible with aix
+modification_time() {
+  if type stat >/dev/null 2>/dev/null
+  then
+    stat -c "%y" "$1"
+  else
+    # be careful, there is a litteral tab below
+    LANG=C istat "$1" | sed -n '/Last modified/s/Last modified:[ 	]*//p'
+  fi
+}
+
 # Colors configuration (enable colors only if stdout is a terminal)
 if [ -t 1 ]; then
     COLOR="-Calways"
