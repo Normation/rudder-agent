@@ -29,10 +29,10 @@ HASH=$(echo "${HASH}" | sed -e 's/.*= //')
 POLICY=$(cat /var/rudder/cfengine-community/policy_server.dat 2>/dev/null)
 [ $? -ne 0 ] && POLICY="Not yet configured"
 
-POLICY_FETCHED=$(stat -c %y /var/rudder/cfengine-community/last_successful_inputs_update 2> /dev/null)
+POLICY_FETCHED=$(modification_time /var/rudder/cfengine-community/last_successful_inputs_update 2> /dev/null)
 [ $? -ne 0 ] && POLICY_FETCHED="Not yet updated" || POLICY_FETCHED=$(echo "${POLICY_FETCHED}" | cut -d'.' -f1)
 
-INVENTORY_SENT=$(stat -c %y /var/rudder/tmp/inventory_sent 2> /dev/null)
+INVENTORY_SENT=$(modification_time /var/rudder/tmp/inventory_sent 2> /dev/null)
 [ $? -ne 0 ] && INVENTORY_SENT="Not yet sent" || INVENTORY_SENT=$(echo "${INVENTORY_SENT}" | cut -d'.' -f1)
 
 ROLES=$(ls -m /opt/rudder/etc/server-roles.d/ 2>/dev/null)
@@ -53,12 +53,6 @@ then
   fi
 fi
 
-if [ -e /opt/rudder/etc/disable-agent ]; then
-  ENABLED="disabled"
-else
-  ENABLED="enabled"
-fi
-
 VERSION=`${RUDDER_BIN} agent version`
 
 echo "Hostname: $(get_hostname)"
@@ -71,7 +65,11 @@ then
   echo "Report mode: ${RUDDER_REPORT_MODE}"
 fi
 echo "Run interval: ${AGENT_RUN_INTERVAL} min"
-echo "Agent is ${ENABLED}"
+if [ -e /opt/rudder/etc/disable-agent ]; then
+  echo "Agent is disabled since $(modification_time /opt/rudder/etc/disable-agent)"
+else
+  echo "Agent is enabled"
+fi
 if [ -n "${RUDDER_NODE_CONFIG_ID}" ]
 then
   echo "Configuration id: ${RUDDER_NODE_CONFIG_ID}"
