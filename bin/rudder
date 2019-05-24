@@ -106,6 +106,12 @@ then
   exit 1
 fi
 
+# Single binary commands support
+if [ -x "${BASEDIR}/${role}" ]
+then
+  exec "${BASEDIR}/${role}" "$@"
+fi
+
 # second parameter is command parameter
 command=`echo "$1" | sed 's/[^[:alpha:]_-]*//g'`
 if [ "${command}" = "help" ] || [ "${command}" = "" ]
