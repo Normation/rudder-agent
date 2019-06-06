@@ -54,15 +54,14 @@ done
 
 # Try to remove everything that can block
 # - restore initial promises
-[ "$VERBOSE" = true ] && echo "Restoring initial promises..."
 if [ "${UUID}" != "root" ]
 then
+  [ "$VERBOSE" = true ] && echo "Restoring initial promises..."
   rm -rf /var/rudder/cfengine-community/inputs/*
+  # - remove ncf
+  rm -rf /var/rudder/ncf/common/*
+  rm -rf /var/rudder/ncf/local/*
 fi
-
-# - remove ncf
-rm -rf /var/rudder/ncf/common/*
-rm -rf /var/rudder/ncf/local/*
 
 # - remove state
 [ "$VERBOSE" = true ] && echo "Resetting internal agent state..."
