@@ -373,6 +373,8 @@ then
   check_policy_server_or_exit
   # Check for free space and stop if there is not enough
   check_varspace_or_exit
+  # Do not go further if the agent is disabled
+  [ -f "${CFE_DISABLE_FILE}" ] && exit 0
   # There must be exactly one cf-execd process and not too many agente
   check_and_fix_cfengine_processes
   # Agent must have been updated recently
