@@ -39,7 +39,13 @@
 . "${BASEDIR}/../lib/cfengine_parsing.sh"
 . "${BASEDIR}/../lib/report.sh"
 
-REPORTING_PROTOCOL=$(rudder_json_value 'REPORTING_PROTOCOL')
+bootstrap_check
+
+if [ -f "${RUDDER_JSON}" ]; then
+  REPORTING_PROTOCOL=$(rudder_json_value 'REPORTING_PROTOCOL')
+else
+  REPORTING_PROTOCOL="syslog"
+fi
 
 UPDATE=false
 UPDATE_OPTIONS=""

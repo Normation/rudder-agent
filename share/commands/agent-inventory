@@ -29,6 +29,8 @@
 
 . "${BASEDIR}/../lib/common.sh"
 
+bootstrap_check
+
 # Ignore disable-inventory flag
 FORCE=0
 OPTS=""

@@ -19,6 +19,8 @@
 
 . "${BASEDIR}/../lib/common.sh"
 
+bootstrap_check
+
 VERBOSITY=""
 FORCE=false
 QUIET=false

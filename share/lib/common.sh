@@ -120,6 +120,15 @@ modification_time() {
   fi
 }
 
+# Check that a bootstrap is necessary
+bootstrap_check() {
+  if [ "$(ls -A /var/rudder/cfengine-community/inputs)" = "" ]
+  then
+    cp /opt/rudder/share/bootstrap-promises/* /var/rudder/cfengine-community/inputs/
+    rudder agent update
+  fi
+}
+
 # Colors configuration (enable colors only if stdout is a terminal)
 if [ -t 1 ]; then
     COLOR="-Calways"
