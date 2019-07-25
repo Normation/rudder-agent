@@ -44,7 +44,7 @@ bootstrap_check
 if [ -f "${RUDDER_JSON}" ]; then
   REPORTING_PROTOCOL=$(rudder_json_value 'REPORTING_PROTOCOL')
 else
-  REPORTING_PROTOCOL="syslog"
+  REPORTING_PROTOCOL="SYSLOG"
 fi
 
 UPDATE=false
