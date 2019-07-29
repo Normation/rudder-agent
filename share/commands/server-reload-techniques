@@ -26,5 +26,5 @@ while getopts "iIvdc" opt; do
 done
 
 # Make call to jetty directly and bypass apache conf so we are sure we have no problem to call reload techniques API
-simple_api_call "http://localhost:8080/rudder/api/techniqueLibrary/reload" "reload techniques from files" "${DISPLAY_COMMAND}"
+simple_api_call "http://localhost:8080/rudder/api/techniqueLibrary/reload" "reload techniques from files" "${DISPLAY_COMMAND}" "OK" ""
 

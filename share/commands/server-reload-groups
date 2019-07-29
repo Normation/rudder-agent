@@ -25,5 +25,5 @@ while getopts "iIvdc" opt; do
   esac
 done
 
-simple_api_call "https://localhost/rudder/api/dyngroup/reload" "reload dynamic groups" "${DISPLAY_COMMAND}"
+simple_api_call "https://localhost/rudder/api/dyngroup/reload" "reload dynamic groups" "${DISPLAY_COMMAND}" "OK" ""
 

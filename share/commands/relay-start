@@ -1,0 +1,27 @@
+#!/bin/sh
+# @description start the relay service
+# @man Start the relay service using the appropriate service manager.
+# @man +
+# @man *Options*:
+# @man +
+# @man *-q*: run the agent in quiet mode (display only error messages)
+# @man +
+# @man *-c*: run the agent without color output
+
+. "${BASEDIR}/../lib/common.sh"
+
+QUIET=false
+
+while getopts "qc" opt; do
+  case $opt in
+    q)
+      QUIET=true
+      ;;
+    c)
+      clear_colors
+      ;;
+  esac
+done
+
+service_action "rudder-relayd" "start"
+exit $?

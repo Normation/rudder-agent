@@ -10,14 +10,16 @@ simple_api_call() {
   url="$1"
   action="$2"
   display_command="$3"
-  curl_command="${DOWNLOAD_COMMAND} \"${url}\""
+  expected="$4"
+  curl_opt="$5"
+  curl_command="${DOWNLOAD_COMMAND} ${curl_opt} \"${url}\""
   if ${display_command};
   then
     printf "${WHITE}${curl_command}${NORMAL}\n"
   fi
   result=`eval ${DOWNLOAD_COMMAND} \"${url}\"`
   code=$?
-  if [ ${code} -eq 0 ] && [ "${result}" = "OK" ]
+  if [ ${code} -eq 0 ] && [ "${result}" = "${expected}" ]
   then
     printf "${GREEN}ok${NORMAL}: ${action}.\n"
   else
