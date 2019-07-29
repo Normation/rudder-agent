@@ -276,7 +276,7 @@ check_and_fix_inputs() {
 # Inventory must have been sent less than 3 days ago
 check_and_fix_inventory() {
   # age in hours
-  inventory_age=$(perl -e '(@i) = stat($ARGV[0]); printf "mtime=%ld\n", (time-$i[9])/3600' /var/rudder/tmp/inventory_sent)
+  inventory_age=$(perl -e '(@i) = stat($ARGV[0]); printf "%ld\n", (time-$i[9])/3600' /var/rudder/tmp/inventory_sent)
   # 72 hours = 3 days
   if [ "${inventory_age}" -gt 72 ]
   then
