@@ -104,6 +104,12 @@ exist_or_restore() {
   fi
 }
 
+# Compare agent certificate UID and agent UUID (return shell boolean)
+compare_uuid() {
+  UUID=$(cat "${UUID_FILE}")
+  SUBJECT=$(openssl x509 -in /opt/rudder/etc/ssl/agent.cert -noout -subject | sed 's/.*UID = \([^,]*\)\(,.*\)\?/\1/')
+  [ "${UUID}" = "${SUBJECT}" ]
+}
 # CFEngine keys must be present with a certificate and have proper access rights
 check_and_fix_cfengine_keys() {
   # Agent must have keys
@@ -120,13 +126,14 @@ check_and_fix_cfengine_keys() {
       chmod 600 ${CFE_DIR}/ppkeys/*
     fi
   fi
-  # Agent must have a certificate
-  if ! exist_or_restore /opt/rudder/etc/ssl/agent.cert
+  # Agent must have a certificate with a subject that match agent uuid
+  if ! exist_or_restore /opt/rudder/etc/ssl/agent.cert || ! compare_uuid
   then
     [ "$QUIET" = false ] && printf "INFO: Agent certificate is missing, creating it..."
     openssl req -new -sha256 -key ${CFE_DIR}/ppkeys/localhost.priv -out /opt/rudder/etc/ssl/agent.cert -passin "pass:Cfengine passphrase" -x509 -days 3650 -extensions agent_cert -config /opt/rudder/etc/ssl/openssl-agent.cnf -subj "/UID=$(cat "${UUID_FILE}")"
     [ "$QUIET" = false ] && echo " Done"
   fi
+  # Agent certificate UID must match agent UUID
 }
 
 # There must be a policy server otherwise we can't do anything
