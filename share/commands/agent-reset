@@ -83,15 +83,16 @@ then
   then
     # the update should do the rest
     cp /opt/rudder/share/bootstrap-promises/* /var/rudder/cfengine-community/inputs/
+
+    # - update to make sure we have at least the initial promises
+    [ "$VERBOSE" = true ] && echo "Getting initial promises..."
+    # $@ to pass options through
+    rudder agent update "$@"
   fi
 else
   [ "${QUIET}" = false ] && echo "No policy server file, cannot update"
   exit 1
 fi
 
-# - update to make sure we have at least the initial promises
-[ "$VERBOSE" = true ] && echo "Getting initial promises..."
-# $@ to pass options through
-rudder agent update "$@"
 
 [ "$QUIET" = false ] && printf "${GREEN}ok${NORMAL}: Rudder agent state has been reset.\n"
