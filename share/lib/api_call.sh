@@ -17,7 +17,7 @@ simple_api_call() {
   then
     printf "${WHITE}${curl_command}${NORMAL}\n"
   fi
-  result=`eval ${DOWNLOAD_COMMAND} \"${url}\"`
+  result=`eval ${curl_command}`
   code=$?
   if [ ${code} -eq 0 ] && [ "${result}" = "${expected}" ]
   then
