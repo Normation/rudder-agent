@@ -23,5 +23,6 @@ while getopts "qc" opt; do
   esac
 done
 
+if [ -s /var/rudder/lib/ssl/allnodescerts.pem ]; then chgrp rudder /var/rudder/lib/ssl/allnodescerts.pem; fi
 service_action "rudder-relayd" "start"
 exit $?

@@ -7,6 +7,9 @@
 # @man *-q*: run the agent in quiet mode (display only error messages)
 # @man +
 # @man *-c*: run the agent without color output
+# @man +
+# @man *-p*: check permissions of file used by relayd
+
 
 . "${BASEDIR}/../lib/common.sh"
 . "${BASEDIR}/../lib/api_call.sh"
@@ -14,7 +17,7 @@
 QUIET=false
 DISPLAY_COMMAND=false
 
-while getopts "qciIvd" opt; do
+while getopts "qciIvdp" opt; do
   case $opt in
     i|I|v|d)
       DISPLAY_COMMAND=true
@@ -25,6 +28,9 @@ while getopts "qciIvd" opt; do
       ;;
     c)
       clear_colors
+      ;;
+    p)
+      if [ -f /var/rudder/lib/ssl/allnodescerts.pem ]; then chgrp rudder /var/rudder/lib/ssl/allnodescerts.pem; fi
       ;;
   esac
 done
