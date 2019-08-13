@@ -79,6 +79,11 @@ if [ -e /opt/rudder/etc/disable-agent ]; then
 else
   echo "Agent is enabled"
 fi
+if [ -e /opt/rudder/etc/force-audit-agent ]; then
+  echo "Agent is forced in audit mode since $(modification_time /opt/rudder/etc/force-audit-agent)"
+else
+  echo "Agent is not forced in audit mode"
+fi
 if [ -n "${RUDDER_NODE_CONFIG_ID}" ]
 then
   echo "Configuration id: ${RUDDER_NODE_CONFIG_ID}"
