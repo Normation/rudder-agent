@@ -15,7 +15,7 @@
 
 QUIET=false
 
-while getopts "qc" opt; do
+while getopts "qcs" opt; do
   case $opt in
     s)
       STOP=y
