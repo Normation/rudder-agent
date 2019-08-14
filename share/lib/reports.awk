@@ -182,7 +182,13 @@ function print_report_singleline() {
     # very likely a broken report
     if (match($0, /.*R: @@/)) {
       broken_reports++;
-    } 
+    }
+
+    # CFEngine error
+    if (!no_report && (match($0, /^   error: /))) {
+      print red $0 normal;
+      next
+    }
 
     if (info && !no_report) {
       print darkgreen $0 normal;
