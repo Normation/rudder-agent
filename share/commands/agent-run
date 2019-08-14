@@ -9,9 +9,9 @@
 # @man +
 # @man *-i*: run the agent in information mode, prints basic information
 # @man +
-# @man *-v*: run the agent in verbose mode, prints detailed information
+# @man *-v*: run the agent in verbose mode, prints detailed information (reports won't be sent to the server)
 # @man +
-# @man *-d*: run the agent in debug mode, prints low-level information
+# @man *-d*: run the agent in debug mode, prints low-level information (reports won't be sent to the server)
 # @man +
 # @man *-q*: run the agent in quiet mode (display only error messages)
 # @man +
