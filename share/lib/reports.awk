@@ -172,8 +172,12 @@ function print_report_singleline() {
   # for raw mode
   if (summary_only && !no_report) {
     print $0;
+    if (!is_report) {
+      next
+    }
   }
 
+  # for formatted mode
   if (!is_report) {
     # very likely a broken report
     if (match($0, /.*R: @@/)) {
