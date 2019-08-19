@@ -168,6 +168,7 @@ if [ -f "${RUDDER_JSON}" ]; then
   AGENT_RUN_INTERVAL=$(rudder_json_value 'AGENT_RUN_INTERVAL')
   RUDDER_NODE_CONFIG_ID=$(rudder_json_value 'RUDDER_NODE_CONFIG_ID')
   RUDDER_SYSLOG_PROTOCOL=$(rudder_json_value 'RUDDER_SYSLOG_PROTOCOL')
+  RUDDER_VERIFY_CERTIFICATES=$(rudder_json_value 'RUDDER_VERIFY_CERTIFICATES')
 fi
 # run interval default value
 [ "${AGENT_RUN_INTERVAL}" = "" ] && AGENT_RUN_INTERVAL=5
@@ -182,3 +183,11 @@ then
 else
   FULL_COMPLIANCE=1
 fi
+
+if [ "${RUDDER_VERIFY_CERTIFICATES}" = "true" ] 
+then
+  CERTIFICATE_OPTION=""
+else
+  CERTIFICATE_OPTION="--insecure"
+fi
+

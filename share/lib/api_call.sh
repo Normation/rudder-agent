@@ -2,7 +2,7 @@
 API_URL="https://127.0.0.1/rudder"
 TECHNIQUES_DIRECTORY="${CONFIGURATION_DIRECTORY}/technique"
 
-DOWNLOAD_COMMAND="curl --silent --show-error --insecure --location --proxy '' --globoff"
+DOWNLOAD_COMMAND="curl --silent --show-error ${CERTIFICATE_OPTION} --location --proxy '' --globoff"
 HEADER_OPT="--header"
 
 # This functions tests if the API call returns "OK"
