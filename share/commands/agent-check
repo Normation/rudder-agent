@@ -17,6 +17,8 @@
 # @man *-f*: prevent sleeping in non-interactive mode
 # @man +
 # @man *-u*: only check the uuid existence
+# @man +
+# @man *-r*: reset, do not try to restore backups
 
 
 . "${BASEDIR}/../lib/common.sh"
@@ -25,6 +27,7 @@ QUIET=false
 SLEEP=true
 ONLY_UUID=false
 OPT=""
+RESET=false
 
 while getopts "qcfu" opt; do
   case $opt in
@@ -42,6 +45,8 @@ while getopts "qcfu" opt; do
     u)
       ONLY_UUID=true
       ;;
+    r)
+      RESET=true
   esac
 done
 
@@ -89,7 +94,7 @@ exist_or_restore() {
   file_path="$1"
   file_name=$(basename ${file_path})
   if [ ! -f "${file_path}" ] || [ ! -s "${file_path}" ]; then
-    if [ -d "${BACKUP_DIR}" ]; then
+    if [ -d "${BACKUP_DIR}" ] && [ "${RESET}" = "false" ]; then
       last_backup=$(ls -1 ${BACKUP_DIR}${file_name}-* | sort | tail -n1 || true)
       if [ "${last_backup}" != "" ]; then
         [ "$QUIET" = false ] && printf "INFO: The file '${file_path}' does not exist. The lastest backup '${last_backup}' will be recovered..."
