@@ -1,0 +1,69 @@
+#!/bin/bash
+# @description List directives that can be run on this agent
+# @man This command will list all directives an their ID to be used in directive-run command
+# @man +
+# @man *Options*:
+# @man +
+# @man *-a*: also show non runnable directives (system directives and directives with hooks)
+# @man +
+# @man *-l*: show long directive details
+# @man +
+
+. "${BASEDIR}/../lib/common.sh"
+
+BASE_PATH="/var/rudder/cfengine-community/inputs"
+SERVER_VERSION=$(rudder_json_value 'SERVER_VERSION')
+
+major_compare "5.1" "${SERVER_VERSION}"
+if [ $? -eq 255 ]
+then
+  echo "Your server doesn't support this feature, please upgrade to at least 5.1"
+  exit 1
+fi
+if [ ! -f "${BASE_PATH}/rudder-directives.csv" ]
+then
+  echo "Your server didn't generate rudder-directives.csv, maybe you are not up to date"
+  exit 1
+fi
+
+FULL="false"
+LONG="false"
+while getopts "al" opt; do
+  case $opt in
+    a)
+      FULL="true"
+      ;;
+    l)
+      LONG="true"
+      ;;
+  esac
+done
+
+if [ "${LONG}" = "true" ]
+then
+  printf '               (E)nable or (A)udit MODE GENERATION (M)erged or (S)eparated\n'
+  printf '                               SYSTEM | | HOOKS    \n'
+  printf 'UUID                                 \| |/  TECHNIQUE(VERSION)                       NAME \n'
+else
+  printf "%-37s%-8s%s\n" "UUID" "MODE" "NAME"
+fi
+
+while parse_directive
+do
+  # exclude system directives
+  [ "${FULL}" = "false" ] && [ "${is_system}" = "true" ] && continue
+  # exclude directive with hooks
+  [ "${FULL}" = "false" ] && [ "${hooks}" = "true" ] && continue
+
+  if [ "${LONG}" = "true" ]
+  then
+    mode=$(echo ${mode}|tr '[a-z]' '[A-Z]')
+    generation=$(echo ${generation}|tr '[a-z]' '[A-Z]')
+    is_system=$(echo ${is_system}|tr 'tf' 'x-')
+    hooks=$(echo ${hooks}|tr 'tf' 'x-')
+    printf "%-37s%1.1s%1.1s %1.1s%1.1s  %-40s %s\n" "${uuid}" "${is_system}" "${mode}" "${generation}" "${hooks}" "${technique}(${technique_version})" "${name}"
+  else
+    printf "%-37s%-8s%s\n" "${uuid}" "${mode}" "${name}"
+  fi
+done < "${BASE_PATH}/rudder-directives.csv"
+

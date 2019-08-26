@@ -129,6 +129,44 @@ bootstrap_check() {
   fi
 }
 
+# Compare major rudder versions, return 255,0,1
+# empty value < anything
+major_compare() {
+  [ "$1" = "" ] && return 255
+  [ "$2" = "" ] && return 1
+  major_a1=$(echo "$1" | cut -d. -f1)
+  major_a2=$(echo "$1" | cut -d. -f2)
+  major_b1=$(echo "$2" | cut -d. -f1)
+  major_b2=$(echo "$2" | cut -d. -f2)
+  [ "${major_a1}" -lt "${major_b1}" ] && return 255
+  [ "${major_a1}" -gt "${major_b1}" ] && return 1
+  [ "${major_a2}" -lt "${major_b2}" ] && return 255
+  [ "${major_a2}" -gt "${major_b2}" ] && return 1
+  return 0
+}
+
+# Read one line of directives.csv
+parse_directive() {
+  IFS=, read _uuid _mode _generation _hooks _technique _technique_version _is_system _name || return 1
+  uuid=$(echo "${_uuid}"| sed 's/^"\(.*\)"$/\1/')
+  mode=$(echo "${_mode}"| sed 's/^"\(.*\)"$/\1/')
+  generation=$(echo "${_generation}"| sed 's/^"\(.*\)"$/\1/')
+  hooks=$(echo "${_hooks}"| sed 's/^"\(.*\)"$/\1/')
+  technique=$(echo "${_technique}"| sed 's/^"\(.*\)"$/\1/')
+  technique_version=$(echo "${_technique_version}"| sed 's/^"\(.*\)"$/\1/')
+  is_system=$(echo "${_is_system}"| sed 's/^"\(.*\)"$/\1/')
+  name=$(echo "${_name}"| sed 's/^"\(.*\)"$/\1/')
+}
+
+# Check that a bootstrap is necessary
+bootstrap_check() {
+  if [ "$(ls -A /var/rudder/cfengine-community/inputs)" = "" ]
+  then
+    cp /opt/rudder/share/bootstrap-promises/* /var/rudder/cfengine-community/inputs/
+    rudder agent update
+  fi
+}
+
 # Colors configuration (enable colors only if stdout is a terminal)
 if [ -t 1 ]; then
     COLOR="-Calways"

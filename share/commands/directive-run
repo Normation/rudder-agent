@@ -1,0 +1,121 @@
+#!/bin/bash
+# @description Run a specific directive on this agent
+# @man This command runs one directive without running everything else
+# @man +
+# @man *Options*:
+# @man +
+# @man *-u*: UUID of the directive to run
+# @man +
+# @man *-A*: Force audit mode
+# @man +
+# @man *-E*: Force enforce mode
+# @man +
+# @man *-y*: allow running directives with hooks (beware, this may break your system)
+# @man +
+# @man *-i*: run the agent in information mode, prints basic information
+# @man +
+# @man *-v*: run the agent in verbose mode, prints detailed information (reports won't be sent to the server)
+# @man +
+# @man *-d*: run the agent in debug mode, prints low-level information (reports won't be sent to the server)
+# @man +
+# @man *-q*: run the agent in quiet mode (display only error messages)
+# @man +
+# @man *-w*: show full strings, never cut output
+# @man +
+# @man *-c*: run the agent without color output
+# @man +
+# @man *-T*: display timing information
+# @man +
+# @man *-r*: run the agent with raw output
+# @man +
+# @man *-R*: run the agent in completely unparsed mode, with no return code of 1 in case of error. A little faster.
+# @man +
+# @man *-D*: define a class for this run
+# @man +
+# @man *-f*: run the agent even if it is disabled
+
+. "${BASEDIR}/../lib/common.sh"
+
+BASE_PATH="/var/rudder/cfengine-community/inputs"
+SERVER_VERSION=$(rudder_json_value 'SERVER_VERSION')
+
+major_compare "5.1" "${SERVER_VERSION}"
+if [ $? -eq 255 ]
+then
+  echo "Your server doesn't support this feature, please upgrade to at least 5.1"
+  exit 1
+fi
+if [ ! -f "${BASE_PATH}/rudder-directives.csv" ]
+then
+  echo "Your server didn't generate rudder-directives.csv, maybe you are not up to date or the node isn't yet accepted within Rudder"
+  exit 1
+fi
+
+UUID=""
+OPTS="-N"
+AUDIT="default"
+RISKY="false"
+while getopts "u:AEyivdqwcTrRD:f" opt; do
+  case $opt in
+    u)
+      UUID="${OPTARG}"
+      ;;
+    A)
+      AUDIT="true"
+      ;;
+    E)
+      AUDIT="false"
+      ;;
+    y)
+      RISKY="true"
+      ;;
+    i|v|d|q|w|c|T|r|R|f)
+      OPTS="${OPTS} -${opt}"
+      ;;
+    D)
+      OPTS="${OPTS} -${opt} ${OPTARG}"
+      ;;
+  esac
+done
+
+if [ "${UUID}" = "" ]
+then
+  echo "You must provide a directive UUID with option -u"
+  exit 1
+fi
+
+BS="rudder_init"
+
+FOUND=0
+while parse_directive
+do
+  # exclude system directives
+  [ "${RISKY}" = "false" ] && [ "${is_system}" = "true" ] && continue
+  # exclude directive with hooks
+  [ "${RISKY}" = "false" ] && [ "${hooks}" = "true" ] && continue
+  # keep only the wanted directive
+  [ "${UUID}" != "${uuid}" ] && continue
+
+  canon_uuid=$(echo "${uuid}" | tr '-' '_')
+
+  if [ "${AUDIT}" = "default" ]
+  then
+    [ "${mode}" = "enforce" ] && AUDIT="false"
+    [ "${mode}" = "audit" ] && AUDIT="true"
+  fi
+
+  BS="${BS},set_dry_run_mode_${AUDIT}"
+  BS="${BS},run_${canon_uuid}"
+  BS="${BS},set_dry_run_mode_false"
+  FOUND=1
+done < "${BASE_PATH}/rudder-directives.csv"
+
+if [ ${FOUND} -eq 0 ]
+then
+  echo "No such directive ${UUID}, aborting"
+  exit 1
+fi
+
+BS="${BS},rudder_end"
+
+echo rudder agent run ${OPTS} -b "${BS}"
