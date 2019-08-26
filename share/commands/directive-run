@@ -118,4 +118,4 @@ fi
 
 BS="${BS},rudder_end"
 
-echo rudder agent run ${OPTS} -b "${BS}"
+rudder agent run ${OPTS} -b "${BS}"
