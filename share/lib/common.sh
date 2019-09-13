@@ -21,10 +21,10 @@ service_action() {
   service="$1"
   action="$2"
 
-  if systemctl list-units --type service --all ${service}.service 2>&1 | grep -q "^${service}.service"; then
+  if systemctl list-units --type service --all ${service}.service 2>&1 | grep -q '\b1 loaded units listed'; then
     CMD="systemctl ${action} ${service}"
   elif [ -x /usr/sbin/service ]; then
-    CMD="service ${service} ${action}"
+    CMD="/usr/sbin/service ${service} ${action}"
   elif [ -x /etc/init.d/${service} ]; then
     CMD="/etc/init.d/${service} ${action}"
   elif [ "${action}" = "start" ] && [ -x /usr/bin/startsrc ]; then
