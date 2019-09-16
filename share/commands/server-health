@@ -1,0 +1,107 @@
+#!/bin/bash
+# @description monitor server health
+# @man Check that rudder agent has no problem
+# @man +
+# @man *Options*:
+# @man +
+# @man *-w*: wait for the service to be up (if you just started the server)
+# @man +
+# @man *-n*: run in nrpe mode, print a single line and return 0,1 or 2
+# @man  put this line in your nrpe.cfg to use it
+# @man  command[check_rudder_server]=/opt/rudder/bin/rudder server health -n
+
+. "${BASEDIR}/../lib/common.sh"
+
+NRPE="no"
+WAIT="no"
+TIMEOUT=60
+STDERR=
+
+while getopts "wn" opt; do
+  case $opt in
+    w)
+      WAIT="yes"
+      ;;
+    n)
+      NRPE="yes"
+      STDERR="2>/dev/null"
+      ;;
+  esac
+done
+
+
+# check api status
+for i in $(seq 1 ${TIMEOUT}); do
+  ERRORS=$(curl --silent --fail --insecure --location https://localhost/rudder/api/status)
+  if [ "$ERRORS" = "OK" ]
+  then
+    break
+  elif [ "${WAIT}" = "no" ]
+  then
+    echo "Server API Response is KO."
+    exit 2
+  elif [ $i -eq 60 ]
+  then
+    echo "Server Response is not KO after 60 seconds..."
+    exit 2
+  fi
+  sleep 1
+done
+
+# check app startup
+ERRORS=$(curl --silent --insecure --location https://localhost/ ${STDERR} | grep "No Navigation Defined." | wc -l)
+if [ $ERRORS -ne 0 ]; then
+  echo 'Found the string "No Navigation Defined." in the login page'
+  exit 2
+fi
+
+# Check credentials
+if [ ! -f /opt/rudder/etc/rudder-web.properties ]
+then
+  echo "/opt/rudder/etc/rudder-web.properties is missing"
+  exit 2
+fi
+
+# Get how many access credentials we got for LDAP and SQL in /opt/rudder/etc/rudder-web.properties
+# (should have 2 for each, user and password)
+LDAP_CREDENTIALS=$(grep -c -E "^ldap.auth(dn|pw)[ \t]*=" /opt/rudder/etc/rudder-web.properties || true)
+SQL_CREDENTIALS=$(grep -c -E "^rudder.jdbc.(username|password)[ \t]*=" /opt/rudder/etc/rudder-web.properties || true)
+TOTAL_CREDENTIALS=$((LDAP_CREDENTIALS+SQL_CREDENTIALS))
+
+if [ ${TOTAL_CREDENTIALS} -ne 4 ]
+then
+  echo "Login/pw for either postgresql or ldap"
+  exit 2
+fi
+
+# Get the database access credentials from the rudder-web.properties file
+LDAP_USER="$(grep -E '^ldap.authdn[ \t]*=' ${RUDDER_OPT}/etc/rudder-web.properties | cut -d "=" -f 2-)"
+LDAP_PASSWORD="$(grep -E '^ldap.authpw[ \t]*=' ${RUDDER_OPT}/etc/rudder-web.properties | cut -d "=" -f 2-)"
+LDAP_SERVER="$(grep -E '^ldap.host[ \t]*=' ${RUDDER_OPT}/etc/rudder-web.properties | cut -d '=' -f 2-)"
+LDAP_PORT="$(grep -E '^ldap.port[ \t]*=' ${RUDDER_OPT}/etc/rudder-web.properties | cut -d '=' -f 2-)"
+
+SQL_USER="$(grep -E '^rudder.jdbc.username[ \t]*=' ${RUDDER_OPT}/etc/rudder-web.properties | cut -d "=" -f 2-)"
+SQL_PASSWORD="$(grep -E '^rudder.jdbc.password[ \t]*=' ${RUDDER_OPT}/etc/rudder-web.properties | cut -d "=" -f 2-)"
+SQL_SERVER="$(grep -E '^rudder.jdbc.url[ \t]*=' ${RUDDER_OPT}/etc/rudder-web.properties | cut -d '=' -f 2- | sed 's%^.*://\(.*\):\(.*\)/.*$%\1%')"
+SQL_PORT="$(grep -E '^rudder.jdbc.url[ \t]*=' ${RUDDER_OPT}/etc/rudder-web.properties | cut -d '=' -f 2- | sed 's%^.*://\(.*\):\(.*\)/.*$%\2%')"
+SQL_DATABASE="$(grep -E '^rudder.jdbc.url[ \t]*=' ${RUDDER_OPT}/etc/rudder-web.properties | cut -d '=' -f 2- | sed 's%^.*://.*:.*/\(.*\)$%\1%')"
+
+export PGPASSWORD="${SQL_PASSWORD}"
+
+# check postgresql connection
+if ! psql -q -h ${SQL_SERVER} -p ${SQL_PORT} -U ${SQL_USER} -t -d ${SQL_DATABASE} -c "SELECT 1;" > /dev/null ${STDERR}
+then
+  echo "Cannot connect to PostgreSQL server"
+  exit 2
+fi
+
+# check ldap connection
+if ! ldapsearch -H ldap://${LDAP_SERVER}:${LDAP_PORT}/ -D ${LDAP_USER} -w ${LDAP_PASSWORD} -x -LLL  -b "cn=rudder-configuration" -s base dn | grep "dn: cn=rudder-configuration" > /dev/null ${STDERR}
+then
+  echo "Cannot connect to LDAP server"
+  exit 2
+fi
+
+# Done
+echo "OK"
+exit 0 # success
