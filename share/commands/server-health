@@ -75,16 +75,16 @@ then
 fi
 
 # Get the database access credentials from the rudder-web.properties file
-LDAP_USER="$(grep -E '^ldap.authdn[ \t]*=' ${RUDDER_OPT}/etc/rudder-web.properties | cut -d "=" -f 2-)"
-LDAP_PASSWORD="$(grep -E '^ldap.authpw[ \t]*=' ${RUDDER_OPT}/etc/rudder-web.properties | cut -d "=" -f 2-)"
-LDAP_SERVER="$(grep -E '^ldap.host[ \t]*=' ${RUDDER_OPT}/etc/rudder-web.properties | cut -d '=' -f 2-)"
-LDAP_PORT="$(grep -E '^ldap.port[ \t]*=' ${RUDDER_OPT}/etc/rudder-web.properties | cut -d '=' -f 2-)"
+LDAP_USER="$(grep -E '^ldap.authdn[ \t]*=' /opt/rudder/etc/rudder-web.properties | cut -d "=" -f 2-)"
+LDAP_PASSWORD="$(grep -E '^ldap.authpw[ \t]*=' /opt/rudder/etc/rudder-web.properties | cut -d "=" -f 2-)"
+LDAP_SERVER="$(grep -E '^ldap.host[ \t]*=' /opt/rudder/etc/rudder-web.properties | cut -d '=' -f 2-)"
+LDAP_PORT="$(grep -E '^ldap.port[ \t]*=' /opt/rudder/etc/rudder-web.properties | cut -d '=' -f 2-)"
 
-SQL_USER="$(grep -E '^rudder.jdbc.username[ \t]*=' ${RUDDER_OPT}/etc/rudder-web.properties | cut -d "=" -f 2-)"
-SQL_PASSWORD="$(grep -E '^rudder.jdbc.password[ \t]*=' ${RUDDER_OPT}/etc/rudder-web.properties | cut -d "=" -f 2-)"
-SQL_SERVER="$(grep -E '^rudder.jdbc.url[ \t]*=' ${RUDDER_OPT}/etc/rudder-web.properties | cut -d '=' -f 2- | sed 's%^.*://\(.*\):\(.*\)/.*$%\1%')"
-SQL_PORT="$(grep -E '^rudder.jdbc.url[ \t]*=' ${RUDDER_OPT}/etc/rudder-web.properties | cut -d '=' -f 2- | sed 's%^.*://\(.*\):\(.*\)/.*$%\2%')"
-SQL_DATABASE="$(grep -E '^rudder.jdbc.url[ \t]*=' ${RUDDER_OPT}/etc/rudder-web.properties | cut -d '=' -f 2- | sed 's%^.*://.*:.*/\(.*\)$%\1%')"
+SQL_USER="$(grep -E '^rudder.jdbc.username[ \t]*=' /opt/rudder/etc/rudder-web.properties | cut -d "=" -f 2-)"
+SQL_PASSWORD="$(grep -E '^rudder.jdbc.password[ \t]*=' /opt/rudder/etc/rudder-web.properties | cut -d "=" -f 2-)"
+SQL_SERVER="$(grep -E '^rudder.jdbc.url[ \t]*=' /opt/rudder/etc/rudder-web.properties | cut -d '=' -f 2- | sed 's%^.*://\(.*\):\(.*\)/.*$%\1%')"
+SQL_PORT="$(grep -E '^rudder.jdbc.url[ \t]*=' /opt/rudder/etc/rudder-web.properties | cut -d '=' -f 2- | sed 's%^.*://\(.*\):\(.*\)/.*$%\2%')"
+SQL_DATABASE="$(grep -E '^rudder.jdbc.url[ \t]*=' /opt/rudder/etc/rudder-web.properties | cut -d '=' -f 2- | sed 's%^.*://.*:.*/\(.*\)$%\1%')"
 
 export PGPASSWORD="${SQL_PASSWORD}"
 
