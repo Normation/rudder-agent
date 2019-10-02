@@ -15,7 +15,6 @@
 NRPE="no"
 WAIT="no"
 TIMEOUT=60
-STDERR=
 
 while getopts "wn" opt; do
   case $opt in
@@ -24,7 +23,7 @@ while getopts "wn" opt; do
       ;;
     n)
       NRPE="yes"
-      STDERR="2>/dev/null"
+      exec 2>/dev/null
       ;;
   esac
 done
@@ -49,7 +48,7 @@ for i in $(seq 1 ${TIMEOUT}); do
 done
 
 # check app startup
-ERRORS=$(curl --silent --insecure --location https://localhost/ ${STDERR} | grep "No Navigation Defined." | wc -l)
+ERRORS=$(curl --silent --insecure --location https://localhost/ | grep "No Navigation Defined." | wc -l)
 if [ $ERRORS -ne 0 ]; then
   echo 'Found the string "No Navigation Defined." in the login page'
   exit 2
@@ -89,14 +88,15 @@ SQL_DATABASE="$(grep -E '^rudder.jdbc.url[ \t]*=' /opt/rudder/etc/rudder-web.pro
 export PGPASSWORD="${SQL_PASSWORD}"
 
 # check postgresql connection
-if ! psql -q -h ${SQL_SERVER} -p ${SQL_PORT} -U ${SQL_USER} -t -d ${SQL_DATABASE} -c "SELECT 1;" > /dev/null ${STDERR}
+if ! psql -q -h ${SQL_SERVER} -p ${SQL_PORT} -U ${SQL_USER} -t -d ${SQL_DATABASE} -c "SELECT 1;" > /dev/null
 then
   echo "Cannot connect to PostgreSQL server"
   exit 2
 fi
 
 # check ldap connection
-if ! ldapsearch -H ldap://${LDAP_SERVER}:${LDAP_PORT}/ -D ${LDAP_USER} -w ${LDAP_PASSWORD} -x -LLL  -b "cn=rudder-configuration" -s base dn | grep "dn: cn=rudder-configuration" > /dev/null ${STDERR}
+if ! ldapsearch -H ldap://${LDAP_SERVER}:${LDAP_PORT}/ -D ${LDAP_USER} -w ${LDAP_PASSWORD} -x -LLL  -b "cn=rudder-configuration" -s base dn | grep "dn: cn=rudder-configuration" > /dev/null
+
 then
   echo "Cannot connect to LDAP server"
   exit 2
