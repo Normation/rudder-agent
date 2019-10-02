@@ -6,7 +6,7 @@
 # @man +
 # @man *Arguments*:
 # @man +
-# @man *node*: IP or hostname of the target node or 'all' for all nodes of the server
+# @man *nodes*: comma-separated list of IP or hostname of the target node or 'all' for all nodes of the server
 # @man +
 # @man *Options*:
 # @man +
@@ -48,6 +48,7 @@
 
 PORT=5309
 LOOP="xargs -I{}"
+DELIM=""
 MULTIHOST=1
 TIMEOUT="-t 300"
 
@@ -133,7 +134,8 @@ then
   echo "Usage rudder remote run <node_ip_or_name>"
   exit 1
 else
-  NODELIST="echo $*"
+  DELIM="-d,"
+  NODELIST="echo -n $*"
 fi
 
 # get all hosts on server
@@ -157,4 +159,4 @@ then
 fi
 
 # Aggregate everything
-${NODELIST} | ${LOOP} "${RUDDER_VAR}/cfengine-community/bin/cf-runagent" -H "{}:${PORT}" ${TIMEOUT} ${VERBOSITY} ${COLOR} ${CLASS} | eval ${PRETTY}
+${NODELIST} | ${LOOP} ${DELIM} "${RUDDER_VAR}/cfengine-community/bin/cf-runagent" -H "{}:${PORT}" ${TIMEOUT} ${VERBOSITY} ${COLOR} ${CLASS} | eval ${PRETTY}
