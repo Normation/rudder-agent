@@ -31,6 +31,13 @@
 
 bootstrap_check
 
+# We cannnot strart an inventory in bootstrap policies
+if cmp -s "/var/rudder/cfengine-community/inputs/failsafe.cf" "/opt/rudder/share/bootstrap-promises/failsafe.cf"
+then
+  >&2 echo "Agent is currently in bootstrap policies, cannot run an inventory, you need to download initial policies from the server"
+  exit 1
+fi
+
 # Ignore disable-inventory flag
 FORCE=0
 OPTS=""
