@@ -37,12 +37,12 @@
 . "${BASEDIR}/../lib/common.sh"
 
 BASE_PATH="/var/rudder/cfengine-community/inputs"
-SERVER_VERSION=$(rudder_json_value 'SERVER_VERSION')
+SERVER_VERSION=$(rudder_json_value 'SERVER_VERSION' | cut -d. -f1,2)
 
-major_compare "5.1" "${SERVER_VERSION}"
+major_compare "${SERVER_VERSION}" "6.0"
 if [ $? -eq 255 ]
 then
-  echo "Your server doesn't support this feature, please upgrade to at least 5.1"
+  echo "Your server doesn't support this feature, please upgrade to at least 6.0"
   exit 1
 fi
 if [ ! -f "${BASE_PATH}/rudder-directives.csv" ]
