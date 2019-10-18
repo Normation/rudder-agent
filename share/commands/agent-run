@@ -41,12 +41,6 @@
 
 bootstrap_check
 
-if [ -f "${RUDDER_JSON}" ]; then
-  REPORTING_PROTOCOL=$(rudder_json_value 'REPORTING_PROTOCOL')
-else
-  REPORTING_PROTOCOL="SYSLOG"
-fi
-
 UPDATE=false
 UPDATE_OPTIONS=""
 # CLASSES to define
@@ -153,6 +147,13 @@ code1=0
 if [ "${UPDATE}" = "true" ]; then
   ${RUDDER_BIN} agent update "${UPDATE_OPTIONS}"
   code1=$?
+fi
+
+# We need to do this after update to see the value used in the followgin run
+if [ -f "${RUDDER_JSON}" ]; then
+  REPORTING_PROTOCOL=$(rudder_json_value 'REPORTING_PROTOCOL')
+else
+  REPORTING_PROTOCOL="SYSLOG"
 fi
 
 # If not launched from cf-execd, we need to take care of logging in outputs
