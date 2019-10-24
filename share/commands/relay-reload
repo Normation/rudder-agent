@@ -35,5 +35,5 @@ while getopts "qciIvdp" opt; do
   esac
 done
 
-simple_api_call "http://127.0.0.1:3030/rudder/relay-api/1/system/reload" "reload relayd configuration" "${DISPLAY_COMMAND}" "\"response\":\"success\"" "--request POST"
+simple_api_call "http://127.0.0.1:3030/rudder/relay-api/1/system/reload" "reload relayd configuration" "${DISPLAY_COMMAND}" '{"result":"success","action":"reloadConfiguration"}' "--request POST"
 
