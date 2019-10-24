@@ -31,6 +31,7 @@ while getopts "qciIvdp" opt; do
       ;;
     p)
       if [ -f /var/rudder/lib/ssl/allnodescerts.pem ]; then chgrp rudder /var/rudder/lib/ssl/allnodescerts.pem; fi
+      if [ -f /var/rudder/lib/relay/nodeslist.json ]; then chown rudder-relayd /var/rudder/lib/relay/nodeslist.json; fi
       ;;
   esac
 done

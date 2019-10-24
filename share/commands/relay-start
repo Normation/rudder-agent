@@ -21,8 +21,8 @@ while getopts "qc" opt; do
       clear_colors
       ;;
   esac
-done
 
 if [ -s /var/rudder/lib/ssl/allnodescerts.pem ]; then chgrp rudder /var/rudder/lib/ssl/allnodescerts.pem; fi
+if [ -f /var/rudder/lib/relay/nodeslist.json ]; then chown rudder-relayd /var/rudder/lib/relay/nodeslist.json; fi
 service_action "rudder-relayd" "start"
 exit $?
