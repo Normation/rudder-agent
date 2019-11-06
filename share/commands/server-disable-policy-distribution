@@ -8,13 +8,16 @@
 # First, prevent the agent from restarting cf-serverd
 touch /opt/rudder/etc/disable-policy-distribution
 
-# Then, actually stop the server right now
+# Then disable and stop it
+systemctl stop rudder-cf-serverd
+systemctl disable rudder-cf-serverd
+
+# Just in case other cf-server were running
 if type killall > /dev/null 2> /dev/null; then
-  killall cf-serverd
+  killall cf-serverd 2> /den/null || true
 elif type pidof > /dev/null 2> /dev/null; then
-  kill $(pidof cf-serverd 2>/dev/null)
+  kill $(pidof cf-serverd 2>/dev/null) 2> /dev/null || true
 else
-  echo "Don't know how to stop Rudder policy server. 'killall' or 'pidof' are required." 1>&2
-  echo 'Policy server not stopped!' 1>&2
-  exit 2
+  echo "Could not check for remaining policy server processes outside of the service"
+  echo "(install 'pidof' or 'killall' to enable this check)" 
 fi

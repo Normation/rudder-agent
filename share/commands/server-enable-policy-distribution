@@ -10,4 +10,5 @@
 rm -f /opt/rudder/etc/disable-policy-distribution
 
 # Then, actually start the server right now
-/var/rudder/cfengine-community/bin/cf-serverd
+systemctl enable rudder-cf-serverd
+systemctl start rudder-cf-serverd
