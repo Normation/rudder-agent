@@ -1,6 +1,6 @@
 #!/bin/sh
-# @description start the relay service
-# @man Start the relay service using the appropriate service manager.
+# @description reload (or start if necessary) the relay service
+# @man Start or reload the relay service using the appropriate service manager.
 # @man +
 # @man *Options*:
 # @man +
@@ -36,5 +36,8 @@ while getopts "qciIvdp" opt; do
   esac
 done
 
-simple_api_call "http://127.0.0.1:3030/rudder/relay-api/1/system/reload" "reload relayd configuration" "${DISPLAY_COMMAND}" '{"result":"success","action":"reloadConfiguration"}' "--request POST"
-
+if systemctl is-active rudder-relay >/dev/null; then
+  simple_api_call "http://127.0.0.1:3030/rudder/relay-api/1/system/reload" "reload relayd configuration" "${DISPLAY_COMMAND}" '{"result":"success","action":"reloadConfiguration"}' "--request POST"
+else
+  systemctl start rudder-relay
+fi
