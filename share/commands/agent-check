@@ -44,7 +44,7 @@ while getopts "qcfu" opt; do
 done
 
 # Source /etc/profile to gather environment variables from the system and the user
-. /etc/profile
+[ -f /etc/profile ] && . /etc/profile
 
 # Do not use set -e in the check script, otherwise a failing action may prevent repairing the problem
 #set -e
