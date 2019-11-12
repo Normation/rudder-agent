@@ -22,7 +22,6 @@
 . "${BASEDIR}/../lib/common.sh"
 
 TECHNIQUES_DIRECTORY="${CONFIGURATION_DIRECTORY}/technique"
-TOKEN="$(cat /var/rudder/run/api-token)"
 DISPLAY_COMMAND=false
 
 need_jq

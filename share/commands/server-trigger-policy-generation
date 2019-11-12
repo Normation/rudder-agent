@@ -12,7 +12,6 @@
 . "${BASEDIR}/../lib/common.sh"
 . "${BASEDIR}/../lib/api_call.sh"
 
-TOKEN="$(cat /var/rudder/run/api-token)"
 DISPLAY_COMMAND=false
 
 while getopts "iIvdc" opt; do
