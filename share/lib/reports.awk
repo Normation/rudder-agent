@@ -34,15 +34,22 @@ BEGIN {
   if(fixed_date != 1514764800) {
     broken_date=1
   }
-  if(broken_date) {
-    "date +%s" | getline starttime;
-  } else {
-    "date +%s.%N" | getline starttime;
-  }
-  # needed to be able to call the same command a second time
-  close("date +%s.%N");
+  starttime=date();
   # Initialize timer to allow computing time taken for parsing the policies
   timer()
+}
+
+function date()
+  if(broken_date) {
+    "date +%s" | getline dt;
+    # needed to be able to call the same command a second time
+    close("date +%s");
+  } else {
+    "date +%s.%N" | getline dt;
+    # needed to be able to call the same command a second time
+    close("date +%s.%N");
+  }
+  return dt;
 }
 
 # We need it because length() only exists in gawk
@@ -54,8 +61,7 @@ function alen (a) {
 }
 
 function timer() {
-  "date +%s.%N" | getline component_end_time;
-  close("date +%s.%N");
+  component_end_time = date();
   tmp_time = component_end_time - component_begin_time;
   component_begin_time = component_end_time;
   return tmp_time
@@ -348,6 +354,8 @@ function print_report_singleline() {
 END {
   #### 6/ End of the run, time to compute result and display summary
 
+  endtime = date();
+
   # Print a single line of summary
   if (short_summary) {
     if(original_time_s) {
@@ -361,12 +369,6 @@ END {
     printf "%sEnforce%s: %s%3d%s compliant, %s%3d%s repaired, %s%3d%s N/A, %s%3d%s errors  ", dgreen, normal, green, enforce_compliant, normal, yellow, enforce_repaired, normal, green, enforce_notapplicable, normal, red, enforce_error, normal
     printf "%sAudit%s: %s%3d%s compliant, %s%3d%s non-compliant, %s%3d%s N/A, %s%3d%s errors\n", dblue, normal, green, audit_compliant, normal, magenta, audit_noncompliant, normal, green, audit_notapplicable, normal, red, audit_error, normal
     exit 0
-  }
-
-  if(broken_date) {
-    "date +%s" | getline endtime;
-  } else {
-    "date +%s.%N" | getline endtime;
   }
 
   # If we defined a custom bundlesequence, it is expected to not have everything
