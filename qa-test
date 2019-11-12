@@ -3,7 +3,7 @@
 set -ex
 
 # Shellcheck
-find . -type f -exec bash -c "head -n1 {} | grep -Eq '^#!(.*/|.*env +)(sh|bash|ksh)'" \; -print |
+find * -type f -exec bash -c "head -n1 {} | grep -Eq '^#!(.*/|.*env +)(sh|bash|ksh)'" \; -print |
   while IFS="" read -r file
   do
     # with recent shellcheck, "-S error" replaces this hack
