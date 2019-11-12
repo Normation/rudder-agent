@@ -159,3 +159,5 @@ then
 else
   FULL_COMPLIANCE=1
 fi
+
+TOKEN="$([ -f /var/rudder/run/api-token ] && cat /var/rudder/run/api-token)"
