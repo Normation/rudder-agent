@@ -88,9 +88,9 @@ rm -f /var/rudder/cfengine-community/ppkeys/localhost*
 
 # - generate a new uuid
 [ "$VERBOSE" = true ] && echo "Generating a new uuid..."
-if [ -x /opt/rudder/bin/uuidgen ]
+if [ -x /opt/rudder/bin/rudder-uuidgen ]
 then
-  /opt/rudder/bin/uuidgen > /opt/rudder/etc/uuid.hive
+  /opt/rudder/bin/rudder-uuidgen > /opt/rudder/etc/uuid.hive
 else
   uuidgen > /opt/rudder/etc/uuid.hive
 fi
