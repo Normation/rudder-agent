@@ -39,7 +39,7 @@ BEGIN {
   timer()
 }
 
-function date()
+function date() {
   if(broken_date) {
     "date +%s" | getline dt;
     # needed to be able to call the same command a second time
