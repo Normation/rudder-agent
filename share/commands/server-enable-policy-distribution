@@ -6,9 +6,6 @@
 
 . "${BASEDIR}/../lib/common.sh"
 
-# Allow the agent from restarting cf-serverd
-rm -f /opt/rudder/etc/disable-policy-distribution
-
-# Then, actually start the server right now
+# Enable and start the server right now
 systemctl enable rudder-cf-serverd
 systemctl start rudder-cf-serverd
