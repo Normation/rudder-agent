@@ -246,12 +246,14 @@ check_and_fix_inputs() {
     echo " Done"
   fi
 
-  # Ensure main promises are not broken, and clean ncf cache and force a new download if so
-  if ! ${CFE_BIN_DIR}/cf-promises > /dev/null
-  then
-    rm -rf ${CFE_DIR}/state/ncf-exclude-cache-*
-    rm -f ${CFE_DIR}/inputs/rudder_promises_updated
-    ${CFE_BIN_DIR}/cf-agent -K -f failsafe.cf
+  # Ensure main promises are not broken, and clean ncf cache and force a new download if so and agent is not disabled
+  if [ ! -f "${CFE_DISABLE_FILE}" ]; then
+    if ! ${CFE_BIN_DIR}/cf-promises > /dev/null
+    then
+      rm -rf ${CFE_DIR}/state/ncf-exclude-cache-*
+      rm -f ${CFE_DIR}/inputs/rudder_promises_updated
+      ${CFE_BIN_DIR}/cf-agent -K -f failsafe.cf
+    fi
   fi
 }
 
