@@ -5,10 +5,7 @@
 
 . "${BASEDIR}/../lib/common.sh"
 
-# First, prevent the agent from restarting cf-serverd
-touch /opt/rudder/etc/disable-policy-distribution
-
-# Then disable and stop it
+# Disable and stop the server
 systemctl stop rudder-cf-serverd
 systemctl disable rudder-cf-serverd
 
