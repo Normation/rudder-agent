@@ -4,6 +4,8 @@
 # @man +
 # @man *Options*:
 # @man +
+# @man *-k*: keep cf-serverd
+# @man +
 # @man *-q*: run the agent in quiet mode (display only error messages)
 # @man +
 # @man *-c*: run the agent without color output
@@ -12,7 +14,7 @@
 
 QUIET=false
 
-while getopts "qc" opt; do
+while getopts "qck" opt; do
   case $opt in
     q)
       QUIET=true
@@ -20,8 +22,16 @@ while getopts "qc" opt; do
     c)
       clear_colors
       ;;
+    k)
+      KEEP_SERVERD=y
+      ;;
   esac
 done
 
-service_action "rudder-agent" "stop"
+if [ "${KEEP_SERVERD}" = "y" ]
+then
+  service_action "rudder-cf-execd" "stop"
+else
+  service_action "rudder-agent" "stop"
+fi
 exit $?
