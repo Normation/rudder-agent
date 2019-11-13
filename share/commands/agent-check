@@ -277,11 +277,13 @@ check_and_fix_inputs() {
     rudder agent reset ${OPT}
     [ "$QUIET" = false ] && echo " Done"
   fi
-  if ! ${CFE_DIR}/bin/cf-promises -f failsafe.cf > /dev/null || ! ${CFE_DIR}/bin/cf-promises > /dev/null
-  then
-    [ "$QUIET" = false ] && printf "${YELLOW}WARNING${NORMAL}: Policies invalid, reseting to initial promises and updating..."
-    rudder agent reset ${OPT}
-    [ "$QUIET" = false ] && echo " Done"
+  if [ ! -f "${CFE_DISABLE_FILE}" ]; then
+    if ! ${CFE_DIR}/bin/cf-promises -f failsafe.cf > /dev/null || ! ${CFE_DIR}/bin/cf-promises > /dev/null
+    then
+      [ "$QUIET" = false ] && printf "${YELLOW}WARNING${NORMAL}: Policies invalid, reseting to initial promises and updating..."
+      rudder agent reset ${OPT}
+      [ "$QUIET" = false ] && echo " Done"
+    fi
   fi
 }
 
