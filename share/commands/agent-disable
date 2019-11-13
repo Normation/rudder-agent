@@ -7,6 +7,8 @@
 # @man +
 # @man *-s*: stop rudder-agent in addition to disabling it
 # @man +
+# @man *-k*: keep cf-serverd when stopping agent
+# @man +
 # @man *-q*: run the agent in quiet mode (display only error messages)
 # @man +
 # @man *-c*: run the agent without color output
@@ -15,16 +17,22 @@
 
 QUIET=false
 
-while getopts "qcs" opt; do
+OPTIONS=""
+while getopts "qcsk" opt; do
   case $opt in
     s)
       STOP=y
       ;;
+    k)
+      OPTIONS="${OPTIONS} -k"
+      ;;
     q)
       QUIET=true
+      OPTIONS="${OPTIONS} -q"
       ;;
     c)
       clear_colors
+      OPTIONS="${OPTIONS} -c"
       ;;
   esac
 done
@@ -35,5 +43,5 @@ touch /opt/rudder/etc/disable-agent
 
 [ "$QUIET" = false ] && printf "${GREEN}ok${NORMAL}: Rudder agent is now disabled.\n"
 if [ "${STOP}" = "y" ]; then
-  rudder agent stop "${OPTIONS}"
+  rudder agent stop ${OPTIONS}
 fi
