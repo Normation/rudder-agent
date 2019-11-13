@@ -26,7 +26,7 @@ while getopts "iIvdc" opt; do
 done
 
 # check if the API is available
-api_result=$(filtered_api_call "${API_URL}/api/latest/system/status" "${TOKEN}" "GET" "" "${DISPLAY_COMMAND}")
+api_result=$(filtered_api_call "${API_URL}/api/latest/system/status" "${TOKEN}" "GET" "" "${DISPLAY_COMMAND}" 2>/dev/null)
 api_code=$?
 
 if [ ${api_code} -eq 0 ]
