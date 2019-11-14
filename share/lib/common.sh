@@ -23,6 +23,15 @@ service_action() {
 
   if systemctl list-units --type service --all ${service}.service 2>&1 | grep -q '\b1 loaded units listed'; then
     CMD="systemctl ${action} ${service}"
+    if [ "${service}" = "rudder-agent" ]; then
+      # Display information about subservices
+      SUBSERVICES=""
+      for subservice in "rudder-cf-serverd" "rudder-cf-execd"; do
+        status="disabled"
+        systemctl -q is-enabled "${subservice}" && status="enabled" || true
+        echo "${subservice}: ${status}"
+      done
+    fi
   elif [ -x /usr/sbin/service ]; then
     CMD="/usr/sbin/service ${service} ${action}"
   elif [ -x /etc/init.d/${service} ]; then
