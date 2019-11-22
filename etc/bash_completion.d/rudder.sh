@@ -15,8 +15,8 @@ _global() {
   fi
 }
 _rudder() {
-  local cur="$2"
-  local prev="$3"
+  local cur="${COMP_WORDS[COMP_CWORD]}"
+  local prev="${COMP_WORDS[COMP_CWORD]}"
   local obj cmd base opts
 
   base="/opt/rudder/share/commands"
