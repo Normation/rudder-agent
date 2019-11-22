@@ -37,11 +37,11 @@ for i in $(seq 1 ${TIMEOUT}); do
     break
   elif [ "${WAIT}" = "no" ]
   then
-    echo "Server API Response is KO."
+    echo "Server status check failed"
     exit 2
   elif [ $i -eq 60 ]
   then
-    echo "Server Response is not KO after 60 seconds..."
+    echo "Server status check failed after 60 seconds..."
     exit 2
   fi
   sleep 1
