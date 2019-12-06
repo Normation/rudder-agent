@@ -8,7 +8,7 @@
 # @man +
 # @man *-c*: run the agent without color output
 # @man +
-# @man *-p*: check permissions of file used by relayd
+# @man *-p*: fix permissions of file used by relayd, and start it if not running
 
 
 . "${BASEDIR}/../lib/common.sh"
