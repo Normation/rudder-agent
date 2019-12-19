@@ -14,7 +14,7 @@ systemctl disable rudder-cf-serverd
 
 # Just in case other cf-server were running
 if type killall > /dev/null 2> /dev/null; then
-  killall cf-serverd 2> /den/null || true
+  killall cf-serverd 2> /dev/null || true
 elif type pidof > /dev/null 2> /dev/null; then
   kill $(pidof cf-serverd 2>/dev/null) 2> /dev/null || true
 else
