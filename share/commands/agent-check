@@ -51,16 +51,14 @@ while getopts "qcfu" opt; do
 done
 
 # Variables
-BACKUP_DIR=/var/backups/rudder/
-
-# Default variables for CFEngine binaries and disable files
-CFE_DIR=/var/rudder/cfengine-community
-CFE_DISABLE_FILE=/opt/rudder/etc/disable-agent
-UUID_FILE=/opt/rudder/etc/uuid.hive
+BACKUP_DIR="/var/backups/rudder/"
+CFE_DIR="${RUDDER_VAR}/cfengine-community"
+CFE_DISABLE_FILE="${RUDDER_DIR}/etc/disable-agent"
+UUID_FILE="${RUDDER_DIR}/etc/uuid.hive"
 LAST_UPDATE_FILE="${CFE_DIR}/last_successful_inputs_update"
 
 ## Paths for Rudder Server Roles
-RUDDER_SERVER_ROLES=/opt/rudder/etc/server-roles.d
+RUDDER_SERVER_ROLES="${RUDDER_DIR}/etc/server-roles.d"
 
 # Get common commands from common.sh
 init_commands
@@ -164,7 +162,7 @@ check_and_fix_cfengine_processes() {
   # A standard kill won't kill them, so the -9 is necessary to make sure they are stopped
   # They will be restarted by the check below, if the disable file is not set
   # List the cf-execd processes running (without the path, they can be run manually)
-  CF_EXECD_RUNNING=`${PS_COMMAND} | grep "${CFE_DIR}/bin/cf-execd" | sed -e '/grep/d' | cat`
+  CF_EXECD_RUNNING=`${PS_COMMAND} | grep -E "(${RUDDER_DIR}|${CFE_DIR})/bin/cf-execd" | sed -e '/grep/d' | cat`
   NB_CF_EXECD_RUNNING=`echo "${CF_EXECD_RUNNING}" | sed -e '/^$/d' | wc -l`
   if [ ${NB_CF_EXECD_RUNNING} -gt 1 ]; then
     [ "$QUIET" = false ] && printf "${YELLOW}WARNING${NORMAL}: Too many instance of Rudder cf-execd processes running. Killing them..."
@@ -173,7 +171,7 @@ check_and_fix_cfengine_processes() {
   fi
 
   # List the CFEngine processes running
-  CF_PROCESS_RUNNING=`${PS_COMMAND} | grep -E "${CFE_DIR}/bin/cf-(agent|execd)" | cat`
+  CF_PROCESS_RUNNING=`${PS_COMMAND} | grep -E "(${RUDDER_DIR}|${CFE_DIR})/bin/cf-(agent|execd)" | cat`
   # Count the number of processes running, filtering empty lines
   NB_CF_PROCESS_RUNNING=`echo "${CF_PROCESS_RUNNING}" | sed -e '/^$/d' | wc -l`
 
@@ -278,7 +276,7 @@ check_and_fix_inputs() {
     [ "$QUIET" = false ] && echo " Done"
   fi
   if [ ! -f "${CFE_DISABLE_FILE}" ]; then
-    if ! ${CFE_DIR}/bin/cf-promises -f failsafe.cf > /dev/null || ! ${CFE_DIR}/bin/cf-promises > /dev/null
+    if ! ${RUDDER_DIR}/bin/cf-promises -f failsafe.cf > /dev/null || ! ${RUDDER_DIR}/bin/cf-promises > /dev/null
     then
       [ "$QUIET" = false ] && printf "${YELLOW}WARNING${NORMAL}: Policies invalid, reseting to initial promises and updating..."
       rudder agent reset ${OPT}

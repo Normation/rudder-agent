@@ -159,4 +159,4 @@ then
 fi
 
 # Aggregate everything
-${NODELIST} | ${LOOP} ${DELIM} "${RUDDER_VAR}/cfengine-community/bin/cf-runagent" -H "{}:${PORT}" ${TIMEOUT} ${VERBOSITY} ${COLOR} ${CLASS} | eval ${PRETTY}
+${NODELIST} | ${LOOP} ${DELIM} "${RUDDER_DIR}/bin/cf-runagent" -H "{}:${PORT}" ${TIMEOUT} ${VERBOSITY} ${COLOR} ${CLASS} | eval ${PRETTY}

@@ -53,7 +53,7 @@ STEP="Creating redirect iptables rule"
 iptables -t nat -I PREROUTING -p tcp -s ${NODE} --dport ${SERVER_PORT} -j DNAT --to-destination :${DEBUG_PORT}
 
 STEP="Running debug server"
-${RUDDER_VAR}/cfengine-community/bin/cf-serverd -v --no-fork -D debug_port
+${RUDDER_DIR}/bin/cf-serverd -v --no-fork -D debug_port
 
 STEP="Removing iptables rule"
 iptables -t nat -D PREROUTING -p tcp -s ${NODE} --dport ${SERVER_PORT} -j DNAT --to-destination :${DEBUG_PORT}

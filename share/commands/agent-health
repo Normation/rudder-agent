@@ -51,7 +51,7 @@ if ! grep -E "^[0-9.]+$|^[0-9a-fA-F:]+$" "${CFE_DIR}/policy_server.dat">/dev/nul
 fi
 
 # test failsafe promises
-/var/rudder/cfengine-community/bin/cf-promises -f failsafe.cf > /dev/null 2>&1
+${RUDDER_DIR}/bin/cf-promises -f failsafe.cf > /dev/null 2>&1
 if [ $? -ne 0 ]
 then
   echo "Broken failsafe promises"
@@ -69,7 +69,7 @@ then
 fi
 
 # test promises
-CFPROMISES=$(/var/rudder/cfengine-community/bin/cf-promises -I 2>&1)
+CFPROMISES=$(${RUDDER_DIR}/bin/cf-promises -I 2>&1)
 if [ $? -ne 0 ]
 then
   echo "Broken promises"
