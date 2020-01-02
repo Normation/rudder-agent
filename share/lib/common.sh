@@ -189,6 +189,7 @@ fi
 
 # Paths
 RUDDER_VAR="/var/rudder"
+RUDDER_DIR="/opt/rudder"
 
 # Standard classes for verbosity
 DEBUG_CLASS="-D trace"

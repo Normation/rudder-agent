@@ -28,7 +28,7 @@ CERT_EXP=$(openssl x509 -enddate -noout -in /opt/rudder/etc/ssl/agent.cert | cut
 [ $? -ne 0 ] && CERT_EXP="Not yet configured"
 CERT_FINGERPRINT=$(openssl x509 -in /opt/rudder/etc/ssl/agent.cert -noout -fingerprint -sha1 | cut -d= -f2)
 [ $? -ne 0 ] && CERT_FINGERPRINT="Not yet configured"
-KEY_HASH=$(cf-promises --show-vars | grep "sys.key_digest" | awk '{print $2}')
+KEY_HASH=$(${RUDDER_DIR}/bin/cf-promises --show-vars | grep "sys.key_digest" | awk '{print $2}')
 [ $? -ne 0 ] && KEY_HASH="Not yet configured"
 
 POLICY=$(cat /var/rudder/cfengine-community/policy_server.dat 2>/dev/null)
@@ -95,6 +95,6 @@ echo "Version: ${VERSION}"
 # Display system classes in verbose mode
 if [ "${VERBOSE}" = "true" ]; then
   echo "Defined system conditions:"
-  "${RUDDER_VAR}/cfengine-community/bin/cf-promises" --show-classes | grep "hardclass$" | awk '{ print "  " $1 }'
+  "${RUDDER_DIR}/bin/cf-promises" --show-classes | grep "hardclass$" | awk '{ print "  " $1 }'
 fi
 

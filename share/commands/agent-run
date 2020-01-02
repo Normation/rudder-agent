@@ -181,7 +181,7 @@ else
   runlog_output="cat"
 fi
 
-"${RUDDER_VAR}/cfengine-community/bin/cf-agent" ${VERBOSITY} ${COLOR} -K ${BUNDLE} ${CLASS} | $log_outputs | $timestamp | $runlog_output | eval ${PRETTY}
+"${RUDDER_DIR}/bin/cf-agent" ${VERBOSITY} ${COLOR} -K ${BUNDLE} ${CLASS} | $log_outputs | $timestamp | $runlog_output | eval ${PRETTY}
 code2=$?
 
 if [ "${OUTPUT_LOG}" = "true" ]; then
