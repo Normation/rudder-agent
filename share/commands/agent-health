@@ -59,13 +59,17 @@ then
   exit 2 # error
 fi
 
-# test connection errors
-egrep "FATAL:|Fatal :|could not get an updated configuration" "${CFE_DIR}/outputs/previous" > /dev/null
-if [ $? -ne 1 ]
+# test connection errors, only if the previous file exists
+# otherwise we are before the first agent run or in bootstrap promises
+if [ -e "${CFE_DIR}/outputs/previous" ]
 then
-  echo "Connection errors in Rudder agent last run"
-  [ -z "${NRPE}" ] && echo "See ${CFE_DIR}/outputs/previous for more details"
-  exit 2 # error
+  egrep "FATAL:|Fatal :|could not get an updated configuration" "${CFE_DIR}/outputs/previous" > /dev/null
+  if [ $? -ne 1 ]
+  then
+    echo "Connection errors in Rudder agent last run"
+    [ -z "${NRPE}" ] && echo "See ${CFE_DIR}/outputs/previous for more details"
+    exit 2 # error
+  fi
 fi
 
 # test promises
