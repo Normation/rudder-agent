@@ -31,6 +31,7 @@ while getopts "qciIvdp" opt; do
       ;;
     p)
       if [ -f /var/rudder/lib/ssl/allnodescerts.pem ]; then chgrp rudder /var/rudder/lib/ssl/allnodescerts.pem; fi
+      if [ -f /var/rudder/lib/ssl/allnodescerts.pem ] && type restorecon >/dev/null 2>&1; then restorecon /var/rudder/lib/ssl/allnodescerts.pem; fi
       if [ -f /var/rudder/lib/relay/nodeslist.json ]; then chown rudder-relayd /var/rudder/lib/relay/nodeslist.json; fi
       # Needed in case it was not running
       # Only do it in -p as it should not be done in the general case which is used by systemd to reload the service
