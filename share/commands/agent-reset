@@ -88,6 +88,11 @@ then
     [ "$VERBOSE" = true ] && echo "Getting initial promises..."
     # $@ to pass options through
     rudder agent update "$@"
+  else
+    # Ensure that ncf is up to date  
+    [ "$VERBOSE" = true ] && echo "Ensure ncf is up to date..."
+    # $@ to pass options through
+    rudder agent update "$@"
   fi
 else
   [ "${QUIET}" = false ] && echo "No policy server file, cannot update"
