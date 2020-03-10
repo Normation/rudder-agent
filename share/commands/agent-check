@@ -29,7 +29,7 @@ ONLY_UUID=false
 OPT=""
 RESET=false
 
-while getopts "qcfu" opt; do
+while getopts "qcfur" opt; do
   case $opt in
     q)
       QUIET=true
