@@ -90,7 +90,7 @@ if [ ! -t 0 ]; then
  if [ "$SLEEP" = true ]; then
     # we splay on half the interval to avoid running at the same time twice the agent
     MAX_SLEEP=`expr ${RUN_INTERVAL} \* 30`
-    SLEEP_DURATION=$(awk -v m="$MAX_SLEEP" 'BEGIN{print int(rand()*m)}')
+    SLEEP_DURATION=$(awk -v m="$MAX_SLEEP" 'BEGIN{srand(); print int(rand()*m)}')
     sleep $SLEEP_DURATION
   fi
 fi
