@@ -72,7 +72,7 @@ if [ ! -t 0 ]; then
  if [ "$SLEEP" = true ]; then
     # we half the interval in the hope of not running at the same time as the agent
     MAX_SLEEP=`expr ${AGENT_RUN_INTERVAL} \* 30` # in second
-    SLEEP_DURATION=$(awk -v m="$MAX_SLEEP" 'BEGIN{print int(rand()*m)}')
+    SLEEP_DURATION=$(awk -v m="$MAX_SLEEP" 'BEGIN{srand(); print int(rand()*m)}')
     sleep $SLEEP_DURATION
   fi
 fi
