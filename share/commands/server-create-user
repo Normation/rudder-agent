@@ -1,0 +1,48 @@
+#!/bin/bash
+# @description create an admin user account
+# @man This commands allows inserting a new user account. It is particularly useful
+# @man to create the first admin account on the server. It requires that the 
+# @man authentication hash is bcrypt (default from fresh 6.1).
+# @man +
+# @man *Options*:
+# @man +
+# @man *-u*: specify the user name ("admin" by default)
+
+. "${BASEDIR}/../lib/common.sh"
+
+USERFILE="/opt/rudder/etc/rudder-users.xml"
+USER="admin"
+
+while getopts "u:" opt; do
+  case $opt in
+    u)
+      USER="${OPTARG}"
+      ;;
+  esac
+done
+
+# check hash
+if ! grep -qE "^[[:space:]]*<authentication[[:space:]]+hash=\"bcrypt\"[[:space:]]*>" "${USERFILE}"
+then
+  echo "This command can only create users when the 'bcrypt' hash method is used"
+  echo "Particularly, for servers upgraded from pre-6.1, it requires resetting all"
+  echo "user passwords when changing the hash method."
+  echo "See https://docs.rudder.io/reference/6.0/administration/users.html for details."
+  exit 1
+fi
+
+# check if user is already there
+if grep -qE "name[[:space:]]*=[[:space:]]*\"${USER}\"" "${USERFILE}"
+then
+  echo "User '${USER}' already exists, aborting."
+  exit 1
+fi
+
+# bcrypt (12 cost)
+hash=$(htpasswd -nBC 12 "" | tr -d ':\n')
+
+details="<user name=\"${USER}\" password=\"${hash}\" role=\"administrator\" />"
+sed -i "/^[[:space:]]*<\/authentication>/i ${details}" "${USERFILE}"
+
+echo "User '${USER}' added to Rudder server"
+
