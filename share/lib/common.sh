@@ -218,8 +218,11 @@ UUID=$(cat /opt/rudder/etc/uuid.hive 2>/dev/null)
 
 if [ "${RUDDER_REPORT_MODE}" = "changes-only" ] || [ "${RUDDER_REPORT_MODE}" = "reports-disabled" ]
 then
+  VERBOSITY=""
   FULL_COMPLIANCE=0
 else
+  # info as minimal verbosity level for complete reporting
+  VERBOSITY="-I ${INFO_CLASS}"
   FULL_COMPLIANCE=1
 fi
 
