@@ -44,5 +44,7 @@ hash=$(htpasswd -nBC 12 "" | tr -d ':\n')
 details="<user name=\"${USER}\" password=\"${hash}\" role=\"administrator\" />"
 sed -i "/^[[:space:]]*<\/authentication>/i ${details}" "${USERFILE}"
 
-echo "User '${USER}' added to Rudder server"
+echo "User '${USER}' added, restarting the Rudder server"
+
+systemctl restart rudder-jetty >/dev/null
 
