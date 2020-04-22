@@ -27,6 +27,13 @@ compress_and_sign() {
     tmp_file="${TMP_REPORTS_DIR}/${file}"
     ready_file="${REPORTS_DIR}/${file}.gz"
 
+    # Do not send an empty file
+    if [ -z "$(cat ${tmp_file})" ]; then
+        echo "${blue}info${normal}: empty runlog, skipping reporting"
+        rm "${tmp_file}"
+        exit 0
+    fi
+
     # We do not include certs as the server already knows them
     openssl smime -sign -text -nocerts -signer "${CERT}" -inkey "${PRIVKEY}" -passin "pass:${PASSPHRASE}" \
         -in "${tmp_file}" -out "${tmp_file}.signed"
