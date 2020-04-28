@@ -34,6 +34,12 @@
 # @man *-D*: define a class for this run
 # @man +
 # @man *-f*: run the agent even if it is disabled
+# @man +
+# @man *Exit codes*:
+# @man +
+# @man *0*: Agent ran normally
+# @man +
+# @man *1*: Agent encountered a critial error and could not run properly
 
 . "${BASEDIR}/../lib/common.sh"
 . "${BASEDIR}/../lib/cfengine_parsing.sh"
