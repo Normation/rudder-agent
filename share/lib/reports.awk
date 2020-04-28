@@ -465,7 +465,7 @@ END {
   printf "%s%-80.80s%s\n", white, padding, normal;
 
   # Set return code
-  if (run_error+audit_error+enforce_error != 0) {
+  if (run_error != 0) {
     exit 1;
   }
 }
