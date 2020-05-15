@@ -10,6 +10,9 @@
 
 . "${BASEDIR}/../lib/common.sh"
 
+set -o pipefail
+set -e
+
 USERFILE="/opt/rudder/etc/rudder-users.xml"
 USER="admin"
 
