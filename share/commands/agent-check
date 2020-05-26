@@ -133,7 +133,7 @@ check_and_fix_cfengine_keys() {
   if ! exist_or_restore /opt/rudder/etc/ssl/agent.cert || ! compare_uuid
   then
     [ "$QUIET" = false ] && printf "INFO: Agent certificate is missing, creating it..."
-    openssl req -new -sha256 -key ${CFE_DIR}/ppkeys/localhost.priv -out /opt/rudder/etc/ssl/agent.cert -passin "pass:Cfengine passphrase" -x509 -days 3650 -extensions agent_cert -config /opt/rudder/etc/ssl/openssl-agent.cnf -subj "/UID=$(cat "${UUID_FILE}")"
+    openssl req -new -batch -sha256 -key ${CFE_DIR}/ppkeys/localhost.priv -out /opt/rudder/etc/ssl/agent.cert -passin "pass:Cfengine passphrase" -x509 -days 3650 -extensions agent_cert -config /opt/rudder/etc/ssl/openssl-agent.cnf -subj "/UID=$(cat "${UUID_FILE}")"
     [ "$QUIET" = false ] && echo " Done"
   fi
   # Agent certificate UID must match agent UUID
