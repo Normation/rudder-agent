@@ -23,7 +23,7 @@ service_action() {
 
   if systemctl list-units --type service --all ${service}.service 2>&1 | grep -q '\b1 loaded units listed'; then
     CMD="systemctl ${action} ${service}"
-    if [ "${service}" = "rudder-agent" ]; then
+    if [ "${service}" = "rudder-agent" ] && [ "${QUIET}" != "true" ]; then
       # Display information about subservices
       SUBSERVICES=""
       for subservice in "rudder-cf-serverd" "rudder-cf-execd"; do

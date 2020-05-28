@@ -179,8 +179,8 @@ check_and_fix_cfengine_processes() {
   # But this is applied only on servers or nodes already initialized (policy server set)
   if [ ! -f "${CFE_DISABLE_FILE}" ] && [ "${NB_CF_PROCESS_RUNNING}" -eq 0 ]; then
     [ "$QUIET" = false ] && printf "INFO: No disable file detected and no agent executor process either. Restarting agent service..."
-    rudder agent stop ${OPT}
-    rudder agent start ${OPT}
+    rudder agent stop -q ${OPT}
+    rudder agent start -q ${OPT}
     [ "$QUIET" = false ] && echo " Done"
   fi
 
