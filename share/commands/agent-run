@@ -1,7 +1,7 @@
 #!/bin/sh
-# @description force run agent promises
+# @description force run agent policies
 # @man This command will force the agent to enforce current policies.
-# @man You can run *rudder agent update* before to update the promises.
+# @man You can run *rudder agent update* before to update the policies.
 # @man +
 # @man *Options*:
 # @man +

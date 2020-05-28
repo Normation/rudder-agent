@@ -54,8 +54,8 @@ fi
 ${RUDDER_DIR}/bin/cf-promises -f failsafe.cf > /dev/null 2>&1
 if [ $? -ne 0 ]
 then
-  echo "Broken failsafe promises"
-  [ -z "${NRPE}" ] && echo "The failsafe promises are broken, you can run 'rudder agent reset' to go back to the initial promises"
+  echo "Broken failsafe policies"
+  [ -z "${NRPE}" ] && echo "The failsafe policies are broken, you can run 'rudder agent reset' to go back to the initial policies"
   exit 2 # error
 fi
 
@@ -76,8 +76,8 @@ fi
 CFPROMISES=$(${RUDDER_DIR}/bin/cf-promises -I 2>&1)
 if [ $? -ne 0 ]
 then
-  echo "Broken promises"
-  [ -z "${NRPE}" ] && echo "The promises are broken, you should fix them on the policy server or run 'rudder agent reset' to go back to the initial promises"
+  echo "Broken policies"
+  [ -z "${NRPE}" ] && echo "The policies are broken, you should fix them on the policy server or run 'rudder agent reset' to go back to the initial policies"
   exit 2 # error
 fi
 

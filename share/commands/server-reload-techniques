@@ -1,7 +1,7 @@
 #!/bin/bash
 # @description reload techniques
 # @man This command will reload the technique library into memory from
-# @man the filesystem and regenerate the promises if necessary.
+# @man the filesystem and regenerate the policies if necessary.
 # @man +
 # @man *Options*:
 # @man +

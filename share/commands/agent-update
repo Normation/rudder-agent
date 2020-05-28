@@ -1,6 +1,6 @@
 #!/bin/sh
-# @description update promises on agent
-# @man The agent will fetch the last version of its promises from its configured
+# @description update policies on agent
+# @man The agent will fetch the last version of its policies from its configured
 # @man policy server.
 # @man +
 # @man *Options*:
@@ -65,9 +65,9 @@ fi
 code=$?
 
 if [ $code -eq 0 ]; then
-  [ "$QUIET" = false ] && printf "${GREEN}ok${NORMAL}: Rudder agent promises were updated.\n"
+  [ "$QUIET" = false ] && printf "${GREEN}ok${NORMAL}: Rudder agent policies were updated.\n"
   exit 0
 else
-  printf "${RED}error${NORMAL}: Rudder agent promises could not be updated.\n" 1>&2
+  printf "${RED}error${NORMAL}: Rudder agent policies could not be updated.\n" 1>&2
   exit $code
 fi

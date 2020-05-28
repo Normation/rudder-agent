@@ -5,7 +5,7 @@
 # @man - kill cfengine if there are too many processes
 # @man - run cfengine if its daemon is missing
 # @man - clean lock file if it is too big
-# @man - check that promises have been properly copied
+# @man - check that policies have been properly copied
 # @man - will sleep a random time (max half the run interval) when not run in interactive mode
 # @man +
 # @man *Options*:
@@ -278,7 +278,7 @@ check_and_fix_inputs() {
   if [ ! -f "${CFE_DISABLE_FILE}" ]; then
     if ! ${RUDDER_DIR}/bin/cf-promises -f failsafe.cf > /dev/null || ! ${RUDDER_DIR}/bin/cf-promises > /dev/null
     then
-      [ "$QUIET" = false ] && printf "${YELLOW}WARNING${NORMAL}: Policies invalid, reseting to initial promises and updating..."
+      [ "$QUIET" = false ] && printf "${YELLOW}WARNING${NORMAL}: Policies invalid, reseting to initial policies and updating..."
       rudder agent reset ${OPT}
       [ "$QUIET" = false ] && echo " Done"
     fi

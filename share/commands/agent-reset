@@ -1,9 +1,9 @@
 #!/bin/sh
 # @description reset agent status and cache
-# @man Remove all locks and state cache of the agent, and restore initial promises.
+# @man Remove all locks and state cache of the agent, and restore initial policies.
 # @man This won't affect the desired state of the node, but will only
 # @man reset the internal state of the agent. It is useful to test a rule
-# @man without caching interference or when you have trouble with the promises updates,
+# @man without caching interference or when you have trouble with the policies updates,
 # @man and is in most cases sufficient to resolve issues.
 # @man +
 # @man To completely reinitialize the agent and make it appear as a new node again, please
@@ -54,14 +54,11 @@ done
 
 # Try to remove everything that can block
 # - restore initial promises
-if [ "${UUID}" != "root" ]
-then
-  [ "$VERBOSE" = true ] && echo "Restoring initial promises..."
-  rm -rf /var/rudder/cfengine-community/inputs/*
-  # - remove ncf
-  rm -rf /var/rudder/ncf/common/*
-  rm -rf /var/rudder/ncf/local/*
-fi
+[ "$VERBOSE" = true ] && echo "Restoring initial policies..."
+rm -rf /var/rudder/cfengine-community/inputs/*
+# - remove ncf
+rm -rf /var/rudder/ncf/common/*
+rm -rf /var/rudder/ncf/local/*
 
 # - remove state
 [ "$VERBOSE" = true ] && echo "Resetting internal agent state..."
@@ -81,19 +78,17 @@ if [ -f "${RUDDER_VAR}/cfengine-community/policy_server.dat" ]
 then
   if [ "${UUID}" != "root" ]
   then
-    # the update should do the rest
+    # Bootstrap promises: the update should do the rest
     cp /opt/rudder/share/bootstrap-promises/* /var/rudder/cfengine-community/inputs/
 
-    # - update to make sure we have at least the initial promises
-    [ "$VERBOSE" = true ] && echo "Getting initial promises..."
-    # $@ to pass options through
-    rudder agent update "$@"
   else
-    # Ensure that ncf is up to date  
-    [ "$VERBOSE" = true ] && echo "Ensure ncf is up to date..."
-    # $@ to pass options through
-    rudder agent update "$@"
+    # Initial promises: the update should copy ncf
+    cp -r /opt/rudder/share/initial-promises/* /var/rudder/cfengine-community/inputs/
   fi
+  # Update to make sure we have working policies
+  [ "$VERBOSE" = true ] && echo "Getting initial policies..."
+  # $@ to pass options through
+  rudder agent update "$@"
 else
   [ "${QUIET}" = false ] && echo "No policy server file, cannot update"
   exit 1
