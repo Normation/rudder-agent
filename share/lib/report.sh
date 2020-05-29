@@ -28,10 +28,10 @@ compress_and_sign() {
     ready_file="${REPORTS_DIR}/${file}.gz"
 
     # Do not send an empty file
-    if [ -z "$(cat ${tmp_file})" ]; then
+    if ! [ -f "${tmp_file}" ] || [ -z "$(cat ${tmp_file})" ]; then
         echo "${blue}info${normal}: empty runlog, skipping reporting"
-        rm "${tmp_file}"
-        exit 0
+        rm -f "${tmp_file}"
+        return
     fi
 
     # We do not include certs as the server already knows them
