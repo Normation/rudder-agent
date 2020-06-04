@@ -1,3 +1,16 @@
+# Paths
+RUDDER_VAR="/var/rudder"
+RUDDER_DIR="/opt/rudder"
+RUDDER_JSON="${RUDDER_VAR}/cfengine-community/inputs/rudder.json"
+
+# Standard classes for verbosity
+DEBUG_CLASS="-D trace"
+VERBOSE_CLASS="-D debug"
+INFO_CLASS="-D info"
+
+# Default port for bootstrap
+BOOTSTRAP_PORT=5309
+
 # Reset colors
 clear_colors() {
     COLOR=""
@@ -187,21 +200,7 @@ else
     clear_colors
 fi
 
-# Paths
-RUDDER_VAR="/var/rudder"
-RUDDER_DIR="/opt/rudder"
-
-# Standard classes for verbosity
-DEBUG_CLASS="-D trace"
-VERBOSE_CLASS="-D debug"
-INFO_CLASS="-D info"
-
-# Default port for bootstrap
-BOOTSTRAP_PORT=5309
-
 # Information extracted from the policies
-RUDDER_JSON="${RUDDER_VAR}/cfengine-community/inputs/rudder.json"
-
 if [ -f "${RUDDER_JSON}" ]; then
   RUDDER_REPORT_MODE=$(rudder_json_value 'RUDDER_REPORT_MODE')
   AGENT_RUN_INTERVAL=$(rudder_json_value 'AGENT_RUN_INTERVAL')
