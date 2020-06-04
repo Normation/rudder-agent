@@ -142,7 +142,8 @@ then
 fi
 
 # Test if we are root
-if [ "$(id -u)" != "0" ]
+# some commands need to be called from rudder-relayd
+if [ "$(id -u)" != "0" ] && [ "$(id -un)" != "rudder-relayd" ]
 then
   echo "WARNING: Not running as root, this may cause problem"
 fi

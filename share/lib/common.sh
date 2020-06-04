@@ -233,4 +233,4 @@ else
   CERTIFICATE_OPTION="--insecure"
 fi
 
-TOKEN="$([ -f /var/rudder/run/api-token ] && cat /var/rudder/run/api-token)"
+TOKEN="$([ -f /var/rudder/run/api-token ] && cat /var/rudder/run/api-token 2>/dev/null)"
