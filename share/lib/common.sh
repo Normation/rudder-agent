@@ -144,6 +144,12 @@ modification_time() {
 
 # Check that a bootstrap is necessary
 bootstrap_check() {
+  # create folder if it doesn't exist
+  if [ ! -d "/var/rudder/cfengine-community/inputs" ]
+  then
+    mkdir -p /var/rudder/cfengine-community/inputs
+  fi
+
   if [ "$(ls -A /var/rudder/cfengine-community/inputs)" = "" ]
   then
     cp /opt/rudder/share/bootstrap-promises/* /var/rudder/cfengine-community/inputs/
