@@ -468,4 +468,14 @@ END {
   if (run_error != 0) {
     exit 1;
   }
+  if (error_fail || noncompliant_fail) {
+    if (enforce_error > 0 || audit_error > 0) {
+      exit 2;
+    }
+  }
+  if (noncompliant_fail) {
+    if (audit_noncompliant > 0) {
+      exit 3;
+    }
+  }
 }

@@ -41,6 +41,21 @@
 # @man *-u*: provide an alternate url for group query (default from ~/.rudder)
 # @man +
 # @man *-C*: provide an alternate config section in ~/.rudder for group query (default to first found)
+# @man +
+# @man *-e*: exit with an error if there was an error during policy application
+# @man +
+# @man *-E*: exit with an error if there a non compliance
+# @man +
+# @man *Exit codes*:
+# @man +
+# @man *0*: Agent ran normally
+# @man +
+# @man *1*: Agent encountered a critial error and could not run properly
+# @man +
+# @man *2*: Some policy encountered and error and *-e* parameter was passed
+# @man +
+# @man *3*: Some policy encountered a non compliance and *-E* parameter was passed
+
 
 . "${BASEDIR}/../lib/common.sh"
 . "${BASEDIR}/../lib/cfengine_parsing.sh"
@@ -52,7 +67,7 @@ DELIM=""
 MULTIHOST=1
 TIMEOUT="-t 300"
 
-while getopts "iIvdqwrRcTD:j:g:at:u:C:" opt; do
+while getopts "iIvdqwrRcTD:j:g:at:u:C:eE" opt; do
   case $opt in
     i|I)
       DISPLAY_INFO=1
@@ -115,6 +130,12 @@ while getopts "iIvdqwrRcTD:j:g:at:u:C:" opt; do
       ;;
     C)
       CONFID="${OPTARG}"
+      ;;
+    e)
+      ERROR_FAIL=1
+      ;;
+    E)
+      NONCOMPLIANT_FAIL=1
       ;;
   esac
 done

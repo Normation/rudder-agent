@@ -15,6 +15,10 @@ FULL_STRINGS=0
 MULTIHOST=0
 # Timing information
 TIMING=0
+# Return a non zero exit code on policy application error
+ERROR_FAIL=0
+# Return a non zero exit code on non compliance
+NONCOMPLIANT_FAIL=0
 
 VERSION=`${RUDDER_BIN} agent version`
 # Some awk version crash miserably when fflush is not defined
@@ -27,4 +31,5 @@ fi
 
 PRETTY="awk -v info=\"\${DISPLAY_INFO}\" -v full_strings=\"\${FULL_STRINGS}\" -v summary_only=\"\${SUMMARY_ONLY}\" -v quiet=\"\${QUIET}\" -v multihost=\"\${MULTIHOST}\" \
             -v green=\"\${GREEN}\" -v darkgreen=\"\${DARKGREEN}\" -v red=\"\${RED}\" -v yellow=\"\${YELLOW}\" -v magenta=\"\${MAGENTA}\" -v normal=\"\${NORMAL}\" -v white=\"\${WHITE}\" -v cyan=\"\${CYAN}\" \
-            -v dblue=\"\${DBLUE}\" -v dgreen=\"\${DGREEN}\" -v timing=\"\${TIMING}\" -v has_fflush=\"\${AWK_FFLUSH}\" -v full_compliance=\"\${FULL_COMPLIANCE}\" -v partial_run=\"\${PARTIAL_RUN}\" ${AWK_OPTS} -f ${PRETTY_FILTER}"
+            -v dblue=\"\${DBLUE}\" -v dgreen=\"\${DGREEN}\" -v timing=\"\${TIMING}\" -v has_fflush=\"\${AWK_FFLUSH}\" -v full_compliance=\"\${FULL_COMPLIANCE}\" -v partial_run=\"\${PARTIAL_RUN}\" \
+            -v error_fail=\"\${ERROR_FAIL}\" -v noncompliant_fail=\"\${NONCOMPLIANT_FAIL}\" ${AWK_OPTS} -f ${PRETTY_FILTER}"

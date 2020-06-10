@@ -18,6 +18,19 @@
 # @man +
 # @man *-d*: show log from a given date in the date command format (man date for details)
 # @man +
+# @man *-e*: exit with an error if there was an error during policy application
+# @man +
+# @man *-E*: exit with an error if there a non compliance
+# @man +
+# @man *Exit codes*:
+# @man +
+# @man *0*: Agent ran normally
+# @man +
+# @man *1*: Agent encountered a critial error and could not run properly
+# @man +
+# @man *2*: Some policy encountered and error and *-e* parameter was passed
+# @man +
+# @man *3*: Some policy encountered a non compliance and *-E* parameter was passed
 
 . "${BASEDIR}/../lib/common.sh"
 . "${BASEDIR}/../lib/cfengine_parsing.sh"
@@ -28,7 +41,7 @@ UPDATE_OPTIONS=""
 BASE_PATH="/var/rudder/cfengine-community/outputs"
 LOGFILE="${BASE_PATH}/previous"
 
-while getopts "wrRcl:n:d:" opt; do
+while getopts "wrRcl:n:d:eE" opt; do
   case $opt in
     w)
       FULL_STRINGS=1
@@ -55,6 +68,12 @@ while getopts "wrRcl:n:d:" opt; do
       date=`LANG=C date -d "${OPTARG}" +"%a_%b_%_d_%H_%M" | sed 's/ /_/'`
       name=`ls -tr "${BASE_PATH}" | grep "${date}" | tail -n 1`
       LOGFILE="${BASE_PATH}/${name}"
+      ;;
+    e)
+      ERROR_FAIL=1
+      ;;
+    E)
+      NONCOMPLIANT_FAIL=1
       ;;
   esac
 done

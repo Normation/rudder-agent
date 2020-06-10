@@ -35,11 +35,19 @@
 # @man +
 # @man *-f*: run the agent even if it is disabled
 # @man +
+# @man *-e*: exit with an error if there was an error during policy application
+# @man +
+# @man *-E*: exit with an error if there a non compliance
+# @man +
 # @man *Exit codes*:
 # @man +
 # @man *0*: Agent ran normally
 # @man +
 # @man *1*: Agent encountered a critial error and could not run properly
+# @man +
+# @man *2*: Some policy encountered and error and *-e* parameter was passed
+# @man +
+# @man *3*: Some policy encountered a non compliance and *-E* parameter was passed
 
 . "${BASEDIR}/../lib/common.sh"
 . "${BASEDIR}/../lib/cfengine_parsing.sh"
@@ -62,7 +70,7 @@ COLOR="-Cnever"
 # When debugging, reports will be huge, skip HTTP reporting
 DO_HTTP="true"
 
-while getopts "uiIvdqgwrRNcTb:D:f" opt; do
+while getopts "uiIvdqgwrRNcTb:D:feE" opt; do
   case $opt in
     u)
       UPDATE=true
@@ -127,6 +135,12 @@ while getopts "uiIvdqgwrRNcTb:D:f" opt; do
       ;;
     f)
       FORCE=1
+      ;;
+    e)
+      ERROR_FAIL=1
+      ;;
+    E)
+      NONCOMPLIANT_FAIL=1
       ;;
   esac
 done
