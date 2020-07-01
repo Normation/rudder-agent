@@ -221,11 +221,7 @@ check_and_fix_last_update() {
 check_and_fix_cf_lock() {
   MAX_CF_LOCK_SIZE=10485760
   if [ -f "${CFE_DIR}/state/cf_lock.lmdb" ]; then
-    if [ "${OS_FAMILY}" = "AIX" ]; then
-      CF_LOCK_SIZE=`istat "${CFE_DIR}/state/cf_lock.lmdb" | grep Length | sed "s%^.*Length \([0-9]*\) bytes.*$%\1%"`
-    else
-      CF_LOCK_SIZE=`stat -c%s "${CFE_DIR}/state/cf_lock.lmdb"`
-    fi
+    CF_LOCK_SIZE=$(perl -e'@a=stat $ARGV[0]; print $a[7]' "${CFE_DIR}/state/cf_lock.lmdb")
 
     if [ "${CF_LOCK_SIZE}" -ge "${MAX_CF_LOCK_SIZE}" ]; then
       [ "$QUIET" = false ] && printf "${YELLOW}WARNING${NORMAL}: The file ${CFE_DIR}/state/cf_lock.lmdb is too big (${CF_LOCK_SIZE} bytes), purging it..."

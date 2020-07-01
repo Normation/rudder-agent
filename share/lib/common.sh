@@ -75,10 +75,7 @@ service_action() {
 }
 
 init_commands() {
-## If we are on AIX, use alternative commands and options
-  # detect OS family
-  OS_FAMILY=`uname -s`
-  
+  ## If we are on AIX, use alternative commands and options
   if [ "${OS_FAMILY}" = "AIX" ] || [ "${OS_FAMILY}" = "SunOS" ]; then
     CP_A="cp -hpPr"
   else
@@ -131,14 +128,15 @@ rudder_json_value() {
   grep "$1" "${RUDDER_JSON}" | sed 's/.*"'$1'" *: *"\(.*\)",.*/\1/'
 }
 
-# stat -c %y compatible with aix
+# stat -c %y compatible with other unices
 modification_time() {
-  if type stat >/dev/null 2>/dev/null
-  then
-    stat -c "%y" "$1"
-  else
+  if [ "${OS_FAMILY}" = "AIX" ]; then
     # be careful, there is a litteral tab below
     LANG=C istat "$1" | sed -n '/Last modified/s/Last modified:[ 	]*//p'
+  elif [ "${OS_FAMILY}" = "Darwin" ]; then
+    stat -f "%Sm" "$1"
+  else
+    stat -c "%y" "$1"
   fi
 }
 
@@ -239,3 +237,7 @@ else
 fi
 
 TOKEN="$([ -f /var/rudder/run/api-token ] && cat /var/rudder/run/api-token 2>/dev/null)"
+
+# detect OS family
+OS_FAMILY=`uname -s`
+ 
