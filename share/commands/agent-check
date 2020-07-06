@@ -305,7 +305,8 @@ check_space() {
   if [ -d "${dir}" ]; then
     space=$(df "${dir}" | tail -n 1 | awk '{print $5}' | sed 's/%//')
     if [ "${space}" -gt "${max_percent}" ]; then
-      echo "FATAL: No space left on device '${dir}'" | logger -s
+      partition=$(df "${dir}" | tail -n 1 | awk '{print $1}')
+      echo "FATAL: No space left on device for '${dir}' on partition '${partition}'" | logger -s
       stop_now=1
     fi
   fi
