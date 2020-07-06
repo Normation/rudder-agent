@@ -263,6 +263,7 @@ check_varspace() {
     if [ -d /var/rudder/ldap/ ]; then
       ldap_space=$(df /var/rudder/ldap | tail -n 1 | awk '{print $5}' | sed 's/%//')
       if [ "${ldap_space}" -gt 98 ]; then
+        partition=$(df /var/rudder/ldap | tail -n 1 | awk '{print $1}')
         stop_now=1
       fi
     fi
@@ -284,12 +285,13 @@ check_varspace() {
       fi
 
       if [ "${psql_space}" -gt 98 ]; then
+        partition=$(df ${PG_TABLES_PATH} | tail -n 1 | awk '{print $1}')
         stop_now=1
       fi
     fi
   fi
   if [ "${stop_now}" = 1 ]; then
-    echo "FATAL: No space left on device" | logger -s
+    echo "FATAL: No space left on device - partition ${partition} has less than 5% free" | logger -s
     rudder agent disable
 
     # in TCP, we cannot stop Postgresql, but we can stop rudder-jetty and rudder-agent
