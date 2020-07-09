@@ -110,7 +110,7 @@ exist_or_restore() {
 # Compare agent certificate UID and agent UUID (return shell boolean)
 compare_uuid() {
   UUID=$(cat "${UUID_FILE}")
-  SUBJECT=$(openssl x509 -in /opt/rudder/etc/ssl/agent.cert -noout -subject | sed 's/.*UID = \([^,]*\)\(,.*\)\?/\1/')
+  SUBJECT=$(openssl x509 -in /opt/rudder/etc/ssl/agent.cert -noout -subject | sed 's/.*UID *= *\([^,]*\)\(,.*\)*/\1/')
   [ "${UUID}" = "${SUBJECT}" ]
 }
 # CFEngine keys must be present with a certificate and have proper access rights
