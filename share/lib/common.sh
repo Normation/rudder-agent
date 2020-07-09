@@ -76,8 +76,10 @@ service_action() {
 
 init_commands() {
   ## If we are on AIX, use alternative commands and options
-  if [ "${OS_FAMILY}" = "AIX" ] || [ "${OS_FAMILY}" = "SunOS" ]; then
+  if [ "${OS_FAMILY}" = "AIX" ]; then
     CP_A="cp -hpPr"
+  elif [ "${OS_FAMILY}" = "SunOS" ]; then
+    CP_A="cp -pPr"
   else
     CP_A="cp -a"
   fi
