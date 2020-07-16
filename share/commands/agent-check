@@ -162,7 +162,7 @@ check_and_fix_cfengine_processes() {
   # A standard kill won't kill them, so the -9 is necessary to make sure they are stopped
   # They will be restarted by the check below, if the disable file is not set
   # List the cf-execd processes running (without the path, they can be run manually)
-  CF_EXECD_RUNNING=`${PS_COMMAND} | grep -E "(${RUDDER_DIR}|${CFE_DIR})/bin/cf-execd" | sed -e '/grep/d' | cat`
+  CF_EXECD_RUNNING=`${PS_COMMAND} | egrep "(${RUDDER_DIR}|${CFE_DIR})/bin/cf-execd" | sed -e '/grep/d' | cat`
   NB_CF_EXECD_RUNNING=`echo "${CF_EXECD_RUNNING}" | sed -e '/^$/d' | wc -l`
   if [ ${NB_CF_EXECD_RUNNING} -gt 1 ]; then
     [ "$QUIET" = false ] && printf "${YELLOW}WARNING${NORMAL}: Too many instance of Rudder cf-execd processes running. Killing them..."
@@ -171,7 +171,7 @@ check_and_fix_cfengine_processes() {
   fi
 
   # List the CFEngine processes running
-  CF_PROCESS_RUNNING=`${PS_COMMAND} | grep -E "(${RUDDER_DIR}|${CFE_DIR})/bin/cf-(agent|execd)" | cat`
+  CF_PROCESS_RUNNING=`${PS_COMMAND} | egrep "(${RUDDER_DIR}|${CFE_DIR})/bin/cf-(agent|execd)" | cat`
   # Count the number of processes running, filtering empty lines
   NB_CF_PROCESS_RUNNING=`echo "${CF_PROCESS_RUNNING}" | sed -e '/^$/d' | wc -l`
 
@@ -346,7 +346,7 @@ check_varspace_or_exit() {
       fi
       if [ -f ${RUDDER_SERVER_ROLES}/rudder-reports ]; then
         # Try with systemd
-        POSTGRESQL_SERVICE_NAME=$(systemctl list-unit-files --type service | awk -F'.' '{print $1}' | grep -E "^postgresql-?[0-9]*$" | tail -n 1)
+        POSTGRESQL_SERVICE_NAME=$(systemctl list-unit-files --type service | awk -F'.' '{print $1}' | egrep "^postgresql-?[0-9]*$" | tail -n 1)
         
         # If nothing try with chkconfig (sles 12 only: postgresql is properly managed by systemd but cannot be detected with the line above)
         if [ -z "${POSTGRESQL_SERVICE_NAME}" ] && ! type chkconfig >/dev/null 2>/dev/null ; then

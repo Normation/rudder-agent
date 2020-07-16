@@ -94,7 +94,7 @@ init_commands() {
     fi
   elif [ -n "${ns}" ]; then # we have namespaces
     # the sed is here to prepend a fake user field that is removed by the -o option (it is never used)
-    PS_COMMAND="eval ps --no-header -e -O utsns | grep -E '^[[:space:]]*[[:digit:]]*[[:space:]]+${ns}' | sed 's/^/user /'"
+    PS_COMMAND="eval ps --no-header -e -O utsns | egrep '^[[:space:]]*[[:digit:]]*[[:space:]]+${ns}' | sed 's/^/user /'"
   else # standard unix
     PS_COMMAND="ps -ef"
   fi

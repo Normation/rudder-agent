@@ -40,7 +40,7 @@ then
 fi
 
 # test policy server value if it's not an ip
-if ! grep -E "^[0-9.]+$|^[0-9a-fA-F:]+$" "${CFE_DIR}/policy_server.dat">/dev/null; then
+if ! egrep "^[0-9.]+$|^[0-9a-fA-F:]+$" "${CFE_DIR}/policy_server.dat">/dev/null; then
   if type getent >/dev/null 2>/dev/null; then
     cat "${CFE_DIR}/policy_server.dat" | xargs getent hosts > /dev/null
   else
