@@ -58,11 +58,14 @@ compress_and_sign() {
     # Try to send it.
     # If it fails, it will be sent later by the agent
     curl --tlsv1.2 ${CERTIFICATE_OPTION} --fail --silent --proxy '' --user "${DAVUSER}:${DAVPW}" --upload-file "${ready_file}" https://${SERVER}/reports/ >/dev/null
-    if [ $? -eq 0 ]; then
+    # keep the code sinc curl has a very comprehensive error code list
+    code=$?
+    if [ ${code} -eq 0 ]; then
         # Remove temp file
         rm "${ready_file}"
+        echo "Reports sent."
     else
         # Keep the runlog for future upload by the agent
-        echo "${yellow}warning${normal}: Could not send ${ready_file}, it will be retried later"
+        echo "${yellow}warning${normal}: Could not send ${ready_file} (error ${code}), it will be retried later"
     fi  
 }
