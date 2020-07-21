@@ -107,7 +107,7 @@ get_hostname() {
   OS=$(uname -s)
   HOSTNAME=$(uname -n)
   
-  if [ "${OS}" = "Linux" ]; then
+  if [ "${OS}" = "Linux" ] && type hostname >/dev/null 2>/dev/null; then
      fqname=$(hostname --fqdn)
      if [ $? -eq 0 ] && echo "${fqname}" | grep -q '.' 2>/dev/null; then
        HOSTNAME="${fqname}"
