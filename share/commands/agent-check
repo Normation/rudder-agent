@@ -77,6 +77,18 @@ if [ ! -t 0 ]; then
   fi
 fi
 
+## Lock agent check to avoid piling up check processes
+## This might be removable whent 6.2 becomes the oldest supported (or not) because of #16859
+LOCKFILE=/tmp/agent-check.lock
+if [ -e "${LOCKFILE}" ] && kill -0 `cat "${LOCKFILE}"`; then
+    echo "rudder agent check is already running"
+    exit 1
+fi
+# make sure the lockfile is removed when we exit and then claim it
+trap "rm -f ${LOCKFILE}; exit" INT TERM EXIT
+echo "$$" > "${LOCKFILE}"
+
+
 ##################################################################
 #### Test functions, skip to 'TEST' tag to read testing order ####
 ##################################################################
