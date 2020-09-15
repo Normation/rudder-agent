@@ -319,6 +319,7 @@ then
   cp -a "${BASE}"/* techniques/
   /opt/rudder/bin/rudder-fix-repository-permissions
   git add techniques/
+  git reset HEAD techniques/**/resources/*
   git commit -q -m "${TAG_MESSAGE} Forced technique upgrade from version ${package_version} on $(date)"
   # consider this commit as the common ancestor for futur update
   # TODO: better ?
