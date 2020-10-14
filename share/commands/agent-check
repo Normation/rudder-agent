@@ -67,16 +67,6 @@ init_commands
 MYUID=`id | cut -d\( -f2 | cut -d\) -f1`
 if [ "${MYUID}" != 'root' ];then echo "You must be root"; exit; fi
 
-# sleep for a random time, if not interactive
-if [ ! -t 0 ]; then
- if [ "$SLEEP" = true ]; then
-    # we half the interval in the hope of not running at the same time as the agent
-    MAX_SLEEP=`expr ${AGENT_RUN_INTERVAL} \* 30` # in second
-    SLEEP_DURATION=$(awk -v m="$MAX_SLEEP" 'BEGIN{srand(); print int(rand()*m)}')
-    sleep $SLEEP_DURATION
-  fi
-fi
-
 ## Lock agent check to avoid piling up check processes
 ## This might be removable whent 6.2 becomes the oldest supported (or not) because of #16859
 LOCKFILE=/tmp/agent-check.lock
@@ -88,6 +78,15 @@ fi
 trap "rm -f ${LOCKFILE}; exit" INT TERM EXIT
 echo "$$" > "${LOCKFILE}"
 
+# sleep for a random time, if not interactive
+if [ ! -t 0 ]; then
+ if [ "$SLEEP" = true ]; then
+    # we half the interval in the hope of not running at the same time as the agent
+    MAX_SLEEP=`expr ${AGENT_RUN_INTERVAL} \* 30` # in second
+    SLEEP_DURATION=$(awk -v m="$MAX_SLEEP" 'BEGIN{srand(); print int(rand()*m)}')
+    sleep $SLEEP_DURATION
+  fi
+fi
 
 ##################################################################
 #### Test functions, skip to 'TEST' tag to read testing order ####
