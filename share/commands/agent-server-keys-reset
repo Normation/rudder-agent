@@ -1,0 +1,47 @@
+#!/bin/sh
+# @description Reset all keys known from this node.
+# @man This command will delete all known keys from this node, allowing it to connect to
+# @man another server or relay by trusting it.
+# @man *Options*:
+# @man +
+# @man *-f*: force the reset of all keys without asking for confirmation
+# @man +
+# @man *-v*: run the command in verbose mode
+
+. "${BASEDIR}/../lib/common.sh"
+
+VERBOSE=false
+FORCE=0
+OPTS=""
+
+
+while getopts "vf" opt; do
+  case $opt in
+    v)
+      VERBOSE=true
+      ;;
+    f)
+      FORCE=1
+      ;;
+  esac
+done
+
+if [ "${UUID}" = "root" ]
+then
+  echo "Reinitializing all known keys on the root server breaks all agents. ABORTING!" >&2
+  exit 1
+fi
+
+if [ ${FORCE} -eq 0 ]
+then
+  echo "Reseting all known keys allow the node to connect to another server than the one it is currently trusting."
+  echo "Do yo really want to do it?"
+  echo "Type ctrl-c to abort now or enter to continue"
+  read a
+fi
+
+# - remove ppkeys (check will recreate them)
+[ "$VERBOSE" = true ] && echo "Removing all known keys..."
+rm -f /var/rudder/cfengine-community/ppkeys/root*
+rm -f /var/rudder/cfengine-community/ppkeys/policy_server_hash
+
