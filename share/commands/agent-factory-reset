@@ -70,7 +70,7 @@ fi
 
 if [ ${FORCE} -eq 0 ]
 then
-  echo "Reinitializing a node removes its UUID, its keys and its associated directives!"
+  echo "Reinitializing a node removes its UUID, its keys and trusts, and its applied policies!"
   echo "You will need to remove this node from the server and accept it again if it was already accepted."
   echo "Do yo really want to do it?"
   echo "Type ctrl-c to abort now or enter to continue"
@@ -89,6 +89,10 @@ cp -f /opt/rudder/etc/ssl/agent.cert /var/backups/rudder/agent.cert-$(date +%Y%m
 [ "$VERBOSE" = true ] && echo "Removing the agent keys..."
 rm -f /var/rudder/cfengine-community/ppkeys/localhost*
 rm -f /opt/rudder/etc/ssl/agent.cert
+
+# - remove all trust
+[ "$VERBOSE" = true ] && echo "Untrusting all other systems..."
+rm -f /var/rudder/cfengine-community/ppkeys/*
 
 # - remove uuid (check will recreate it)
 [ "$VERBOSE" = true ] && echo "Removing UUID..."
