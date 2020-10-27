@@ -44,3 +44,6 @@ fi
 [ "$VERBOSE" = true ] && echo "Removing all known keys..."
 rm -f /var/rudder/cfengine-community/ppkeys/root*
 rm -f /var/rudder/cfengine-community/ppkeys/policy_server_hash
+
+[ "$VERBOSE" = true ] && echo "Resetting policies..."
+${RUDDER_BIN} agent reset
