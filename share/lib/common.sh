@@ -8,9 +8,6 @@ DEBUG_CLASS="-D trace"
 VERBOSE_CLASS="-D debug"
 INFO_CLASS="-D info"
 
-# Default port for bootstrap
-BOOTSTRAP_PORT=5309
-
 # Reset colors
 clear_colors() {
     COLOR=""

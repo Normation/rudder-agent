@@ -61,7 +61,8 @@
 . "${BASEDIR}/../lib/cfengine_parsing.sh"
 . "${BASEDIR}/../lib/api_call.sh"
 
-PORT=5309
+PORT=$(cut -d: -s -f2 "${RUDDER_VAR}/cfengine-community/policy_server.dat")
+PORT=${PORT:-5309}
 LOOP="xargs -I{}"
 DELIM=""
 MULTIHOST=1
