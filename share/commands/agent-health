@@ -42,9 +42,9 @@ fi
 # test policy server value if it's not an ip
 if ! egrep "^[0-9.]+$|^[0-9a-fA-F:]+$" "${CFE_DIR}/policy_server.dat">/dev/null; then
   if type getent >/dev/null 2>/dev/null; then
-    cat "${CFE_DIR}/policy_server.dat" | xargs getent hosts > /dev/null
+    cut -d: -f1 "${CFE_DIR}/policy_server.dat" | xargs getent hosts > /dev/null
   else
-    cat "${CFE_DIR}/policy_server.dat" | xargs host > /dev/null 2> /dev/null
+    cut -d: -f1 "${CFE_DIR}/policy_server.dat" | xargs host > /dev/null 2> /dev/null
   fi
   if [ $? -ne 0 ]
   then

@@ -5,7 +5,7 @@ if [ -f "${RUDDER_JSON}" ]; then
   DAVPW=$(rudder_json_value 'DAVPASSWORD')
 fi
 
-SERVER=$(cat "${RUDDER_VAR}/cfengine-community/policy_server.dat")
+SERVER=$(cut -d: -f1 "${RUDDER_VAR}/cfengine-community/policy_server.dat")
 TMP_REPORTS_DIR="/var/rudder/tmp/reports/"
 REPORTS_DIR="/var/rudder/reports/ready/"
 

@@ -15,7 +15,8 @@
 . "${BASEDIR}/../lib/common.sh"
 
 DEBUG_PORT=5310
-SERVER_PORT=5309
+SERVER_PORT=$(cut -d: -s -f2 "${RUDDER_VAR}/cfengine-community/policy_server.dat")
+SERVER_PORT=${SERVER_PORT:-5309}
 
 set -e
 

@@ -52,7 +52,7 @@ full_api_call() {
     url=`_get_conf "${conf}" "url"`
     if [ -z "${url}" ]
     then
-      host=`cat /var/rudder/cfengine-community/policy_server.dat 2>/dev/null`
+      host=`cut -d: -f1 /var/rudder/cfengine-community/policy_server.dat 2>/dev/null`
       [ -z "${host}" ] && host="localhost"
       url="https://${host}/rudder"
     fi
