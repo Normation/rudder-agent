@@ -1,7 +1,7 @@
 #!/bin/bash
 # @description Upgrade techniques in the configuration repository from the packaged ones
-# @man This command will replace the techniques in /var/rudder/configuration-repository/techniques
-# @man by the techniques found in /opt/rudder/share/techniques which is installed by rudder-technique package.
+# @man This command will replace the techniques in ${RUDDER_VAR}/configuration-repository/techniques
+# @man by the techniques found in ${RUDDER_DIR}/share/techniques which is installed by rudder-technique package.
 # @man The upgrade can take care of user defined changes.
 # @man This command creates an update branch "rudder_update" with the content of current techniques first time is it run
 # @man +
@@ -34,7 +34,7 @@ PARENT_COMMIT=""
 SET_OPTION=false
 KEY_OPTION=""
 VALUE_OPTION=""
-CONFIGURATION_FILE=/opt/rudder/etc/rudder.conf
+CONFIGURATION_FILE=${RUDDER_DIR}/etc/rudder.conf
 
 AUTO_UPDATE_TECHNIQUE=false
 DURING_UPGRADE=false
@@ -47,8 +47,8 @@ function usage()
 {
   echo "rudder server upgrade-techniques"
   echo "upgrade techniques in the configuration repository from the packaged ones"
-  echo "This command will replace the techniques in /var/rudder/configuration-repository/techniques"
-  echo "by the techniques found in /opt/rudder/share/techniques which is installed by rudder-technique package."
+  echo "This command will replace the techniques in ${RUDDER_VAR}/configuration-repository/techniques"
+  echo "by the techniques found in ${RUDDER_DIR}/share/techniques which is installed by rudder-technique package."
   echo "The upgrade can take care of user defined changes."
   echo "This command creates an update branch rudder_update with the content of current techniques first time is it run"
   echo ""
@@ -242,8 +242,8 @@ fi
 
 
 
-REPO="/var/rudder/configuration-repository"
-BASE="/opt/rudder/share/techniques"
+REPO="${RUDDER_VAR}/configuration-repository"
+BASE="${RUDDER_DIR}/share/techniques"
 UPDATE_BRANCH="rudder_update"
 
 cd "${REPO}"
@@ -256,12 +256,12 @@ then
     if git checkout "${UPDATE_BRANCH}"
     then
       cp -a "${BASE}"/* techniques/
-      /opt/rudder/bin/rudder-fix-repository-permissions
+      ${RUDDER_DIR}/bin/rudder-fix-repository-permissions
       git add techniques/
       git commit -q -m "${TAG_MESSAGE} Standard technique upgrade from version ${package_version} on $(date)"
       git checkout master
       git merge "${UPDATE_BRANCH}"
-      /opt/rudder/bin/rudder-fix-repository-permissions
+      ${RUDDER_DIR}/bin/rudder-fix-repository-permissions
       # TODO Now's a good time for a user shell
       rudder server reload-techniques
     else
@@ -302,7 +302,7 @@ then
   fi
   git branch "${UPDATE_BRANCH}" "${PARENT_COMMIT}"
   # Fix permissions
-  /opt/rudder/bin/rudder-fix-repository-permissions
+  ${RUDDER_DIR}/bin/rudder-fix-repository-permissions
   exit 0
 fi
 
@@ -317,7 +317,7 @@ then
     read a
   fi
   cp -a "${BASE}"/* techniques/
-  /opt/rudder/bin/rudder-fix-repository-permissions
+  ${RUDDER_DIR}/bin/rudder-fix-repository-permissions
   git add techniques/
   git reset HEAD techniques/**/resources/*
   git commit -q -m "${TAG_MESSAGE} Forced technique upgrade from version ${package_version} on $(date)"
@@ -334,7 +334,7 @@ then
     rudder server reload-techniques
   else
     # webapp is down, so we have to touch file for reloading after reboot
-    touch /opt/rudder/etc/force_technique_reload
+    touch ${RUDDER_DIR}/etc/force_technique_reload
   fi
   echo "Techniques have been updated, and update branch set to current state of the Techniques"
 fi

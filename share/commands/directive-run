@@ -36,7 +36,7 @@
 
 . "${BASEDIR}/../lib/common.sh"
 
-BASE_PATH="/var/rudder/cfengine-community/inputs"
+BASE_PATH="${RUDDER_VAR}/cfengine-community/inputs"
 SERVER_VERSION=$(rudder_json_value 'SERVER_VERSION' | cut -d. -f1,2)
 
 major_compare "${SERVER_VERSION}" "6.0"

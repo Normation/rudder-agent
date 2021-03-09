@@ -6,15 +6,15 @@ if [ -f "${RUDDER_JSON}" ]; then
 fi
 
 SERVER=$(cut -d: -f1 "${RUDDER_VAR}/cfengine-community/policy_server.dat")
-TMP_REPORTS_DIR="/var/rudder/tmp/reports/"
-REPORTS_DIR="/var/rudder/reports/ready/"
+TMP_REPORTS_DIR="${RUDDER_VAR}/tmp/reports/"
+REPORTS_DIR="${RUDDER_VAR}/reports/ready/"
 
 mkdir -p "${TMP_REPORTS_DIR}"
 mkdir -p "${REPORTS_DIR}"
 
 # The key to use for signature
-PRIVKEY="/var/rudder/cfengine-community/ppkeys/localhost.priv"
-CERT="/opt/rudder/etc/ssl/agent.cert"
+PRIVKEY="${RUDDER_VAR}/cfengine-community/ppkeys/localhost.priv"
+CERT="${RUDDER_DIR}/etc/ssl/agent.cert"
 
 # Private key passphrase
 PASSPHRASE="Cfengine passphrase"

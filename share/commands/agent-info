@@ -22,25 +22,25 @@ while getopts "v" opt; do
   esac
 done
 
-CERT_CRE=$(openssl x509 -startdate -noout -in /opt/rudder/etc/ssl/agent.cert | cut -d= -f2)
+CERT_CRE=$(openssl x509 -startdate -noout -in ${RUDDER_DIR}/etc/ssl/agent.cert | cut -d= -f2)
 [ $? -ne 0 ] && CERT_CRE="Not yet configured"
-CERT_EXP=$(openssl x509 -enddate -noout -in /opt/rudder/etc/ssl/agent.cert | cut -d= -f2)
+CERT_EXP=$(openssl x509 -enddate -noout -in ${RUDDER_DIR}/etc/ssl/agent.cert | cut -d= -f2)
 [ $? -ne 0 ] && CERT_EXP="Not yet configured"
-CERT_FINGERPRINT=$(openssl x509 -in /opt/rudder/etc/ssl/agent.cert -noout -fingerprint -sha1 | cut -d= -f2)
+CERT_FINGERPRINT=$(openssl x509 -in ${RUDDER_DIR}/etc/ssl/agent.cert -noout -fingerprint -sha1 | cut -d= -f2)
 [ $? -ne 0 ] && CERT_FINGERPRINT="Not yet configured"
 KEY_HASH=$(${RUDDER_DIR}/bin/cf-promises --show-vars | grep "sys.key_digest" | awk '{print $2}')
 [ $? -ne 0 ] && KEY_HASH="Not yet configured"
 
-POLICY=$(cat /var/rudder/cfengine-community/policy_server.dat 2>/dev/null)
+POLICY=$(cat ${RUDDER_VAR}/cfengine-community/policy_server.dat 2>/dev/null)
 [ $? -ne 0 ] && POLICY="Not yet configured"
 
-POLICY_FETCHED=$(modification_time /var/rudder/cfengine-community/last_successful_inputs_update 2> /dev/null)
+POLICY_FETCHED=$(modification_time ${RUDDER_VAR}/cfengine-community/last_successful_inputs_update 2> /dev/null)
 [ $? -ne 0 ] && POLICY_FETCHED="Not yet updated" || POLICY_FETCHED=$(echo "${POLICY_FETCHED}" | cut -d'.' -f1)
 
-INVENTORY_SENT=$(modification_time /var/rudder/tmp/inventory_sent 2> /dev/null)
+INVENTORY_SENT=$(modification_time ${RUDDER_VAR}/tmp/inventory_sent 2> /dev/null)
 [ $? -ne 0 ] && INVENTORY_SENT="Not yet sent" || INVENTORY_SENT=$(echo "${INVENTORY_SENT}" | cut -d'.' -f1)
 
-ROLES=$(ls -m /opt/rudder/etc/server-roles.d/ 2>/dev/null)
+ROLES=$(ls -m ${RUDDER_DIR}/etc/server-roles.d/ 2>/dev/null)
 if [ $? -ne 0 ]; then
   ROLES="rudder-agent"
 else
@@ -49,10 +49,10 @@ fi
 
 if [ "${UUID}" != "root" ]
 then
-  if [ -d /var/rudder/share ]
+  if [ -d ${RUDDER_VAR}/share ]
   then
     ROLES="${ROLES}, rudder-relay"
-  elif [ -d /var/rudder/inventories/incoming ]
+  elif [ -d ${RUDDER_VAR}/inventories/incoming ]
   then
     ROLES="${ROLES}, rudder-relay (not registered)"
   fi
@@ -66,7 +66,7 @@ echo "Key hash: ${KEY_HASH}"
 echo "Certificate creation: ${CERT_CRE}"
 echo "Certificate expiration: ${CERT_EXP}"
 echo "Certificate fingerprint: ${CERT_FINGERPRINT}"
-[ "${VERBOSE}" = "true" ] && echo "Certificate:" && cat /opt/rudder/etc/ssl/agent.cert
+[ "${VERBOSE}" = "true" ] && echo "Certificate:" && cat ${RUDDER_DIR}/etc/ssl/agent.cert
 echo "Policy server: ${POLICY}"
 echo "Roles: ${ROLES}"
 if [ -n "${RUDDER_REPORT_MODE}" ]
@@ -74,13 +74,13 @@ then
   echo "Report mode: ${RUDDER_REPORT_MODE}"
 fi
 echo "Run interval: ${AGENT_RUN_INTERVAL} min"
-if [ -e /opt/rudder/etc/disable-agent ]; then
-  echo "Agent is disabled since $(modification_time /opt/rudder/etc/disable-agent)"
+if [ -e ${RUDDER_DIR}/etc/disable-agent ]; then
+  echo "Agent is disabled since $(modification_time ${RUDDER_DIR}/etc/disable-agent)"
 else
   echo "Agent is enabled"
 fi
-if [ -e /opt/rudder/etc/force-audit-agent ]; then
-  echo "Agent is forced in audit mode since $(modification_time /opt/rudder/etc/force-audit-agent)"
+if [ -e ${RUDDER_DIR}/etc/force-audit-agent ]; then
+  echo "Agent is forced in audit mode since $(modification_time ${RUDDER_DIR}/etc/force-audit-agent)"
 else
   echo "Agent is not forced in audit mode"
 fi

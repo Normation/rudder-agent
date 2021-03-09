@@ -55,35 +55,35 @@ done
 # Try to remove everything that can block
 # - restore initial promises
 [ "$VERBOSE" = true ] && echo "Restoring initial policies..."
-rm -rf /var/rudder/cfengine-community/inputs/*
+rm -rf ${RUDDER_VAR}/cfengine-community/inputs/*
 # - remove ncf
-rm -rf /var/rudder/ncf/common/*
-rm -rf /var/rudder/ncf/local/*
+rm -rf ${RUDDER_VAR}/ncf/common/*
+rm -rf ${RUDDER_VAR}/ncf/local/*
 
 # - remove state
 [ "$VERBOSE" = true ] && echo "Resetting internal agent state..."
-rm -rf /var/rudder/cfengine-community/state/*
-rm -f /var/rudder/cfengine-community/*.lmdb
+rm -rf ${RUDDER_VAR}/cfengine-community/state/*
+rm -f ${RUDDER_VAR}/cfengine-community/*.lmdb
 
 # - remove locks
 [ "$VERBOSE" = true ] && echo "Removing all agent locks..."
-rm -f /var/rudder/cfengine-community/*lock
+rm -f ${RUDDER_VAR}/cfengine-community/*lock
 
 # - remove the disable status
 [ "$VERBOSE" = true ] && echo "Enabling the agent if needed..."
-rm -f /opt/rudder/etc/disable-agent
+rm -f ${RUDDER_DIR}/etc/disable-agent
 
 # - bootstrap agent (but not on root server without initial promises)
-if [ -f "${RUDDER_VAR}/cfengine-community/policy_server.dat" ] && [ "${UUID}" != "root" -o -d /opt/rudder/share/initial-promises/ ]
+if [ -f "${RUDDER_VAR}/cfengine-community/policy_server.dat" ] && [ "${UUID}" != "root" -o -d ${RUDDER_DIR}/share/initial-promises/ ]
 then
   if [ "${UUID}" != "root" ]
   then
     # Bootstrap promises: the update should do the rest
-    cp /opt/rudder/share/bootstrap-promises/* /var/rudder/cfengine-community/inputs/
+    cp ${RUDDER_DIR}/share/bootstrap-promises/* ${RUDDER_VAR}/cfengine-community/inputs/
 
   else
     # Initial promises: the update should copy ncf
-    cp -r /opt/rudder/share/initial-promises/* /var/rudder/cfengine-community/inputs/
+    cp -r ${RUDDER_DIR}/share/initial-promises/* ${RUDDER_VAR}/cfengine-community/inputs/
   fi
   # Update to make sure we have working policies
   [ "$VERBOSE" = true ] && echo "Getting initial policies..."

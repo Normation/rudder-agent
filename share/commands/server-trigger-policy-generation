@@ -42,7 +42,7 @@ then
   fi
 else
   echo "Web interface is down - requested a policy generation at its restart"
-  touch /opt/rudder/etc/trigger-policy-generation
+  touch ${RUDDER_DIR}/etc/trigger-policy-generation
 fi
 
 

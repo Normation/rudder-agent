@@ -147,7 +147,7 @@ done
 
 printf "${VERSION}\nNode uuid: ${UUID}\n"
 
-if [ ${FORCE} -eq 0 ] && [ -e /opt/rudder/etc/disable-agent ]; then
+if [ ${FORCE} -eq 0 ] && [ -e ${RUDDER_DIR}/etc/disable-agent ]; then
   printf "\n${RED}error${NORMAL}: The Rudder agent is currently disabled. You can enable it with 'rudder agent enable'.\n" 1>&2
   exit 1
 fi
@@ -180,7 +180,7 @@ fi
 if [ "${OUTPUT_LOG}" = "true" ]; then
   # keep same name structure as cf-execd
   logfile=$(echo "cf_$(get_hostname)__$(LANG=C date +%s)_$(LANG=C date +"%a %b %e %H %M %S %Y")_0" | sed 's/[^a-zA-Z0-9]/_/g')
-  logdir=/var/rudder/cfengine-community/outputs
+  logdir=${RUDDER_VAR}/cfengine-community/outputs
   touch "${logdir}/${logfile}"
   chmod 600 "${logdir}/${logfile}"
   log_outputs="tee ${logdir}/${logfile}"

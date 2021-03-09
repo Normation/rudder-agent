@@ -20,7 +20,7 @@
 canonify() {
   printf "$1" | tr -c '[A-Za-z0-9_]' '_'
 }
-BASE_PATH="/var/rudder/modified-files/"
+BASE_PATH="${RUDDER_VAR}/modified-files/"
 BASE_NAME=""
 
 while getopts "l:n:d:" opt; do

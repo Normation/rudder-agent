@@ -80,31 +80,31 @@ fi
 # Backup essential files
 [ "$VERBOSE" = true ] && echo "Making a backup copy of essential files into /var/backups/rudder"
 mkdir -p /var/backups/rudder
-cp -f /opt/rudder/etc/uuid.hive /var/backups/rudder/uuid.hive-$(date +%Y%m%d) 2>/dev/null
-cp -f /var/rudder/cfengine-community/policy_server.dat /var/backups/rudder/policy_server.dat-$(date +%Y%m%d) 2>/dev/null
-cp -af /var/rudder/cfengine-community/ppkeys/ /var/backups/rudder/ppkeys-$(date +%Y%m%d) 2>/dev/null
-cp -f /opt/rudder/etc/ssl/agent.cert /var/backups/rudder/agent.cert-$(date +%Y%m%d) 2>/dev/null
+cp -f ${RUDDER_DIR}/etc/uuid.hive /var/backups/rudder/uuid.hive-$(date +%Y%m%d) 2>/dev/null
+cp -f ${RUDDER_VAR}/cfengine-community/policy_server.dat /var/backups/rudder/policy_server.dat-$(date +%Y%m%d) 2>/dev/null
+cp -af ${RUDDER_VAR}/cfengine-community/ppkeys/ /var/backups/rudder/ppkeys-$(date +%Y%m%d) 2>/dev/null
+cp -f ${RUDDER_DIR}/etc/ssl/agent.cert /var/backups/rudder/agent.cert-$(date +%Y%m%d) 2>/dev/null
 
 # reset policies
 ${RUDDER_BIN} agent reset
 
 # - remove ppkeys (check will recreate them)
 [ "$VERBOSE" = true ] && echo "Removing the agent keys..."
-rm -f /var/rudder/cfengine-community/ppkeys/localhost*
-rm -f /opt/rudder/etc/ssl/agent.cert
+rm -f ${RUDDER_VAR}/cfengine-community/ppkeys/localhost*
+rm -f ${RUDDER_DIR}/etc/ssl/agent.cert
 
 # - remove all trust
 [ "$VERBOSE" = true ] && echo "Untrusting all other systems..."
-rm -f /var/rudder/cfengine-community/ppkeys/*
+rm -f ${RUDDER_VAR}/cfengine-community/ppkeys/*
 
 # - remove uuid (check will recreate it)
 [ "$VERBOSE" = true ] && echo "Removing UUID..."
-rm -f /opt/rudder/etc/uuid.hive
+rm -f ${RUDDER_DIR}/etc/uuid.hive
 
 # - remove old inventory
 [ "$VERBOSE" = true ] && echo "Removing old inventory..."
-rm -rf /opt/rudder/var/fusioninventory/*
-rm -rf /var/rudder/tmp/inventory/*
+rm -rf ${RUDDER_DIR}/var/fusioninventory/*
+rm -rf ${RUDDER_VAR}/tmp/inventory/*
 
 # - check and repair everything missing (keys, uuid, reset, update, inventory ...)
 ${RUDDER_BIN} agent check -f -r ${OPTS}

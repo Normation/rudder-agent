@@ -9,7 +9,7 @@
 
 . "${BASEDIR}/../lib/common.sh"
 
-SERVER_FILE="/var/rudder/cfengine-community/policy_server.dat"
+SERVER_FILE="${RUDDER_VAR}/cfengine-community/policy_server.dat"
 
 CURRENT=$(cat ${SERVER_FILE} 2>/dev/null)
 [ $? -ne 0 ] && CURRENT="Not yet configured"

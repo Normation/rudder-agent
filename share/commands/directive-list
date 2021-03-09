@@ -11,10 +11,10 @@
 
 . "${BASEDIR}/../lib/common.sh"
 
-BASE_PATH="/var/rudder/cfengine-community/inputs"
+BASE_PATH="${RUDDER_VAR}/cfengine-community/inputs"
 
 # Sanity check: if folder is empty then we are in bootstrap mode
-NB_FILE_IN_FOLDER=$(find /var/rudder/cfengine-community/inputs -type f | wc -l)
+NB_FILE_IN_FOLDER=$(find ${RUDDER_VAR}/cfengine-community/inputs -type f | wc -l)
 if [ ${NB_FILE_IN_FOLDER} -eq 0 ]
 then
   echo "Agent is still in bootstrap mode - there are no directives on this node"

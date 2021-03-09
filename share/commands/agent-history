@@ -12,7 +12,7 @@
 . "${BASEDIR}/../lib/common.sh"
 . "${BASEDIR}/../lib/cfengine_parsing.sh"
 
-BASE_PATH="/var/rudder/cfengine-community/outputs"
+BASE_PATH="${RUDDER_VAR}/cfengine-community/outputs"
 # Display 25 lines by default
 max=25
 

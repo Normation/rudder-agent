@@ -122,7 +122,7 @@ exist_or_restore() {
 # Compare agent certificate UID and agent UUID (return shell boolean)
 compare_uuid() {
   UUID=$(cat "${UUID_FILE}")
-  SUBJECT=$(openssl x509 -in /opt/rudder/etc/ssl/agent.cert -noout -subject | sed 's/.*UID *= *\([^,]*\)\(,.*\)*/\1/')
+  SUBJECT=$(openssl x509 -in ${RUDDER_DIR}/etc/ssl/agent.cert -noout -subject | sed 's/.*UID *= *\([^,]*\)\(,.*\)*/\1/')
   [ "${UUID}" = "${SUBJECT}" ]
 }
 # CFEngine keys must be present with a certificate and have proper access rights
@@ -142,11 +142,11 @@ check_and_fix_cfengine_keys() {
     fi
   fi
   # Agent must have a certificate with a subject that match agent uuid
-  if ! exist_or_restore /opt/rudder/etc/ssl/agent.cert || ! compare_uuid
+  if ! exist_or_restore ${RUDDER_DIR}/etc/ssl/agent.cert || ! compare_uuid
   then
     [ "$QUIET" = false ] && printf "INFO: Agent certificate is missing, creating it..."
     UUID=$(cat "${UUID_FILE}")
-    openssl req -new -batch -sha256 -key ${CFE_DIR}/ppkeys/localhost.priv -out /opt/rudder/etc/ssl/agent.cert -passin "pass:Cfengine passphrase" -x509 -days 3650 -extensions agent_cert -config /opt/rudder/etc/ssl/openssl-agent.cnf -subj "/CN=${UUID}/UID=${UUID}"
+    openssl req -new -batch -sha256 -key ${CFE_DIR}/ppkeys/localhost.priv -out ${RUDDER_DIR}/etc/ssl/agent.cert -passin "pass:Cfengine passphrase" -x509 -days 3650 -extensions agent_cert -config ${RUDDER_DIR}/etc/ssl/openssl-agent.cnf -subj "/CN=${UUID}/UID=${UUID}"
     [ "$QUIET" = false ] && echo " Done"
   fi
   # Agent certificate UID must match agent UUID
@@ -254,7 +254,7 @@ check_and_fix_rudder_uuid() {
   if ! exist_or_restore "${UUID_FILE}"
   then
     [ "$QUIET" = false ] && printf "INFO: The UUID of the node does not exist and no backup exist. A new one will be generated..."
-    /opt/rudder/bin/rudder-uuidgen > ${UUID_FILE}
+    ${RUDDER_DIR}/bin/rudder-uuidgen > ${UUID_FILE}
     [ "$QUIET" = false ] && echo " Done"
   fi
 
@@ -266,9 +266,9 @@ check_and_fix_rudder_uuid() {
     [ "$QUIET" = false ] && printf "${YELLOW}WARNING${NORMAL}: Creating a new UUID for Rudder as the existing one is invalid..."
     # Keep a backup of UUID even if it is not valid
     mkdir -p "${BACKUP_DIR}"
-    cp -f /opt/rudder/etc/uuid.hive ${BACKUP_DIR}/uuid-`date +%Y%m%d`.hive
+    cp -f ${RUDDER_DIR}/etc/uuid.hive ${BACKUP_DIR}/uuid-`date +%Y%m%d`.hive
     # Generate a new one
-    /opt/rudder/bin/rudder-uuidgen > ${UUID_FILE}
+    ${RUDDER_DIR}/bin/rudder-uuidgen > ${UUID_FILE}
     echo " Done."
   fi
   
@@ -297,7 +297,7 @@ check_and_fix_inputs() {
 # Inventory must have been sent less than 3 days ago
 check_and_fix_inventory() {
   # age in hours
-  inventory_age=$(perl -e '(@i) = stat($ARGV[0]); printf "%ld\n", (time-$i[9])/3600' /var/rudder/tmp/inventory_sent)
+  inventory_age=$(perl -e '(@i) = stat($ARGV[0]); printf "%ld\n", (time-$i[9])/3600' ${RUDDER_VAR}/tmp/inventory_sent)
   # 72 hours = 3 days
   if [ "${inventory_age}" -gt 72 ]
   then
@@ -325,7 +325,7 @@ check_space() {
 check_varspace_or_exit() {
   # check max space available for databases and stop Rudder if there is a risk
   if [ -f ${RUDDER_SERVER_ROLES}/rudder-ldap ]; then
-    check_space /var/rudder/ldap/ 98
+    check_space ${RUDDER_VAR}/ldap/ 98
   fi
 
   if [ -f ${RUDDER_SERVER_ROLES}/rudder-reports ]; then

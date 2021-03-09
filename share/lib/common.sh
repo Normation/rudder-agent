@@ -87,7 +87,7 @@ init_commands() {
     if [ -e /bin/vzps ]; then # we have vzps
       PS_COMMAND="/bin/vzps -E 0"
     else # use rudder provided vzps
-      PS_COMMAND="/opt/rudder/bin/vzps.py -E 0"
+      PS_COMMAND="${RUDDER_DIR}/bin/vzps.py -E 0"
     fi
   elif [ -n "${ns}" ]; then # we have namespaces
     # the sed is here to prepend a fake user field that is removed by the -o option (it is never used)
@@ -142,14 +142,14 @@ modification_time() {
 # Check that a bootstrap is necessary
 bootstrap_check() {
   # create folder if it doesn't exist
-  if [ ! -d "/var/rudder/cfengine-community/inputs" ]
+  if [ ! -d "${RUDDER_VAR}/cfengine-community/inputs" ]
   then
-    mkdir -p /var/rudder/cfengine-community/inputs
+    mkdir -p ${RUDDER_VAR}/cfengine-community/inputs
   fi
 
-  if [ "$(ls -A /var/rudder/cfengine-community/inputs)" = "" ]
+  if [ "$(ls -A ${RUDDER_VAR}/cfengine-community/inputs)" = "" ]
   then
-    cp /opt/rudder/share/bootstrap-promises/* /var/rudder/cfengine-community/inputs/
+    cp ${RUDDER_DIR}/share/bootstrap-promises/* ${RUDDER_VAR}/cfengine-community/inputs/
     rudder agent update
   fi
 }
@@ -215,7 +215,7 @@ fi
 [ "${AGENT_RUN_INTERVAL}" = "" ] && AGENT_RUN_INTERVAL=5
 
 # Rudder uuid
-UUID=$(cat /opt/rudder/etc/uuid.hive 2>/dev/null)
+UUID=$(cat ${RUDDER_DIR}/etc/uuid.hive 2>/dev/null)
 [ $? -ne 0 ] && UUID="Not yet configured"
 
 if [ "${RUDDER_REPORT_MODE}" = "changes-only" ] || [ "${RUDDER_REPORT_MODE}" = "reports-disabled" ]
@@ -235,7 +235,7 @@ else
   CERTIFICATE_OPTION="--insecure"
 fi
 
-TOKEN="$([ -f /var/rudder/run/api-token ] && cat /var/rudder/run/api-token 2>/dev/null)"
+TOKEN="$([ -f ${RUDDER_VAR}/run/api-token ] && cat ${RUDDER_VAR}/run/api-token 2>/dev/null)"
 
 # detect OS family
 OS_FAMILY=`uname -s`

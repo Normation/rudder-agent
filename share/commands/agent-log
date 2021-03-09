@@ -38,7 +38,7 @@
 UPDATE=false
 UPDATE_OPTIONS=""
 # default logfile is last run
-BASE_PATH="/var/rudder/cfengine-community/outputs"
+BASE_PATH="${RUDDER_VAR}/cfengine-community/outputs"
 LOGFILE="${BASE_PATH}/previous"
 
 while getopts "wrRcl:n:d:eE" opt; do

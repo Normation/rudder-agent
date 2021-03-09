@@ -23,7 +23,7 @@ while getopts "qc" opt; do
   esac
 done
 
-rm -f /opt/rudder/etc/force-audit-agent
+rm -f ${RUDDER_DIR}/etc/force-audit-agent
 
 [ $? -ne 0 ] && printf "${RED}error${NORMAL}: Rudder force audit mode could not be disabled.\n" && exit 1
 

@@ -37,7 +37,7 @@ while getopts "qcsk" opt; do
   esac
 done
 
-touch /opt/rudder/etc/disable-agent
+touch ${RUDDER_DIR}/etc/disable-agent
 
 [ $? -ne 0 ] && printf "${RED}error${NORMAL}: Rudder agent could not be disabled.\n" && exit 1
 

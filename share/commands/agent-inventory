@@ -32,7 +32,7 @@
 bootstrap_check
 
 # We cannnot start an inventory in bootstrap policies
-if cmp -s "/var/rudder/cfengine-community/inputs/failsafe.cf" "/opt/rudder/share/bootstrap-promises/failsafe.cf"
+if cmp -s "${RUDDER_VAR}/cfengine-community/inputs/failsafe.cf" "${RUDDER_DIR}/share/bootstrap-promises/failsafe.cf"
 then
   >&2 echo "Agent is currently in bootstrap policies, cannot run an inventory. Please download initial policies from the server with command \"rudder agent update\" first. If problem persists, use \"rudder agent check\" for diagnostic"
   exit 1
@@ -61,7 +61,7 @@ do
   fi
 done
 
-if [ ${FORCE} -eq 0 ] && [ -e /opt/rudder/etc/disable-inventory ]; then
+if [ ${FORCE} -eq 0 ] && [ -e ${RUDDER_DIR}/etc/disable-inventory ]; then
   printf "${RED}error${NORMAL}: The inventory is currently disabled.\n"
   exit 1
 fi

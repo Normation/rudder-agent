@@ -6,12 +6,12 @@
 # @man +
 # @man *-n*: run in nrpe mode, print a single line and return 0,1 or 2
 # @man  put this line in your nrpe.cfg to use it
-# @man  command[check_rudder]=/opt/rudder/bin/rudder agent health -n
+# @man  command[check_rudder]=${RUDDER_DIR}/bin/rudder agent health -n
 
 . "${BASEDIR}/../lib/common.sh"
 
-CFE_DIR=/var/rudder/cfengine-community
-CFE_DISABLE_FILE=/opt/rudder/etc/disable-agent
+CFE_DIR=${RUDDER_VAR}/cfengine-community
+CFE_DISABLE_FILE=${RUDDER_DIR}/etc/disable-agent
 
 NRPE=
 

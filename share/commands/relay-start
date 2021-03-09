@@ -23,7 +23,7 @@ while getopts "qc" opt; do
   esac
 done
 
-if [ -s /var/rudder/lib/ssl/allnodescerts.pem ]; then chgrp rudder /var/rudder/lib/ssl/allnodescerts.pem; fi
-if [ -f /var/rudder/lib/relay/nodeslist.json ]; then chown rudder-relayd /var/rudder/lib/relay/nodeslist.json; fi
+if [ -s ${RUDDER_VAR}/lib/ssl/allnodescerts.pem ]; then chgrp rudder ${RUDDER_VAR}/lib/ssl/allnodescerts.pem; fi
+if [ -f ${RUDDER_VAR}/lib/relay/nodeslist.json ]; then chown rudder-relayd ${RUDDER_VAR}/lib/relay/nodeslist.json; fi
 service_action "rudder-relayd" "start"
 exit $?
