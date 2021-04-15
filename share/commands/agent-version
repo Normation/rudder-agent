@@ -4,7 +4,10 @@
 
 . "${BASEDIR}/../lib/common.sh"
 
-if [ -e /usr/bin/dpkg ]; then
+VERSION_FILE="/opt/rudder/share/versions/rudder-agent-version"
+if [ -e "${VERSION_FILE}" ]; then
+    AGENT_VERSION=$(sed -n '/rudder_version=/s/rudder_version=//p' "${VERSION_FILE}")
+elif [ -e /usr/bin/dpkg ]; then
     AGENT_VERSION=$(dpkg-query -W --showformat='${Version}' rudder-agent)
 elif [ -e /usr/sbin/slackpkg ]; then
     AGENT_VERSION=$(ls -1 /var/log/packages | sed -n '/^rudder-agent-[0-9.]\+/s/^.*agent-\([0-9.]*\).*$/\1/p') 
