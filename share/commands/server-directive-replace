@@ -12,8 +12,8 @@
 # @man +
 # @man *-i*: verbose mode, display more detailed informations of the execution
 
-. "${BASEDIR}/../lib/api_call.sh"
 . "${BASEDIR}/../lib/common.sh"
+. "${BASEDIR}/../lib/api_call.sh"
 
 TECHNIQUES_DIRECTORY="${CONFIGURATION_DIRECTORY}/technique"
 DISPLAY_COMMAND=false
