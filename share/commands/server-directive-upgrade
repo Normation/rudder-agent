@@ -13,9 +13,8 @@
 # @man +
 # @man *-V*: migrate to given version
 
-
-. "${BASEDIR}/../lib/api_call.sh"
 . "${BASEDIR}/../lib/common.sh"
+. "${BASEDIR}/../lib/api_call.sh"
 
 DISPLAY_COMMAND=false
 
