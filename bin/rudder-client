@@ -1,0 +1,87 @@
+#!/bin/sh
+
+set -e
+
+. "/opt/rudder/share/lib/common.sh"
+
+if [ -x "/opr/rudder/bin/curl" ]; then
+  CURL="/opr/rudder/bin/curl"
+else
+  CURL="curl"
+fi
+
+# Always on options
+CURL_OPTS="--tlsv1.2 --location --fail --silent --show-error"
+EXEC="exec"
+
+## Get options
+while [ "$1" != "" ]
+do
+  if [ "$1" = "-h" ]; then
+    echo "Usage $0 -e <endpoint> [-u <user:password>] [-n] [-h] -- <curl_otions>"
+    echo "  -e <endpoint>: rudder endpoint, example /inventory-updates"
+    echo "  -u <user:password>: force user and password, default is to take it from rudder.json"
+    echo "  -h : help"
+    echo "  -n : do not run, display curl command instead"
+    exit
+  elif [ "$1" = "-e" ]; then
+    ENDPOINT="$2"
+    shift 2
+  elif [ "$1" = "-u" ]; then
+    AUTH="--user $2"
+    shift 2
+  elif [ "$1" = "-n" ]; then
+    EXEC="echo"
+    shift
+  elif [ "$1" = "--" ]; then
+    shift
+    break
+  else
+    echo "Unknown parameter $1, try -h for help" >&2
+    # codes before are taken by curl
+    exit 127
+  fi
+done
+if [ "${ENDPOINT}" = "" ]; then
+  echo "You need to pass an endpoint, try -h for help" >&2
+  exit 127
+fi
+
+## Get configuration
+# proxy default value
+PROXY=""
+
+# get server from policy_server.dat
+SERVER=$(cut -d: -f1 "${RUDDER_VAR}/cfengine-community/policy_server.dat")
+
+# get server key hash from rudder.json if available
+if [ -f "${RUDDER_JSON}" ]; then
+  PINNED_HASH=$(rudder_json_value 'SERVER_KEY_HASHES')
+  VERIFY_CERTIFICATES=$(rudder_json_value 'RUDDER_VERIFY_CERTIFICATES')
+fi
+if [ "${PINNED_HASH}" != "" ]; then
+  SECOPTS="--pinnedpubkey ${PINNED_HASH} --insecure"
+elif [ "${VERIFY_CERTIFICATES}" = "true" ]; then
+  SECOPTS=""
+else
+  SECOPTS="--insecure"
+fi
+
+# get server authentication from rudder.json if available and not overridden
+if [ "${AUTH}" = "" ]; then
+  if [ -f "${RUDDER_JSON}" ]; then
+    DAVUSER=$(rudder_json_value 'DAVUSER')
+    DAVPW=$(rudder_json_value 'DAVPASSWORD')
+    AUTH="--user ${DAVUSER}:${DAVPW}"
+  fi
+fi
+
+## Create URL
+URL="https://${SERVER}${ENDPOINT}"
+
+## Other arguments are curl arguments
+# advantage of exec:
+# - one process less
+# - don't care if there is some code after it
+# - keeps return code
+${EXEC} ${CURL} ${CURL_OPTS} ${SECOPTS} --proxy "${PROXY}" ${AUTH} ${URL} "$@"

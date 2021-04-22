@@ -57,8 +57,8 @@ compress_and_sign() {
 
     # Try to send it.
     # If it fails, it will be sent later by the agent
-    curl --tlsv1.2 ${CERTIFICATE_OPTION} --fail --silent --proxy '' --user "${DAVUSER}:${DAVPW}" --upload-file "${ready_file}" https://${SERVER}/reports/ >/dev/null
-    # keep the code sinc curl has a very comprehensive error code list
+    /opt/rudder/bin/rudder-client -e /reports/ -- --upload-file "${ready_file}" >/dev/null
+    # keep the code since curl has a very comprehensive error code list
     code=$?
     if [ ${code} -eq 0 ]; then
         # Remove temp file
