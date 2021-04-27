@@ -22,4 +22,8 @@ SERVER="$1"
 [ "${UUID}" = "root" ] && printf "${RED}error${NORMAL}: Cannot change policy server on a root server\n" && exit 1
 
 echo "${SERVER}" > "${SERVER_FILE}"
-[ $? -ne 0 ] && printf "${RED}error${NORMAL}: Could not set policy server\n"
+RET=$?
+
+[ ${RET} -ne 0 ] && printf "${RED}error${NORMAL}: Could not set policy server\n"
+
+exit ${RET}
