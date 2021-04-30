@@ -54,10 +54,15 @@ fi
 
 ## Get configuration
 PROXY=$(agent_conf https_proxy)
-HTTPS_PORT=$(agent_conf https_port)
 
-# get server from policy_server.dat
-SERVER=$(cut -d: -f1 "${RUDDER_VAR}/cfengine-community/policy_server.dat")
+# get server form configuration
+SERVER=$(agent_conf server)
+if [ "${SERVER}" = "" ]; then
+  # get server from policy_server.dat
+  SERVER=$(cut -d: -f1 "${RUDDER_VAR}/cfengine-community/policy_server.dat")
+fi
+
+PORT=$(get_https_port)
 
 # Try to read local hash
 if [ -f "${SERVER_HASH_FILE}" ]; then
@@ -97,12 +102,7 @@ if [ "${AUTH}" = "" ]; then
 fi
 
 ## Create URL
-if [ "${HTTPS_PORT}" != "" ]
-then
-  URL="https://${SERVER}:${HTTPS_PORT}${ENDPOINT}"
-else
-  URL="https://${SERVER}${ENDPOINT}"
-fi
+URL="https://${SERVER}${PORT}${ENDPOINT}"
 
 ## Other arguments are curl arguments
 # advantage of exec:

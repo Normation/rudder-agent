@@ -28,10 +28,10 @@ while getopts "wn" opt; do
   esac
 done
 
-
+PORT=$(get_https_port)
 # check api status
 for i in $(seq 1 ${TIMEOUT}); do
-  ERRORS=$(curl --silent --fail --insecure --location https://localhost/rudder/api/status)
+  ERRORS=$(curl --silent --fail --insecure --location --proxy '' https://localhost${PORT}/rudder/api/status)
   if [ "$ERRORS" = "OK" ]
   then
     break
@@ -48,7 +48,7 @@ for i in $(seq 1 ${TIMEOUT}); do
 done
 
 # check app startup
-ERRORS=$(curl --silent --insecure --location https://localhost/ | grep "No Navigation Defined." | wc -l)
+ERRORS=$(curl --silent --insecure --location --proxy '' https://localhost${PORT}/ | grep "No Navigation Defined." | wc -l)
 if [ $ERRORS -ne 0 ]; then
   echo 'Found the string "No Navigation Defined." in the login page'
   exit 2

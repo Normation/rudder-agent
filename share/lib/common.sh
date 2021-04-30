@@ -193,6 +193,20 @@ agent_conf() {
   fi
 }
 
+# get port used to talk https with the server
+get_https_port() {
+  # get port from configuration
+  PORT=$(agent_conf https_port)
+  # if not trust the server on this
+  if [ "${PORT}" = "" ]; then
+    PORT=$(rudder_json_value 'HTTPS_POLICY_DISTRIBUTION_PORT')
+  fi
+  # else default to 443
+  if [ "${PORT}" != "" ]; then
+    PORT=":${PORT}"
+  fi
+  echo "${PORT}"
+}
 
 # Colors configuration (enable colors only if stdout is a terminal)
 if [ -t 1 ]; then
