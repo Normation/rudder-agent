@@ -183,6 +183,21 @@ parse_directive() {
   name=$(echo "${_name}"| sed 's/^"\(.*\)"$/\1/')
 }
 
+# get port use to talk htps with the server
+get_https_port() {
+  # get port from configuration
+  PORT=$(get_conf report_port)
+  # if not trust the server on this
+  if [ "${PORT}" = "" ]; then
+    PORT=$(rudder_json_value 'SERVER_KEY_HASHES')
+  fi
+  # else default to 443
+  if [ "${PORT}" != "" ]; then
+    PORT=":${PORT}"
+  fi
+  echo "${PORT}"
+}
+
 # Colors configuration (enable colors only if stdout is a terminal)
 if [ -t 1 ]; then
     COLOR="-Calways"
