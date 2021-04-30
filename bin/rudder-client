@@ -10,8 +10,6 @@ else
   CURL="curl"
 fi
 
-CONFFILE="/opt/rudder/etc/rudder.conf"
-
 # Always on options
 CURL_OPTS="--tlsv1.2 --location --fail --silent --show-error"
 EXEC="exec"
@@ -49,20 +47,14 @@ if [ "${ENDPOINT}" = "" ]; then
   exit 127
 fi
 
-get_conf() {
-  if [ -f "${CONFFILE}" ]; then
-    sed -ne "/^$1 *= */s/$1 *= *//p" "${CONFFILE}"
-  fi
-}
-
 ## Get configuration
 # proxy default value
 # special value "env": use default proxy from environment
 # because default is to not use a proxy
-PROXY=$(get_conf proxy)
+PROXY=$(get_agent_conf proxy)
 
 # get server form configuration
-SERVER=$(get_conf server)
+SERVER=$(get_agent_conf server)
 if [ "${SERVER}" = "" ]; then
   # get server from policy_server.dat
   SERVER=$(cut -d: -f1 "${RUDDER_VAR}/cfengine-community/policy_server.dat")
