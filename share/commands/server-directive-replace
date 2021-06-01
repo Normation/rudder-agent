@@ -1,6 +1,6 @@
 #!/bin/bash
-# @description replace a directive occurence in all the Rudder rules by another directive.
-# @man replace a directive occurence in all the Rudder rules by another directive.
+# @description replace a directive occurrence in all the Rudder rules by another directive.
+# @man replace a directive occurrence in all the Rudder rules by another directive.
 # @man +
 # @man *Arguments*:
 # @man +
