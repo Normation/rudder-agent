@@ -34,7 +34,7 @@ print_result() {
   if [ "${STATUS}" == "success" ]
   then
     NEW_DIRECTIVE_ID=$(filtered_api_call "${API_URL}/api/latest/directives" "${TOKEN}" "GET" "" "${DISPLAY_COMMAND}" | jq -r " .data.directives[] | select(.displayName==\"${DISPLAY_NAME}_migrated\") | .id")
-    printf "[${GREEN}SUCCESS${NORMAL}] Directive created. You can execute the following command to change all occurence of the old directive to the new one in your rules:\n"
+    printf "[${GREEN}SUCCESS${NORMAL}] Directive created. You can execute the following command to change all occurrence of the old directive to the new one in your rules:\n"
     printf "${WHITE}rudder server directive-replace -o ${OLD_DIRECTIVE_ID} -n ${NEW_DIRECTIVE_ID}${NORMAL}\n"
   elif [ "${STATUS}" == "error" ]
   then
