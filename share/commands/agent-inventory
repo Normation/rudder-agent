@@ -31,7 +31,7 @@
 
 bootstrap_check
 
-# We cannnot start an inventory in bootstrap policies
+# We cannot start an inventory in bootstrap policies
 if cmp -s "${RUDDER_VAR}/cfengine-community/inputs/failsafe.cf" "${RUDDER_DIR}/share/bootstrap-promises/failsafe.cf"
 then
   >&2 echo "Agent is currently in bootstrap policies, cannot run an inventory. Please download initial policies from the server with command \"rudder agent update\" first. If problem persists, use \"rudder agent check\" for diagnostic"

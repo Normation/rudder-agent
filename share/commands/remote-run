@@ -141,7 +141,7 @@ while getopts "iIvdqwrRcTD:j:g:at:u:C:eE" opt; do
   esac
 done
 
-# to read remaing arguments with $*
+# to read remaining arguments with $*
 shift `expr ${OPTIND} - 1`
 
 # Define node list method 
