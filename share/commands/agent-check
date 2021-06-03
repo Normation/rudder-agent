@@ -149,7 +149,12 @@ check_and_fix_cfengine_keys() {
     openssl req -new -batch -sha256 -key ${CFE_DIR}/ppkeys/localhost.priv -out ${RUDDER_DIR}/etc/ssl/agent.cert -passin "pass:Cfengine passphrase" -x509 -days 3650 -extensions agent_cert -config ${RUDDER_DIR}/etc/ssl/openssl-agent.cnf -subj "/CN=${UUID}/UID=${UUID}"
     [ "$QUIET" = false ] && echo " Done"
   fi
-  # Agent certificate UID must match agent UUID
+  # Agent certificate must match the key pair
+  modulus_cert=$(openssl x509 -noout -modulus -in "/opt/rudder/etc/ssl/agent.cert")
+  modulus_key=$(openssl rsa  -noout -modulus -passin "pass:Cfengine passphrase" -in "${CFE_DIR}/ppkeys/localhost.priv")
+  if [ "${modulus_cert}" != "${modulus_key}" ]; then
+    printf "${RED}ERROR${NORMAL}: Certificate does not match agent key\n"
+  fi
 }
 
 # There must be a policy server otherwise we can't do anything
