@@ -8,6 +8,8 @@
 # @man +
 # @man *-n*: show maximum n lines of history
 # @man +
+# @man *-a*: show all available lines of history (long)
+# @man +
 
 . "${BASEDIR}/../lib/common.sh"
 . "${BASEDIR}/../lib/cfengine_parsing.sh"
@@ -24,11 +26,19 @@ while getopts "cn:" opt; do
     n)
       max="${OPTARG}"
       ;;
+    a)
+      all="yes"
   esac
 done
 
+if [ "${all}" = "yes" ]
+then
+  list="cat"
+else 
+  list="tail -n ${max}"
+fi
 
-for file in $(ls -1 ${BASE_PATH}/cf* | sort | tail -n ${max})
+for file in $(ls -1 ${BASE_PATH}/cf* | sort | ${list})
 do
   endtime=$(perl -e'@a=stat $ARGV[0]; print $a[9]' "${file}")
   eval ${PRETTY} -v no_report=1 -v short_summary=1 -v endtime=${endtime} < "${file}"
