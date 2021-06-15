@@ -49,10 +49,18 @@ fi
 
 ## Get configuration
 # proxy default value
-PROXY=""
+# special value "env": use default proxy from environment
+# because default is to not use a proxy
+PROXY=$(get_agent_conf proxy)
 
-# get server from policy_server.dat
-SERVER=$(cut -d: -f1 "${RUDDER_VAR}/cfengine-community/policy_server.dat")
+# get server form configuration
+SERVER=$(get_agent_conf server)
+if [ "${SERVER}" = "" ]; then
+  # get server from policy_server.dat
+  SERVER=$(cut -d: -f1 "${RUDDER_VAR}/cfengine-community/policy_server.dat")
+fi
+
+PORT=$(get_https_port)
 
 # get server key hash from rudder.json if available
 if [ -f "${RUDDER_JSON}" ]; then
@@ -77,11 +85,15 @@ if [ "${AUTH}" = "" ]; then
 fi
 
 ## Create URL
-URL="https://${SERVER}${ENDPOINT}"
+URL="https://${SERVER}${PORT}${ENDPOINT}"
 
 ## Other arguments are curl arguments
 # advantage of exec:
 # - one process less
 # - don't care if there is some code after it
 # - keeps return code
-${EXEC} ${CURL} ${CURL_OPTS} ${SECOPTS} --proxy "${PROXY}" ${AUTH} ${URL} "$@"
+if [ "${PROXY}" = "env" ]; then # difficult to have the same line because of the "" aroud ${PROXY}
+  ${EXEC} ${CURL} ${CURL_OPTS} ${SECOPTS} ${AUTH} ${URL} "$@"
+else
+  ${EXEC} ${CURL} ${CURL_OPTS} ${SECOPTS} --proxy "${PROXY}" ${AUTH} ${URL} "$@"
+fi

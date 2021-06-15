@@ -1,5 +1,6 @@
 # This file provide helpers to make API call from Rudder commands
-API_URL="https://127.0.0.1/rudder"
+PORT=$(get_https_port)
+API_URL="https://127.0.0.1${PORT}/rudder"
 TECHNIQUES_DIRECTORY="${CONFIGURATION_DIRECTORY}/technique"
 
 DOWNLOAD_COMMAND="curl --silent --show-error ${CERTIFICATE_OPTION} --location --proxy '' --globoff"

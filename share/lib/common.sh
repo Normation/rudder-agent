@@ -2,6 +2,7 @@
 RUDDER_VAR="/var/rudder"
 RUDDER_DIR="/opt/rudder"
 RUDDER_JSON="${RUDDER_VAR}/cfengine-community/inputs/rudder.json"
+AGENT_CONFFILE="${RUDDER_DIR}/etc/agent.conf"
 
 # Standard classes for verbosity
 DEBUG_CLASS="-D trace"
@@ -181,6 +182,27 @@ parse_directive() {
   technique_version=$(echo "${_technique_version}"| sed 's/^"\(.*\)"$/\1/')
   is_system=$(echo "${_is_system}"| sed 's/^"\(.*\)"$/\1/')
   name=$(echo "${_name}"| sed 's/^"\(.*\)"$/\1/')
+}
+
+get_agent_conf() {
+  if [ -f "${CONFFILE}" ]; then
+    sed -ne "/^$1 *= */s/$1 *= *//p" "${CONFFILE}"
+  fi
+}
+
+# get port use to talk htps with the server
+get_https_port() {
+  # get port from configuration
+  PORT=$(get_agent_conf report_port)
+  # if not trust the server on this
+  if [ "${PORT}" = "" ]; then
+    PORT=$(rudder_json_value 'SERVER_KEY_HASHES')
+  fi
+  # else default to 443
+  if [ "${PORT}" != "" ]; then
+    PORT=":${PORT}"
+  fi
+  echo "${PORT}"
 }
 
 # Colors configuration (enable colors only if stdout is a terminal)
