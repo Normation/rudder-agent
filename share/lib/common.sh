@@ -2,6 +2,7 @@
 RUDDER_VAR="/var/rudder"
 RUDDER_DIR="/opt/rudder"
 RUDDER_JSON="${RUDDER_VAR}/cfengine-community/inputs/rudder.json"
+SERVER_HASH_FILE="${RUDDER_VAR}/lib/ssl/policy_server_hash"
 
 # Standard classes for verbosity
 DEBUG_CLASS="-D trace"

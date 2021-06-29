@@ -96,6 +96,7 @@ rm -f ${RUDDER_DIR}/etc/ssl/agent.cert
 # - remove all trust
 [ "$VERBOSE" = true ] && echo "Untrusting all other systems..."
 rm -f ${RUDDER_VAR}/cfengine-community/ppkeys/*
+rm -f "${SERVER_HASH_FILE}"
 
 # - remove uuid (check will recreate it)
 [ "$VERBOSE" = true ] && echo "Removing UUID..."

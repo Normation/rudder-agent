@@ -4,14 +4,15 @@ set -e
 
 . "/opt/rudder/share/lib/common.sh"
 
-if [ -x "/opr/rudder/bin/curl" ]; then
-  CURL="/opr/rudder/bin/curl"
+if [ -x "/opt/rudder/bin/curl" ]; then
+  CURL="/opt/rudder/bin/curl"
 else
   CURL="curl"
 fi
 
 # Always on options
-CURL_OPTS="--tlsv1.2 --location --fail --silent --show-error"
+CURL_OPTS="--tlsv1.2 --location --fail --show-error"
+CURL_VERBOSITY="--silent"
 EXEC="exec"
 
 ## Get options
@@ -23,6 +24,7 @@ do
     echo "  -u <user:password>: force user and password, default is to take it from rudder.json"
     echo "  -h : help"
     echo "  -n : do not run, display curl command instead"
+    echo "  -v : verbose"
     exit
   elif [ "$1" = "-e" ]; then
     ENDPOINT="$2"
@@ -32,6 +34,9 @@ do
     shift 2
   elif [ "$1" = "-n" ]; then
     EXEC="echo"
+    shift
+  elif [ "$1" = "-v" ]; then
+    CURL_VERBOSITY=""
     shift
   elif [ "$1" = "--" ]; then
     shift
@@ -54,16 +59,31 @@ PROXY=""
 # get server from policy_server.dat
 SERVER=$(cut -d: -f1 "${RUDDER_VAR}/cfengine-community/policy_server.dat")
 
-# get server key hash from rudder.json if available
-if [ -f "${RUDDER_JSON}" ]; then
-  PINNED_HASH=$(rudder_json_value 'SERVER_KEY_HASHES')
-  VERIFY_CERTIFICATES=$(rudder_json_value 'RUDDER_VERIFY_CERTIFICATES')
+# Try to read local hash
+if [ -f "${SERVER_HASH_FILE}" ]; then
+  PINNED_HASH=$(cat ${SERVER_HASH_FILE})
 fi
+
+if [ -f "${RUDDER_JSON}" ]; then
+  # For compatibility with 6.X option
+  VERIFY_CERTIFICATES=$(rudder_json_value 'RUDDER_VERIFY_CERTIFICATES')
+
+  # Read hash from policies and update if necessary
+  INPUTS_PINNED_HASH=$(rudder_json_value 'SERVER_KEY_HASHES')
+  if [ "${INPUTS_PINNED_HASH}" != "" ]; then
+    if [ "${INPUTS_PINNED_HASH}" != "${PINNED_HASH}" ]; then
+      PINNED_HASH="${INPUTS_PINNED_HASH}"
+      echo "${PINNED_HASH}" > "${SERVER_HASH_FILE}"
+    fi
+  fi
+fi
+
 if [ "${PINNED_HASH}" != "" ]; then
   SECOPTS="--pinnedpubkey ${PINNED_HASH} --insecure"
 elif [ "${VERIFY_CERTIFICATES}" = "true" ]; then
   SECOPTS=""
 else
+  # only allowed in initial policies and with 6.X server
   SECOPTS="--insecure"
 fi
 
@@ -84,4 +104,4 @@ URL="https://${SERVER}${ENDPOINT}"
 # - one process less
 # - don't care if there is some code after it
 # - keeps return code
-${EXEC} ${CURL} ${CURL_OPTS} ${SECOPTS} --proxy "${PROXY}" ${AUTH} ${URL} "$@"
+${EXEC} ${CURL} ${CURL_OPTS} ${CURL_VERBOSITY} ${SECOPTS} --proxy "${PROXY}" ${AUTH} ${URL} "$@"
