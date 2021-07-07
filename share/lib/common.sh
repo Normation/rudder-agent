@@ -3,6 +3,7 @@ RUDDER_VAR="/var/rudder"
 RUDDER_DIR="/opt/rudder"
 RUDDER_JSON="${RUDDER_VAR}/cfengine-community/inputs/rudder.json"
 SERVER_HASH_FILE="${RUDDER_VAR}/lib/ssl/policy_server_hash"
+AGENT_CONFIGURATION="${RUDDER_DIR}/etc/agent.conf"
 
 # Standard classes for verbosity
 DEBUG_CLASS="-D trace"
@@ -104,7 +105,7 @@ get_hostname() {
   # Necessary for log files names
   OS=$(uname -s)
   HOSTNAME=$(uname -n)
-  
+
   if [ "${OS}" = "Linux" ] && type hostname >/dev/null 2>/dev/null; then
      fqname=$(hostname --fqdn)
      if [ $? -eq 0 ] && echo "${fqname}" | grep -q '.' 2>/dev/null; then
@@ -184,6 +185,13 @@ parse_directive() {
   name=$(echo "${_name}"| sed 's/^"\(.*\)"$/\1/')
 }
 
+# read one key of agent.conf
+agent_conf() {
+  key="$1"
+  sed -n "/^${key} *=/s/^${key} *= *//p" "${AGENT_CONFIGURATION}"
+}
+
+
 # Colors configuration (enable colors only if stdout is a terminal)
 if [ -t 1 ]; then
     COLOR="-Calways"
@@ -229,7 +237,7 @@ else
   FULL_COMPLIANCE=1
 fi
 
-if [ "${RUDDER_VERIFY_CERTIFICATES}" = "true" ] 
+if [ "${RUDDER_VERIFY_CERTIFICATES}" = "true" ]
 then
   CERTIFICATE_OPTION=""
 else
@@ -240,4 +248,4 @@ TOKEN="$([ -f ${RUDDER_VAR}/run/api-token ] && cat ${RUDDER_VAR}/run/api-token 2
 
 # detect OS family
 OS_FAMILY=`uname -s`
- 
+

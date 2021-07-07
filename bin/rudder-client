@@ -53,8 +53,8 @@ if [ "${ENDPOINT}" = "" ]; then
 fi
 
 ## Get configuration
-# proxy default value
-PROXY=""
+PROXY=$(agent_conf https_proxy)
+HTTPS_PORT=$(agent_conf https_port)
 
 # get server from policy_server.dat
 SERVER=$(cut -d: -f1 "${RUDDER_VAR}/cfengine-community/policy_server.dat")
@@ -97,11 +97,21 @@ if [ "${AUTH}" = "" ]; then
 fi
 
 ## Create URL
-URL="https://${SERVER}${ENDPOINT}"
+if [ "${HTTPS_PORT}" != "" ]
+then
+  URL="https://${SERVER}:${HTTPS_PORT}${ENDPOINT}"
+else
+  URL="https://${SERVER}${ENDPOINT}"
+fi
 
 ## Other arguments are curl arguments
 # advantage of exec:
 # - one process less
 # - don't care if there is some code after it
 # - keeps return code
-${EXEC} ${CURL} ${CURL_OPTS} ${CURL_VERBOSITY} ${SECOPTS} --proxy "${PROXY}" ${AUTH} ${URL} "$@"
+if [ "${PROXY}" = "system" ]
+then
+  ${EXEC} ${CURL} ${CURL_OPTS} ${CURL_VERBOSITY} ${SECOPTS} ${AUTH} ${URL} "$@"
+else
+  ${EXEC} ${CURL} ${CURL_OPTS} ${CURL_VERBOSITY} ${SECOPTS} --proxy "${PROXY}" ${AUTH} ${URL} "$@"
+fi
