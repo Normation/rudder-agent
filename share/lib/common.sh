@@ -244,7 +244,11 @@ else
   CERTIFICATE_OPTION="--insecure"
 fi
 
-TOKEN="$([ -f ${RUDDER_VAR}/run/api-token ] && cat ${RUDDER_VAR}/run/api-token 2>/dev/null)"
+TOKEN=""
+if [ -f ${RUDDER_VAR}/run/api-token ]
+then
+  TOKEN=$(cat ${RUDDER_VAR}/run/api-token 2>/dev/null)
+fi
 
 # detect OS family
 OS_FAMILY=`uname -s`
