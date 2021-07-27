@@ -185,10 +185,12 @@ parse_directive() {
   name=$(echo "${_name}"| sed 's/^"\(.*\)"$/\1/')
 }
 
-# read one key of agent.conf
+# read one key of agent.conf if file exists
 agent_conf() {
-  key="$1"
-  sed -n "/^${key} *=/s/^${key} *= *//p" "${AGENT_CONFIGURATION}"
+  if [ -f ${AGENT_CONFIGURATION} ]; then
+    key="$1"
+    sed -n "/^${key} *=/s/^${key} *= *//p" "${AGENT_CONFIGURATION}"
+  fi
 }
 
 
