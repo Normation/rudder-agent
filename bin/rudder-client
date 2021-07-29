@@ -69,7 +69,7 @@ if [ -f "${RUDDER_JSON}" ]; then
   VERIFY_CERTIFICATES=$(rudder_json_value 'RUDDER_VERIFY_CERTIFICATES')
 
   # Read hash from policies and update if necessary
-  INPUTS_PINNED_HASH=$(rudder_json_value 'SERVER_KEY_HASHES')
+  INPUTS_PINNED_HASH=$(rudder_json_value 'POLICY_SERVER_KEY_HASH')
   if [ "${INPUTS_PINNED_HASH}" != "" ]; then
     if [ "${INPUTS_PINNED_HASH}" != "${PINNED_HASH}" ]; then
       PINNED_HASH="${INPUTS_PINNED_HASH}"
