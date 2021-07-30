@@ -3,6 +3,7 @@ RUDDER_VAR="/var/rudder"
 RUDDER_DIR="/opt/rudder"
 RUDDER_JSON="${RUDDER_VAR}/cfengine-community/inputs/rudder.json"
 SERVER_HASH_FILE="${RUDDER_VAR}/lib/ssl/policy_server_hash"
+CFE_SERVER_HASH_FILE="${RUDDER_VAR}/cfengine-community/ppkeys/policy_server_hash"
 AGENT_CONFIGURATION="${RUDDER_DIR}/etc/agent.conf"
 
 # Standard classes for verbosity
@@ -235,6 +236,7 @@ if [ -f "${RUDDER_JSON}" ]; then
   RUDDER_NODE_CONFIG_ID=$(rudder_json_value 'RUDDER_NODE_CONFIG_ID')
   RUDDER_SYSLOG_PROTOCOL=$(rudder_json_value 'RUDDER_SYSLOG_PROTOCOL')
   RUDDER_VERIFY_CERTIFICATES=$(rudder_json_value 'RUDDER_VERIFY_CERTIFICATES')
+  RUDDER_NODE_KIND=$(rudder_json_value 'RUDDER_NODE_KIND')
 fi
 # run interval default value
 [ "${AGENT_RUN_INTERVAL}" = "" ] && AGENT_RUN_INTERVAL=5

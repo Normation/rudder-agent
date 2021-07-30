@@ -8,7 +8,6 @@
 # @man +
 # @man *-v*: run the agent in verbose mode, prints detailed information
 
-
 . "${BASEDIR}/../lib/common.sh"
 . "${BASEDIR}/../lib/cfengine_parsing.sh"
 
@@ -22,13 +21,26 @@ while getopts "v" opt; do
   esac
 done
 
+if [ -f "${SERVER_HASH_FILE}" ] && [ -f "${CFE_SERVER_HASH_FILE}" ]
+then
+  PINNING="full"
+elif [ -f "${SERVER_HASH_FILE}" ]
+then
+  PINNING="only HTTPS"
+elif [ -f "${CFE_SERVER_HASH_FILE}" ]
+then
+  PINNING="only CFEngine"
+else
+  PINNING="none"
+fi
+
 CERT_CRE=$(openssl x509 -startdate -noout -in ${RUDDER_DIR}/etc/ssl/agent.cert | cut -d= -f2)
 [ $? -ne 0 ] && CERT_CRE="Not yet configured"
 CERT_EXP=$(openssl x509 -enddate -noout -in ${RUDDER_DIR}/etc/ssl/agent.cert | cut -d= -f2)
 [ $? -ne 0 ] && CERT_EXP="Not yet configured"
 CERT_FINGERPRINT=$(openssl x509 -in ${RUDDER_DIR}/etc/ssl/agent.cert -noout -fingerprint -sha1 | cut -d= -f2)
 [ $? -ne 0 ] && CERT_FINGERPRINT="Not yet configured"
-KEY_HASH=$(${RUDDER_DIR}/bin/cf-promises --show-vars | grep "sys.key_digest" | awk '{print $2}')
+KEY_HASH=$(${RUDDER_DIR}/bin/cf-key -p /var/rudder/cfengine-community/ppkeys/localhost.pub)
 [ $? -ne 0 ] && KEY_HASH="Not yet configured"
 
 POLICY=$(cat ${RUDDER_VAR}/cfengine-community/policy_server.dat 2>/dev/null)
@@ -40,24 +52,6 @@ POLICY_FETCHED=$(modification_time ${RUDDER_VAR}/cfengine-community/last_success
 INVENTORY_SENT=$(modification_time ${RUDDER_VAR}/tmp/inventory_sent 2> /dev/null)
 [ $? -ne 0 ] && INVENTORY_SENT="Not yet sent" || INVENTORY_SENT=$(echo "${INVENTORY_SENT}" | cut -d'.' -f1)
 
-ROLES=$(ls -m ${RUDDER_DIR}/etc/server-roles.d/ 2>/dev/null)
-if [ $? -ne 0 ]; then
-  ROLES="rudder-agent"
-else
-  ROLES="${ROLES}, rudder-agent"
-fi
-
-if [ "${UUID}" != "root" ]
-then
-  if [ -d ${RUDDER_VAR}/share ]
-  then
-    ROLES="${ROLES}, rudder-relay"
-  elif [ -d ${RUDDER_VAR}/inventories/incoming ]
-  then
-    ROLES="${ROLES}, rudder-relay (not registered)"
-  fi
-fi
-
 VERSION=`${RUDDER_BIN} agent version`
 
 echo "Hostname: $(get_hostname)"
@@ -67,8 +61,12 @@ echo "Certificate creation: ${CERT_CRE}"
 echo "Certificate expiration: ${CERT_EXP}"
 echo "Certificate fingerprint: ${CERT_FINGERPRINT}"
 [ "${VERBOSE}" = "true" ] && echo "Certificate:" && cat ${RUDDER_DIR}/etc/ssl/agent.cert
+echo "Key pinning: ${PINNING}"
 echo "Policy server: ${POLICY}"
-echo "Roles: ${ROLES}"
+if [ -n "${RUDDER_NODE_KIND}" ]
+then
+  echo "Role: ${RUDDER_NODE_KIND}"
+fi
 if [ -n "${RUDDER_REPORT_MODE}" ]
 then
   echo "Report mode: ${RUDDER_REPORT_MODE}"
