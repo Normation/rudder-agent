@@ -34,65 +34,75 @@ else
   PINNING="none"
 fi
 
-CERT_CRE=$(openssl x509 -startdate -noout -in ${RUDDER_DIR}/etc/ssl/agent.cert | cut -d= -f2)
-[ $? -ne 0 ] && CERT_CRE="Not yet configured"
-CERT_EXP=$(openssl x509 -enddate -noout -in ${RUDDER_DIR}/etc/ssl/agent.cert | cut -d= -f2)
-[ $? -ne 0 ] && CERT_EXP="Not yet configured"
+CERT_CRE=$(date --date="$(openssl x509 -startdate -noout -in ${RUDDER_DIR}/etc/ssl/agent.cert | cut -d= -f 2)" --iso-8601)
+[ $? -ne 0 ] && CERT_CRE="Not configured"
+CERT_EXP=$(date --date="$(openssl x509 -enddate -noout -in ${RUDDER_DIR}/etc/ssl/agent.cert | cut -d= -f 2)" --iso-8601)
+[ $? -ne 0 ] && CERT_EXP="Not configured"
 CERT_FINGERPRINT=$(openssl x509 -in ${RUDDER_DIR}/etc/ssl/agent.cert -noout -fingerprint -sha1 | cut -d= -f2)
-[ $? -ne 0 ] && CERT_FINGERPRINT="Not yet configured"
+[ $? -ne 0 ] && CERT_FINGERPRINT="Not configured"
 KEY_HASH=$(${RUDDER_DIR}/bin/cf-key -p /var/rudder/cfengine-community/ppkeys/localhost.pub)
-[ $? -ne 0 ] && KEY_HASH="Not yet configured"
+[ $? -ne 0 ] && KEY_HASH="Not configured"
+KEY_HASH_SHA=$(openssl rsa -in /var/rudder/cfengine-community/ppkeys/localhost.priv -outform der -pubout 2>/dev/null | openssl dgst -sha256 -binary | openssl enc -base64)
+[ $? -ne 0 ] && KEY_HASH_SHA="Not configured"
 
 POLICY=$(cat ${RUDDER_VAR}/cfengine-community/policy_server.dat 2>/dev/null)
 [ $? -ne 0 ] && POLICY="Not yet configured"
 
 POLICY_FETCHED=$(modification_time ${RUDDER_VAR}/cfengine-community/last_successful_inputs_update 2> /dev/null)
-[ $? -ne 0 ] && POLICY_FETCHED="Not yet updated" || POLICY_FETCHED=$(echo "${POLICY_FETCHED}" | cut -d'.' -f1)
+[ $? -ne 0 ] && POLICY_FETCHED="Not updated" || POLICY_FETCHED=$(echo "${POLICY_FETCHED}" | cut -d'.' -f1)
 
 INVENTORY_SENT=$(modification_time ${RUDDER_VAR}/tmp/inventory_sent 2> /dev/null)
-[ $? -ne 0 ] && INVENTORY_SENT="Not yet sent" || INVENTORY_SENT=$(echo "${INVENTORY_SENT}" | cut -d'.' -f1)
+[ $? -ne 0 ] && INVENTORY_SENT="Not sent" || INVENTORY_SENT=$(echo "${INVENTORY_SENT}" | cut -d'.' -f1)
 
-VERSION=`${RUDDER_BIN} agent version`
+VERSION=`${RUDDER_BIN} agent version | sed 's/Rudder agent //'`
 
-echo "Hostname: $(get_hostname)"
-echo "UUID: ${UUID}"
-echo "Key hash: ${KEY_HASH}"
-echo "Certificate creation: ${CERT_CRE}"
-echo "Certificate expiration: ${CERT_EXP}"
-echo "Certificate fingerprint: ${CERT_FINGERPRINT}"
-[ "${VERBOSE}" = "true" ] && echo "Certificate:" && cat ${RUDDER_DIR}/etc/ssl/agent.cert
-echo "Key pinning: ${PINNING}"
-echo "Policy server: ${POLICY}"
+printf "\n${WHITE}General${NORMAL}\n"
+echo "           Hostname: $(get_hostname)"
+echo "               UUID: ${UUID}"
+echo "      Policy server: ${POLICY}"
 if [ -n "${RUDDER_NODE_KIND}" ]
 then
-  echo "Role: ${RUDDER_NODE_KIND}"
+  echo "               Role: ${RUDDER_NODE_KIND}"
+fi
+echo "            Version: ${VERSION}"
+
+printf "\n${WHITE}Policies${NORMAL}\n"
+
+if [ -e ${RUDDER_DIR}/etc/disable-agent ]; then
+  echo "             Status: disabled since $(modification_time ${RUDDER_DIR}/etc/disable-agent)"
+else
+  echo "             Status: enabled"
 fi
 if [ -n "${RUDDER_REPORT_MODE}" ]
 then
-  echo "Report mode: ${RUDDER_REPORT_MODE}"
+  echo "        Report mode: ${RUDDER_REPORT_MODE}"
 fi
-echo "Run interval: ${AGENT_RUN_INTERVAL} min"
-if [ -e ${RUDDER_DIR}/etc/disable-agent ]; then
-  echo "Agent is disabled since $(modification_time ${RUDDER_DIR}/etc/disable-agent)"
-else
-  echo "Agent is enabled"
-fi
+echo "       Run interval: ${AGENT_RUN_INTERVAL} min"
 if [ -e ${RUDDER_DIR}/etc/force-audit-agent ]; then
-  echo "Agent is forced in audit mode since $(modification_time ${RUDDER_DIR}/etc/force-audit-agent)"
+  echo "  Forced audit mode: since $(modification_time ${RUDDER_DIR}/etc/force-audit-agent)"
 else
-  echo "Agent is not forced in audit mode"
+  echo "  Forced audit mode: no"
 fi
 if [ -n "${RUDDER_NODE_CONFIG_ID}" ]
 then
-  echo "Configuration id: ${RUDDER_NODE_CONFIG_ID}"
+  echo "   Configuration id: ${RUDDER_NODE_CONFIG_ID}"
 fi
-echo "Policy updated: ${POLICY_FETCHED}"
-echo "Inventory sent: ${INVENTORY_SENT}"
-echo "Version: ${VERSION}"
+echo "     Policy updated: ${POLICY_FETCHED}"
+echo "     Inventory sent: ${INVENTORY_SENT}"
+
+printf "\n${WHITE}Key/Certificate${NORMAL}\n"
+echo "           Key hash: ${KEY_HASH}"
+echo "           Key hash: sha256//${KEY_HASH_SHA}"
+echo "  Cert. fingerprint: ${CERT_FINGERPRINT}"
+echo "        Key pinning: ${PINNING}"
+echo "     Cert. creation: ${CERT_CRE}"
+echo "   Cert. expiration: ${CERT_EXP}"
+[ "${VERBOSE}" = "true" ] && echo "        Certificate:" && cat ${RUDDER_DIR}/etc/ssl/agent.cert
+
+echo ""
 
 # Display system classes in verbose mode
 if [ "${VERBOSE}" = "true" ]; then
-  echo "Defined system conditions:"
-  "${RUDDER_DIR}/bin/cf-promises" --show-classes | grep "hardclass$" | awk '{ print "  " $1 }'
+  printf "\n${WHITE}Defined system conditions${NORMAL}\n"
+  "${RUDDER_DIR}/bin/cf-promises" --show-classes | grep "hardclass" | awk '{ print "  " $1 }'
 fi
-
