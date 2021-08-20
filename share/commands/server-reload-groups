@@ -25,5 +25,9 @@ while getopts "iIvdc" opt; do
   esac
 done
 
-simple_api_call "https://localhost/rudder/api/dyngroup/reload" "reload dynamic groups" "${DISPLAY_COMMAND}" "OK" ""
+action="reload groups"
+curl_opt="--header \"X-API-Token: ${TOKEN}\" --request POST"
+expected='{"action":"reloadGroups","result":"success","data":{"groups":"Started"}}'
+
+simple_api_call "http://localhost:8080/rudder/api/latest/system/reload/groups" "reload groups" "${DISPLAY_COMMAND}" "${expected}" "${curl_opt}"
 
