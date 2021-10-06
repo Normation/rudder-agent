@@ -134,6 +134,11 @@ check_and_fix_cfengine_keys() {
     ${CFE_DIR}/bin/cf-key -T 4096
     [ "$QUIET" = false ] && echo " Done"
   fi
+  # Key must not have a passphrase
+  if ! openssl pkey -passin pass:"" -in ${CFE_DIR}/ppkeys/localhost.priv > /dev/null 2>&1; then
+    openssl rsa -in ${CFE_DIR}/ppkeys/localhost.priv -passin "pass:Cfengine passphrase" > ${CFE_DIR}/ppkeys/localhost.priv.unenc 2>/dev/null
+    /bin/mv ${CFE_DIR}/ppkeys/localhost.priv.unenc ${CFE_DIR}/ppkeys/localhost.priv
+  fi
   # CFEngine key directory must not be accessible by 'group' or 'other'
   if [ -d ${CFE_DIR}/ppkeys ]; then
     chmod 700 ${CFE_DIR}/ppkeys
