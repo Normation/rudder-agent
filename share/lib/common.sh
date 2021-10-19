@@ -199,7 +199,7 @@ get_https_port() {
   # get port from configuration
   PORT=$(agent_conf https_port)
   # if not trust the server on this
-  if [ "${PORT}" = "" ]; then
+  if [ "${PORT}" = "" ] && [ -f "${RUDDER_JSON}" ]; then
     PORT=$(rudder_json_value 'HTTPS_POLICY_DISTRIBUTION_PORT')
   fi
   # else default to 443
