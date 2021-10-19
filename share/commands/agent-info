@@ -45,8 +45,17 @@ KEY_HASH=$(${RUDDER_DIR}/bin/cf-key -p /var/rudder/cfengine-community/ppkeys/loc
 KEY_HASH_SHA=$(openssl rsa -in /var/rudder/cfengine-community/ppkeys/localhost.priv -outform der -pubout 2>/dev/null | openssl dgst -sha256 -binary | openssl enc -base64)
 [ $? -ne 0 ] && KEY_HASH_SHA="Not configured"
 
-POLICY=$(cat ${RUDDER_VAR}/cfengine-community/policy_server.dat 2>/dev/null)
+
+if grep -q ":" "${RUDDER_VAR}/cfengine-community/policy_server.dat"; then
+  PORT=$(cut -d: -s -f2 "${RUDDER_VAR}/cfengine-community/policy_server.dat")
+  POLICY=$(cut -d: -s -f1 "${RUDDER_VAR}/cfengine-community/policy_server.dat")
+else
+  PORT="5309"
+  POLICY=$(cat "${RUDDER_VAR}/cfengine-community/policy_server.dat")
+fi
 [ $? -ne 0 ] && POLICY="Not yet configured"
+
+HTTPS_PORT=$(rudder_json_value 'HTTPS_POLICY_DISTRIBUTION_PORT')
 
 POLICY_FETCHED=$(modification_time ${RUDDER_VAR}/cfengine-community/last_successful_inputs_update 2> /dev/null)
 [ $? -ne 0 ] && POLICY_FETCHED="Not updated" || POLICY_FETCHED=$(echo "${POLICY_FETCHED}" | cut -d'.' -f1)
@@ -60,6 +69,13 @@ printf "\n${WHITE}General${NORMAL}\n"
 echo "           Hostname: $(get_hostname)"
 echo "               UUID: ${UUID}"
 echo "      Policy server: ${POLICY}"
+if [ "${HTTPS_PORT}" != "443" ]; then
+  echo "         HTTPS port: ${HTTPS_PORT}"
+fi
+if [ "${PORT}" != "5309" ]; then
+  echo "      CFEngine port: ${PORT}"
+fi
+
 if [ -n "${RUDDER_NODE_KIND}" ]
 then
   echo "               Role: ${RUDDER_NODE_KIND}"
