@@ -69,19 +69,20 @@ if [ "${MYUID}" != 'root' ];then echo "You must be root"; exit; fi
 
 # only enable lock/sleep mechanisms in non-interactive mode
 if [ ! -t 0 ]; then
-  ## Lock agent check to avoid piling up check processes
-  ## This might be removable whent 6.2 becomes the oldest supported (or not) because of #16859
-  LOCKFILE=/tmp/agent-check.lock
-  if [ -e "${LOCKFILE}" ] && kill -0 `cat "${LOCKFILE}"`; then
-      echo "rudder agent check is already running"
-      exit 1
-  fi
-  # make sure the lockfile is removed when we exit and then claim it
-  trap "rm -f ${LOCKFILE}; exit" INT TERM EXIT
-  echo "$$" > "${LOCKFILE}"
-
-  # sleep for a random time, if not interactive
+  ## If we force, we *really* want it to be run (it's during upgrade)
   if [ "$SLEEP" = true ]; then
+    ## Lock agent check to avoid piling up check processes
+    ## This might be removable whent 6.2 becomes the oldest supported (or not) because of #16859
+    LOCKFILE=/tmp/agent-check.lock
+    if [ -e "${LOCKFILE}" ] && kill -0 `cat "${LOCKFILE}"`; then
+        echo "rudder agent check is already running"
+        exit 1
+    fi
+    # make sure the lockfile is removed when we exit and then claim it
+    trap "rm -f ${LOCKFILE}; exit" INT TERM EXIT
+    echo "$$" > "${LOCKFILE}"
+
+    # sleep for a random time, if not interactive
     # we half the interval in the hope of not running at the same time as the agent
     MAX_SLEEP=`expr ${AGENT_RUN_INTERVAL} \* 30` # in second
     SLEEP_DURATION=$(awk -v m="$MAX_SLEEP" 'BEGIN{srand(); print int(rand()*m)}')
