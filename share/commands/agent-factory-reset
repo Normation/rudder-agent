@@ -106,6 +106,7 @@ rm -f ${RUDDER_DIR}/etc/uuid.hive
 [ "$VERBOSE" = true ] && echo "Removing old inventory..."
 rm -rf ${RUDDER_DIR}/var/fusioninventory/*
 rm -rf ${RUDDER_VAR}/tmp/inventory/*
+rm -f  ${RUDDER_VAR}/tmp/inventory_sent
 
 # - check and repair everything missing (keys, uuid, reset, update, inventory ...)
 ${RUDDER_BIN} agent check -f -r ${OPTS}
