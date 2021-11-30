@@ -16,9 +16,6 @@ mkdir -p "${REPORTS_DIR}"
 PRIVKEY="${RUDDER_VAR}/cfengine-community/ppkeys/localhost.priv"
 CERT="${RUDDER_DIR}/etc/ssl/agent.cert"
 
-# Private key passphrase
-PASSPHRASE="Cfengine passphrase"
-
 # Should be called on the output file from temp directory
 # Everything in the ready dir should be ready to be sent
 compress_and_sign() {
@@ -35,7 +32,8 @@ compress_and_sign() {
     fi
 
     # We do not include certs as the server already knows them
-    openssl smime -sign -text -nocerts -signer "${CERT}" -inkey "${PRIVKEY}" -passin "pass:${PASSPHRASE}" \
+    # -passin can be removed once 6.2 compatibility is dropped
+    openssl smime -sign -text -nocerts -signer "${CERT}" -inkey "${PRIVKEY}" -passin "pass:Cfengine passphrase" \
         -in "${tmp_file}" -out "${tmp_file}.signed"
     if [ $? -eq 0 ]; then
         # Move temp file
