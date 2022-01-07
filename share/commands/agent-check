@@ -60,6 +60,9 @@ LAST_UPDATE_FILE="${CFE_DIR}/last_successful_inputs_update"
 ## Paths for Rudder Server Roles
 RUDDER_SERVER_ROLES="${RUDDER_DIR}/etc/server-roles.d"
 
+# set this to true to force an inventory at the end of the check
+INVENTORY_NEEDED="false"
+
 # Get common commands from common.sh
 init_commands
 
@@ -110,6 +113,8 @@ exist_or_restore() {
       if [ "${last_backup}" != "" ]; then
         [ "$QUIET" = false ] && printf "INFO: The file '${file_path}' does not exist. The lastest backup '${last_backup}' will be recovered..."
         ${CP_A} "${last_backup}" "${file_path}" >/dev/null
+        # any file restored here could be important for the inventory
+        INVENTORY_NEEDED="true"
         [ "$QUIET" = false ] && echo " Done"
       else
         return 1
@@ -134,11 +139,13 @@ check_and_fix_cfengine_keys() {
     [ "$QUIET" = false ] && printf "INFO: Agent keys are missing, creating them ..."
     ${CFE_DIR}/bin/cf-key -T 4096
     [ "$QUIET" = false ] && echo " Done"
+    INVENTORY_NEEDED="true"
   fi
   # Key must not have a passphrase
   if grep -q "ENCRYPTED" ${CFE_DIR}/ppkeys/localhost.priv > /dev/null 2>&1; then
     openssl rsa -in ${CFE_DIR}/ppkeys/localhost.priv -passin "pass:Cfengine passphrase" > ${CFE_DIR}/ppkeys/localhost.priv.unenc 2>/dev/null
     /bin/mv ${CFE_DIR}/ppkeys/localhost.priv.unenc ${CFE_DIR}/ppkeys/localhost.priv
+    INVENTORY_NEEDED="true"
   fi
   # CFEngine key directory must not be accessible by 'group' or 'other'
   if [ -d ${CFE_DIR}/ppkeys ]; then
@@ -154,6 +161,7 @@ check_and_fix_cfengine_keys() {
     UUID=$(cat "${UUID_FILE}")
     openssl req -new -batch -sha256 -key ${CFE_DIR}/ppkeys/localhost.priv -out ${RUDDER_DIR}/etc/ssl/agent.cert -x509 -days 3650 -extensions agent_cert -config ${RUDDER_DIR}/etc/ssl/openssl-agent.cnf -subj "/CN=${UUID}/UID=${UUID}"
     [ "$QUIET" = false ] && echo " Done"
+    INVENTORY_NEEDED="true"
   fi
   # Agent certificate must match the key pair
   modulus_cert=$(openssl x509 -noout -modulus -in "/opt/rudder/etc/ssl/agent.cert")
@@ -260,7 +268,7 @@ check_and_fix_rudder_uuid() {
 
   # Default variable about UUID backup
   LATEST_BACKUPED_UUID=""
-  
+
   # Generate a UUID if we don't have one yet
   if ! exist_or_restore "${UUID_FILE}"
   then
@@ -282,7 +290,7 @@ check_and_fix_rudder_uuid() {
     ${RUDDER_DIR}/bin/rudder-uuidgen > ${UUID_FILE}
     echo " Done."
   fi
-  
+
 }
 
 # Important CFEngine input files must exist and pass cf-promises test
@@ -310,7 +318,7 @@ check_and_fix_inventory() {
   # age in hours
   inventory_age=$(perl -e '(@i) = stat($ARGV[0]); printf "%ld\n", (time-$i[9])/3600' ${RUDDER_VAR}/tmp/inventory_sent)
   # 72 hours = 3 days
-  if [ "${inventory_age}" -gt 72 ]
+  if [ "${inventory_age}" -gt 72 ] || [ "${INVENTORY_NEEDED}" = "true" ]
   then
     [ "$QUIET" = false ] && printf "INFO: Inventory older than 3 days, resending ..."
     rudder agent inventory ${OPT}
@@ -371,12 +379,12 @@ check_varspace_or_exit() {
       if [ -f ${RUDDER_SERVER_ROLES}/rudder-reports ]; then
         # Try with systemd
         POSTGRESQL_SERVICE_NAME=$(systemctl list-unit-files --type service | awk -F'.' '{print $1}' | egrep "^postgresql-?[0-9]*$" | tail -n 1)
-        
+
         # If nothing try with chkconfig (sles 12 only: postgresql is properly managed by systemd but cannot be detected with the line above)
         if [ -z "${POSTGRESQL_SERVICE_NAME}" ] && ! type chkconfig >/dev/null 2>/dev/null ; then
           POSTGRESQL_SERVICE_NAME=$(chkconfig 2>/dev/null | awk '{ print $1 }' | grep "postgresql" | tail -n 1)
         fi
-        
+
         # If nothing try default name (should not happen)
         if [ -z "${POSTGRESQL_SERVICE_NAME}" ]; then
           POSTGRESQL_SERVICE_NAME="postgresql"
