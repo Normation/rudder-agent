@@ -28,8 +28,9 @@ SLEEP=true
 ONLY_UUID=false
 OPT=""
 RESET=false
+STOP_AT=""
 
-while getopts "qcfur" opt; do
+while getopts "qcfurs:" opt; do
   case $opt in
     q)
       QUIET=true
@@ -47,6 +48,10 @@ while getopts "qcfur" opt; do
       ;;
     r)
       RESET=true
+      ;;
+    s)
+      STOP_AT=${OPTARG}
+      ;;
   esac
 done
 
@@ -410,22 +415,30 @@ if [ "${ONLY_UUID}" != true ]
 then
   # Agent must have public and private keys
   check_and_fix_cfengine_keys
+  [ "${STOP_AT}" = "keys" ] && exit
   # Policy server must be declared or next checks are useless
   check_policy_server_or_exit
+  [ "${STOP_AT}" = "policy-server" ] && exit
   # Check for free space and stop if there is not enough
   check_varspace_or_exit
+  [ "${STOP_AT}" = "varspace" ] && exit
   # Do not go further if the agent is disabled
   [ -f "${CFE_DISABLE_FILE}" ] && exit 0
   # Important CFEngine input files must exist and pass cf-promises test
   check_and_fix_inputs
+  [ "${STOP_AT}" = "inputs" ] && exit
   # There must be exactly one cf-execd process and not too many agente
   check_and_fix_cfengine_processes
+  [ "${STOP_AT}" = "process" ] && exit
   # Agent must have been updated recently
   check_and_fix_last_update
+  [ "${STOP_AT}" = "update" ] && exit
   # Lock file must too big
   check_and_fix_cf_lock
+  [ "${STOP_AT}" = "lock" ] && exit
   # Inventory must have been sent recently
   check_and_fix_inventory
+  [ "${STOP_AT}" = "inventory" ] && exit
 fi
 
 [ "$QUIET" = false ] && printf "FINISH: Rudder agent check ran properly, please look at messages above to see if there has been any error.\n"
