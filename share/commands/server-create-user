@@ -1,12 +1,14 @@
 #!/bin/bash
 # @description create an admin user account
 # @man This commands allows inserting a new user account. It is particularly useful
-# @man to create the first admin account on the server. It requires that the 
+# @man to create the first admin account on the server. It requires that the
 # @man authentication hash is bcrypt (default from fresh 6.1).
 # @man +
 # @man *Options*:
 # @man +
 # @man *-u*: specify the user name ("admin" by default)
+# @man +
+# @man *-p*: specify the user password (use with care as it is stored in history), if empty use $ADMIN_PASSWORD from the environment instead
 
 . "${BASEDIR}/../lib/common.sh"
 
@@ -15,11 +17,18 @@ set -e
 
 USERFILE="${RUDDER_DIR}/etc/rudder-users.xml"
 USER="admin"
+PASS_OPT=""
 
-while getopts "u:" opt; do
+while getopts "u:p:" opt; do
   case $opt in
     u)
       USER="${OPTARG}"
+      ;;
+    p)
+      PASS_OPT="b"
+      if [ "${OPTARG}" != "" ]; then
+        ADMIN_PASSWORD="${OPTARG}"
+      fi
       ;;
   esac
 done
@@ -42,7 +51,7 @@ then
 fi
 
 # bcrypt (12 cost)
-hash=$(htpasswd -nBC 12 "" | tr -d ':\n')
+hash=$(htpasswd -n${PASS_OPT}BC 12 "" ${ADMIN_PASSWORD}| tr -d ':\n')
 
 details="<user name=\"${USER}\" password=\"${hash}\" role=\"administrator\" />"
 sed -i "/^[[:space:]]*<\/authentication>/i ${details}" "${USERFILE}"
