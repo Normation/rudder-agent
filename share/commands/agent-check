@@ -192,7 +192,9 @@ check_policy_server_or_exit() {
   fi
 }
 
-# There must be exactly one cf-execd running, and not too many agents
+# There may be several cf-execd running because cf-execd now runs cf-agent from a child process
+# We accept 6, as it allows for 5 agent running at the same time (historic max)
+# and not too many agents
 check_and_fix_cfengine_processes() {
 
   # If there are more than one cf-execd process, we must kill them
@@ -201,7 +203,7 @@ check_and_fix_cfengine_processes() {
   # List the cf-execd processes running (without the path, they can be run manually)
   CF_EXECD_RUNNING=`${PS_COMMAND} | egrep "(${RUDDER_DIR}|${CFE_DIR})/bin/cf-execd" | sed -e '/grep/d' | cat`
   NB_CF_EXECD_RUNNING=`echo "${CF_EXECD_RUNNING}" | sed -e '/^$/d' | wc -l`
-  if [ ${NB_CF_EXECD_RUNNING} -gt 1 ]; then
+  if [ ${NB_CF_EXECD_RUNNING} -gt 6 ]; then
     [ "$QUIET" = false ] && printf "${YELLOW}WARNING${NORMAL}: Too many instance of Rudder cf-execd processes running. Killing them..."
     echo "${CF_EXECD_RUNNING}" | awk 'BEGIN { OFS=" "} {print $2 }' | xargs kill -9 || true
     [ "$QUIET" = false ] && echo " Done"
@@ -222,9 +224,9 @@ check_and_fix_cfengine_processes() {
   fi
 
   # Check for anomalous number of CFEngine processes
-  # If there are more than 6 agent/executor processes, we should kill them, and purge the lock database
-  # 6 means 1 cf-execd + 5 cf-agent
-  if [ "${NB_CF_PROCESS_RUNNING}" -gt 6 ]; then
+  # If there are more than 11 agent/executor processes, we should kill them, and purge the lock database
+  # 11 means 1 cf-execd + 5 cf-execd spawn + 5 cf-agent
+  if [ "${NB_CF_PROCESS_RUNNING}" -gt 11 ]; then
     [ "$QUIET" = false ] && printf "${YELLOW}WARNING${NORMAL}: Too many instance of Agent processes running. Killing them, and purging the Agent lock database..."
     echo "${CF_PROCESS_RUNNING}" | awk 'BEGIN { OFS=" "} {print -$2 }' | xargs kill -9 || true
     rudder agent stop ${OPT}
