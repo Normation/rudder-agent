@@ -34,7 +34,7 @@ while getopts "u:p:" opt; do
 done
 
 # check hash
-if ! grep -qE "^[[:space:]]*<authentication[[:space:]]+hash=\"bcrypt\"[[:space:]]*>" "${USERFILE}"
+if ! grep -qE "^[[:space:]]*<authentication[[:space:]]+hash=\"bcrypt\".*>" "${USERFILE}"
 then
   echo "This command can only create users when the 'bcrypt' hash method is used"
   echo "Particularly, for servers upgraded from pre-6.1, it requires resetting all"
