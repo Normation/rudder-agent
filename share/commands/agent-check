@@ -58,6 +58,7 @@ done
 # Variables
 BACKUP_DIR="/var/backups/rudder/"
 CFE_DIR="${RUDDER_VAR}/cfengine-community"
+CFE_BIN="/opt/rudder/bin"
 CFE_DISABLE_FILE="${RUDDER_DIR}/etc/disable-agent"
 UUID_FILE="${RUDDER_DIR}/etc/uuid.hive"
 LAST_UPDATE_FILE="${CFE_DIR}/last_successful_inputs_update"
@@ -142,7 +143,7 @@ check_and_fix_cfengine_keys() {
   if ! exist_or_restore ${CFE_DIR}/ppkeys/localhost.pub || ! exist_or_restore ${CFE_DIR}/ppkeys/localhost.priv
   then
     [ "$QUIET" = false ] && printf "INFO: Agent keys are missing, creating them ..."
-    ${CFE_DIR}/bin/cf-key -T 4096
+    ${CFE_BIN}/cf-key -T 4096
     [ "$QUIET" = false ] && echo " Done"
     INVENTORY_NEEDED="true"
   fi
@@ -201,7 +202,7 @@ check_and_fix_cfengine_processes() {
   # A standard kill won't kill them, so the -9 is necessary to make sure they are stopped
   # They will be restarted by the check below, if the disable file is not set
   # List the cf-execd processes running (without the path, they can be run manually)
-  CF_EXECD_RUNNING=`${PS_COMMAND} | egrep "(${RUDDER_DIR}|${CFE_DIR})/bin/cf-execd" | sed -e '/grep/d' | cat`
+  CF_EXECD_RUNNING=`${PS_COMMAND} | egrep "(${RUDDER_DIR}|${CFE_BIN})/cf-execd" | sed -e '/grep/d' | cat`
   NB_CF_EXECD_RUNNING=`echo "${CF_EXECD_RUNNING}" | sed -e '/^$/d' | wc -l`
   if [ ${NB_CF_EXECD_RUNNING} -gt 6 ]; then
     [ "$QUIET" = false ] && printf "${YELLOW}WARNING${NORMAL}: Too many instance of Rudder cf-execd processes running. Killing them..."
@@ -210,7 +211,7 @@ check_and_fix_cfengine_processes() {
   fi
 
   # List the CFEngine processes running
-  CF_PROCESS_RUNNING=`${PS_COMMAND} | egrep "(${RUDDER_DIR}|${CFE_DIR})/bin/cf-(agent|execd)" | cat`
+  CF_PROCESS_RUNNING=`${PS_COMMAND} | egrep "(${RUDDER_DIR}|${CFE_BIN})/cf-(agent|execd)" | cat`
   # Count the number of processes running, filtering empty lines
   NB_CF_PROCESS_RUNNING=`echo "${CF_PROCESS_RUNNING}" | sed -e '/^$/d' | wc -l`
 
