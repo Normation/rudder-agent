@@ -22,6 +22,7 @@ BEGIN {
   state_color["error"] = red;
   state_color["repaired"] = yellow;
   state_color["info"] = cyan;
+  state_color["report_json"] = cyan;
   state_color["warning"] = magenta;
   state_color["n/a"] = green;
 
@@ -310,6 +311,12 @@ function print_report_singleline() {
       next
     }
     result = "n/a";
+  } else if (state == "report_json") {
+    if (quiet) {
+      next
+    }
+    message = "[JSON object]"
+    result = "report_json";
   } else {
     if (quiet) {
       next
