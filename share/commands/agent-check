@@ -126,34 +126,48 @@ compare_uuid() {
   SUBJECT=$(openssl x509 -in /opt/rudder/etc/ssl/agent.cert -noout -subject | sed 's/.*UID *= *\([^,]*\)\(,.*\)*/\1/')
   [ "${UUID}" = "${SUBJECT}" ]
 }
-# CFEngine keys must be present with a certificate and have proper access rights
-check_and_fix_cfengine_keys() {
-  # Agent must have keys
-  if ! exist_or_restore ${CFE_DIR}/ppkeys/localhost.pub || ! exist_or_restore ${CFE_DIR}/ppkeys/localhost.priv
-  then
-    [ "$QUIET" = false ] && printf "INFO: Agent keys are missing, creating them ..."
-    ${CFE_DIR}/bin/cf-key -T 4096
+
+compare_key() {
+  # Agent certificate must match the key pair
+  modulus_cert=$(openssl x509 -noout -modulus -in "/opt/rudder/etc/ssl/agent.cert")
+  modulus_key=$(openssl rsa -noout -modulus -passin "pass:Cfengine passphrase" -in "${CFE_DIR}/ppkeys/localhost.priv")
+  [ "${modulus_cert}" = "${modulus_key}" ]
+}
+
+# Keys must be present with a certificate and have proper access rights
+check_and_fix_keys() {
+  # Agent must have a private key
+  if ! exist_or_restore "${CFE_DIR}/ppkeys/localhost.priv"; then
+    [ "$QUIET" = false ] && printf "INFO: Rudder key pair is missing, creating it..."
+    "${CFE_DIR}/bin/cf-key" -T 4096
     [ "$QUIET" = false ] && echo " Done"
   fi
+
+  # Extract public key if missing
+  if [ ! -f "${CFE_DIR}/ppkeys/localhost.pub" ]; then
+    [ "$QUIET" = false ] && printf "INFO: Rudder public key is missing, creating it..."
+    openssl rsa -passin "pass:Cfengine passphrase" -in "${CFE_DIR}/ppkeys/localhost.priv" -RSAPublicKey_out -out "${CFE_DIR}/ppkeys/localhost.pub"
+    [ "$QUIET" = false ] && echo " Done"
+  fi
+
+  # First restore certificate if not there
+  exist_or_restore /opt/rudder/etc/ssl/agent.cert || true
+
+  # Regen if cert if missing or invalid
+  if [ ! -f /opt/rudder/etc/ssl/agent.cert ] || ! compare_uuid || ! compare_key; then
+    # Backup cert
+    [ -f /opt/rudder/etc/ssl/agent.cert ] && mv /opt/rudder/etc/ssl/agent.cert "/var/backups/rudder/agent-`date +%Y%m%d`.cert"
+    [ "$QUIET" = false ] && printf "INFO: Rudder certificate is missing or incorrect, creating one..."
+    openssl req -new -batch -sha256 -key "${CFE_DIR}/ppkeys/localhost.priv" -out "/opt/rudder/etc/ssl/agent.cert" -passin "pass:Cfengine passphrase" -x509 -days 3650 -extensions agent_cert -config /opt/rudder/etc/ssl/openssl-agent.cnf -subj "/UID=$(cat "${UUID_FILE}")"
+    [ "$QUIET" = false ] && echo " Done"
+  fi
+
   # CFEngine key directory must not be accessible by 'group' or 'other'
-  if [ -d ${CFE_DIR}/ppkeys ]; then
-    chmod 700 ${CFE_DIR}/ppkeys
+  if [ -d "${CFE_DIR}/ppkeys" ]; then
+    chmod 700 "${CFE_DIR}/ppkeys"
     if [ `ls ${CFE_DIR}/ppkeys | wc -l` -gt 0 ]; then
       chmod 600 ${CFE_DIR}/ppkeys/*
     fi
-  fi
-  # Agent must have a certificate with a subject that match agent uuid
-  if ! exist_or_restore /opt/rudder/etc/ssl/agent.cert || ! compare_uuid
-  then
-    [ "$QUIET" = false ] && printf "INFO: Agent certificate is missing, creating it..."
-    openssl req -new -batch -sha256 -key ${CFE_DIR}/ppkeys/localhost.priv -out /opt/rudder/etc/ssl/agent.cert -passin "pass:Cfengine passphrase" -x509 -days 3650 -extensions agent_cert -config /opt/rudder/etc/ssl/openssl-agent.cnf -subj "/UID=$(cat "${UUID_FILE}")"
-    [ "$QUIET" = false ] && echo " Done"
-  fi
-  # Agent certificate must match the key pair
-  modulus_cert=$(openssl x509 -noout -modulus -in "/opt/rudder/etc/ssl/agent.cert")
-  modulus_key=$(openssl rsa  -noout -modulus -passin "pass:Cfengine passphrase" -in "${CFE_DIR}/ppkeys/localhost.priv")
-  if [ "${modulus_cert}" != "${modulus_key}" ]; then
-    printf "${RED}ERROR${NORMAL}: Certificate does not match agent key\n"
   fi
 }
 
@@ -394,8 +408,8 @@ check_varspace_or_exit() {
 check_and_fix_rudder_uuid
 if [ "${ONLY_UUID}" != true ]
 then
-  # Agent must have public and private keys
-  check_and_fix_cfengine_keys
+  # Agent must have a key pair and a correct certificate
+  check_and_fix_keys
   # Policy server must be declared or next checks are useless
   check_policy_server_or_exit
   # Check for free space and stop if there is not enough
