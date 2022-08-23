@@ -150,6 +150,7 @@ check_and_fix_keys() {
   # Agent must have a private key
   if ! exist_or_restore "${CFE_DIR}/ppkeys/localhost.priv"; then
     [ "$QUIET" = false ] && printf "INFO: Rudder key pair is missing, creating it..."
+    rm -f "${CFE_DIR}/ppkeys/localhost.pub"
     "${CFE_BIN}/cf-key" -T 4096
     [ "$QUIET" = false ] && echo " Done"
     INVENTORY_NEEDED="true"
