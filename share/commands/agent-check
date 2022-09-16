@@ -203,19 +203,18 @@ check_and_fix_cfengine_processes() {
     [ "$QUIET" = false ] && echo " Done"
   fi
 
-  # List the CFEngine processes running
-  CF_PROCESS_RUNNING=`${PS_COMMAND} | egrep "(${RUDDER_DIR}|${CFE_DIR})/bin/cf-(agent|execd)" | cat`
-  # Count the number of processes running, filtering empty lines
-  NB_CF_PROCESS_RUNNING=`echo "${CF_PROCESS_RUNNING}" | sed -e '/^$/d' | wc -l`
-
-  # If no disable file AND no process of CFEngine from Rudder, then relaunch cf-agent with a failsafe first
-  # But this is applied only on servers or nodes already initialized (policy server set)
-  if [ ! -f "${CFE_DISABLE_FILE}" ] && [ "${NB_CF_PROCESS_RUNNING}" -eq 0 ]; then
+  # If no disable file AND no process of cf-execd, then relaunch the service
+  if [ ! -f "${CFE_DISABLE_FILE}" ] && [ "${NB_CF_EXECD_RUNNING}" -eq 0 ]; then
     [ "$QUIET" = false ] && printf "INFO: No disable file detected and no agent executor process either. Restarting agent service..."
     rudder agent stop -q ${OPT}
     rudder agent start -q ${OPT}
     [ "$QUIET" = false ] && echo " Done"
   fi
+
+  # List the CFEngine processes running
+  CF_PROCESS_RUNNING=`${PS_COMMAND} | egrep "(${RUDDER_DIR}|${CFE_DIR})/bin/cf-(agent|execd)" | cat`
+  # Count the number of processes running, filtering empty lines
+  NB_CF_PROCESS_RUNNING=`echo "${CF_PROCESS_RUNNING}" | sed -e '/^$/d' | wc -l`
 
   # Check for anomalous number of CFEngine processes
   # If there are more than 6 agent/executor processes, we should kill them, and purge the lock database
@@ -269,7 +268,7 @@ check_and_fix_rudder_uuid() {
 
   # Default variable about UUID backup
   LATEST_BACKUPED_UUID=""
-  
+
   # Generate a UUID if we don't have one yet
   if ! exist_or_restore "${UUID_FILE}"
   then
@@ -291,7 +290,7 @@ check_and_fix_rudder_uuid() {
     /opt/rudder/bin/rudder-uuidgen > ${UUID_FILE}
     echo " Done."
   fi
-  
+
 }
 
 # Important CFEngine input files must exist and pass cf-promises test
@@ -380,12 +379,12 @@ check_varspace_or_exit() {
       if [ -f ${RUDDER_SERVER_ROLES}/rudder-reports ]; then
         # Try with systemd
         POSTGRESQL_SERVICE_NAME=$(systemctl list-unit-files --type service | awk -F'.' '{print $1}' | egrep "^postgresql-?[0-9]*$" | tail -n 1)
-        
+
         # If nothing try with chkconfig (sles 12 only: postgresql is properly managed by systemd but cannot be detected with the line above)
         if [ -z "${POSTGRESQL_SERVICE_NAME}" ] && ! type chkconfig >/dev/null 2>/dev/null ; then
           POSTGRESQL_SERVICE_NAME=$(chkconfig 2>/dev/null | awk '{ print $1 }' | grep "postgresql" | tail -n 1)
         fi
-        
+
         # If nothing try default name (should not happen)
         if [ -z "${POSTGRESQL_SERVICE_NAME}" ]; then
           POSTGRESQL_SERVICE_NAME="postgresql"
