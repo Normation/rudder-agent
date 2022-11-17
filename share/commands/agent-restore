@@ -1,0 +1,88 @@
+#!/bin/sh
+# @description restore a file as it was before Rudder modification
+# @man This command replace the file with is backup and make a new backup for de current version
+# @man +
+# @man *Options*:
+# @man +
+# @man *-l*: restore the given backup
+# @man +
+# @man *-n*: restore the nth backup before the last one
+# @man +
+# @man *-d*: restore from a given date in the date command format (man date for details)
+# @man +
+# @man *-f*: force restore, do not ask for confirmation
+# @mac +
+# @man *filename*: the file to show diff from
+# @man +
+
+. "${BASEDIR}/../lib/common.sh"
+. "${BASEDIR}/../lib/cfengine_parsing.sh"
+
+# default logfile is last run
+canonify() {
+  printf "$1" | tr -c '[A-Za-z0-9_]' '_'
+}
+BASE_PATH="${RUDDER_VAR}/modified-files/"
+BASE_NAME=""
+FORCE="-i"
+
+while getopts "l:n:d:f" opt; do
+  case $opt in
+    l)
+      BASE_NAME="${OPTARG}"
+      ;;
+    n)
+      nth="${OPTARG}"
+      ;;
+    d)
+      timestamp=`LANG=C date -d "${OPTARG}" +"%s"`
+      date=`LANG=C date -d "${OPTARG}" +"%s_%a_%b_%_d_%H_%M_%S_%Y" | sed 's/ /_/'`
+      ;;
+    f)
+      FORCE="-f"
+      ;;
+  esac
+done
+
+shift $(($OPTIND-1))
+FILE="$1"
+CFILE=`canonify "${FILE}"`
+
+if [ ! -f "${FILE}" ]
+then
+  echo "You must provide a valid absolute file path argument"
+  exit 1
+fi
+if [ "${BASE_NAME}" = "" ]
+then
+  if [ "${nth}" != "" ]
+  then
+    BASE_NAME=`ls -tr "${BASE_PATH}" | grep "^${CFILE}_.*_cf_before_edit" | tail -n ${OPTARG} | head -n 1`
+  elif [ "${timestamp}" != "" ]
+  then
+    for file in `ls -tr "${BASE_PATH}" | grep "^${CFILE}_.*_cf_before_edit"`
+    do
+      file_ts=`printf ${file} | sed "s/${CFILE}_\\([0-9]*\\)_.*_cf_before_edit/\\1/"`
+      if [ ${timestamp} -le ${file_ts} ]
+      then
+        BASE_NAME="${file}"
+      fi
+    done
+  else
+    BASE_NAME=$(ls -tr "${BASE_PATH}" | grep "^${CFILE}_.*_cf_before_edit" | tail -n 1)
+  fi
+fi
+
+if [ "${BASE_NAME}" = "" ]
+then
+  echo "This file file has not been modified recently or no backup has been found in ${BASE_PATH}"
+  exit 1
+fi
+
+BACKUP_NAME="${CFILE}_`LANG=C date +"%s_%a_%b_%_d_%H_%M_%S_%Y" | sed 's/ /_/'`_cf_before_edit"
+cp "${FILE}" "${BASE_PATH}/${BACKUP_NAME}"
+cp ${FORCE} "${BASE_PATH}/${BASE_NAME}" "${FILE}"
+if [ $? -eq 130 ] # user refused to copy
+then
+  rm "${BASE_PATH}/${BACKUP_NAME}"
+fi
