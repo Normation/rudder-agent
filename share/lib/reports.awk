@@ -130,6 +130,17 @@ function print_report_singleline() {
   is_report = 0;
 
   n = split($0, r, /@@/);
+  # Handle multiline component
+  while (n == 8) {
+    getline nextLine;
+    if (match(nextLine, / R: @@/)) {
+      # woops, it was really a broken report, stop here
+      $0 = nextLine;
+      break;
+    }
+    $0 = $0 nextLine;
+    n = split($0, r, /@@/);
+  }
   if (n) {
     # 1 is R:
     technique = r[2];
@@ -175,7 +186,7 @@ function print_report_singleline() {
       command | getline original_time_s;
     }
   }
-  
+
   # for raw mode
   if (summary_only && !no_report) {
     print $0;
@@ -207,7 +218,7 @@ function print_report_singleline() {
   if (match($0, /.*> ->/)) {
     hostname=substr($0, RSTART, RLENGTH-4);
   }
-  
+
   #### 2/ Parse start and end of the run
 
   # Wait for the StartRun to display the config id
@@ -246,7 +257,7 @@ function print_report_singleline() {
       next
     }
   }
-  
+
   #### 3/ Parse report mode
 
   if (match(state, /^result_/)) {
@@ -254,7 +265,7 @@ function print_report_singleline() {
   } else if (match(state, /^audit_/)) {
     mode = "Audit";
   } else {
-    # a simple log 
+    # a simple log
     mode = "";
   }
 
@@ -295,7 +306,7 @@ function print_report_singleline() {
   } else if (state == "audit_compliant") {
     audit_compliant++;
     if (quiet)
-    { 
+    {
       next
     }
     result = "compliant";
@@ -323,7 +334,7 @@ function print_report_singleline() {
     }
     result = state;
   }
-  if (key == "None") { 
+  if (key == "None") {
     # Do not display "None" keys
     key = "";
   }
@@ -332,7 +343,7 @@ function print_report_singleline() {
     next
   }
   #### 5/ Display reports
-  { 
+  {
     if (!summary_only) {
 
       if (!header_printed) {
@@ -344,7 +355,7 @@ function print_report_singleline() {
         }
 
         if (timing) {
-          printf "%8.8s", "Time "          
+          printf "%8.8s", "Time "
         }
 
         if (full_strings) {
@@ -407,7 +418,7 @@ END {
   # Check for unparsable reports
   if (broken_reports) {
     printf "%s", magenta;
-    
+
     printf "warning  %d reports were not parsable.", broken_reports;
     if (!info) {
       printf "\n         Run with -i to see log messages.";
@@ -448,11 +459,11 @@ END {
 
   if (audit_components > 0) {
     print_count_offset(3, "=>", dblue, audit_components, "components in " dblue "Audit" normal " mode");
-  
+
     if (audit_compliant > 0) {
       print_count_offset(6, "->", green, audit_compliant, "compliant");
     }
-    if (audit_notapplicable > 0) { 
+    if (audit_notapplicable > 0) {
       print_count_offset(6, "->", green, audit_notapplicable, "not-applicable");
     }
     if (audit_noncompliant > 0) {
