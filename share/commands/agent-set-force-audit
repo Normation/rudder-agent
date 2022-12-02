@@ -1,7 +1,7 @@
 #!/bin/sh
 # @description forbid rudder-agent to be run in non audit mode
 # @man This is useful when you want to ensure that the agent check compliance only,
-# @man and won't be doing any modification to your system. If agent is run in non 
+# @man and won't be doing any modification to your system. If agent is run in non
 # @man audit, it will be automatically stopped.
 # @man +
 # @man *Options*:
@@ -27,7 +27,12 @@ done
 
 touch ${RUDDER_DIR}/etc/force-audit-agent
 
-[ $? -ne 0 ] && printf "${RED}error${NORMAL}: Rudder agent could not be be forced in audit mode.\n" && exit 1
+if [ $? -ne 0 ]; then
+  printf "${RED}error${NORMAL}: Rudder agent could not be be forced in audit mode.\n"
+  exit 1
+fi
 
-[ "$QUIET" = false ] && printf "${GREEN}ok${NORMAL}: Rudder agent is now enforced in audit mode.\n"
+if [ "$QUIET" = false ]; then
+  printf "${GREEN}ok${NORMAL}: Rudder agent is now enforced in audit mode.\n"
+fi
 

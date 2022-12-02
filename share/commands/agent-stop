@@ -34,4 +34,3 @@ then
 else
   service_action "rudder-agent" "stop"
 fi
-exit $?

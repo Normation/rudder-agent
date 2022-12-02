@@ -40,5 +40,7 @@ then
   [ "$QUIET" = false ] && printf "${GREEN}ok${NORMAL}: Rudder agent has been enabled.\n"
   ${RUDDER_BIN} agent start "${OPTIONS}"
 else
-  [ "$QUIET" = false ] && printf "${GREEN}ok${NORMAL}: Rudder agent has been enabled but not started, wait for next cron run.\n"
+  if [ "$QUIET" = false ];  then
+    printf "${GREEN}ok${NORMAL}: Rudder agent has been enabled but not started, wait for next cron run.\n"
+  fi
 fi
