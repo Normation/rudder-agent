@@ -25,7 +25,11 @@ done
 
 rm -f ${RUDDER_DIR}/etc/force-audit-agent
 
-[ $? -ne 0 ] && printf "${RED}error${NORMAL}: Rudder force audit mode could not be disabled.\n" && exit 1
+if [ $? -ne 0 ]; then
+  printf "${RED}error${NORMAL}: Rudder force audit mode could not be disabled.\n"
+  exit 1
+fi
 
-[ "$QUIET" = false ] && printf "${GREEN}ok${NORMAL}: Rudder agent is not enforced in audit mode anymore.\n"
-
+if [ "$QUIET" = false ]; then
+  printf "${GREEN}ok${NORMAL}: Rudder agent is not enforced in audit mode anymore.\n"
+fi

@@ -457,5 +457,7 @@ then
   [ "${STOP_AT}" = "inventory" ] && exit
 fi
 
-[ "$QUIET" = false ] && printf "FINISH: Rudder agent check ran properly, please look at messages above to see if there has been any error.\n"
+if [ "$QUIET" = false ]; then
+  printf "FINISH: Rudder agent check ran properly, please look at messages above to see if there has been any error.\n"
+fi
 

@@ -24,4 +24,3 @@ while getopts "qc" opt; do
 done
 
 service_action "rudder-relayd" "stop"
-exit $?
