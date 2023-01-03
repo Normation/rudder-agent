@@ -15,10 +15,7 @@
 . "${BASEDIR}/../lib/common.sh"
 . "${BASEDIR}/../lib/api_call.sh"
 
-TECHNIQUES_DIRECTORY="${CONFIGURATION_DIRECTORY}/technique"
 DISPLAY_COMMAND=false
-
-need_jq
 
 while getopts "iIvdc:o:n:" opt; do
   case $opt in
@@ -49,7 +46,7 @@ echo "DIRECTIVE ${OLD_DIRECTIVE} will be replaced by ${NEW_DIRECTIVE}"
 echo ""
 
 # Find the rules using the old directive
-RULES=$(filtered_api_call "${API_URL}/api/latest/rules" "${TOKEN}" "GET" "" "${DISPLAY_COMMAND}" | jq -r " .data.rules[] | select(.directives[] | contains(\"${OLD_DIRECTIVE}\")) | {\"id\":.id, \"displayName\":.displayName, \"directives\":.directives}")
+RULES=$(rudder_api_call "/rules" "GET" "" "${DISPLAY_COMMAND}" | jq -r " .data.rules[] | select(.directives[] | contains(\"${OLD_DIRECTIVE}\")) | {\"id\":.id, \"displayName\":.displayName, \"directives\":.directives}")
 
 echo "Directives ${OLD_DIRECTIVE} will be replaced by ${NEW_DIRECTIVE} in the following rules:"
 printf "${RULES}\n\n"
@@ -68,18 +65,18 @@ else
       echo "Treating $REPLY"
       # Adding the new directive
       DIRECTIVES=$( echo ${RULES} | jq -r 'select(.id=="'${REPLY}'") |.directives')
-      result=$(filtered_api_call "${API_URL}/api/latest/rules/$REPLY" "${TOKEN}" "POST" "-H \"Content-Type: application/json\" -d '{\"directives\": $DIRECTIVES}'" "${DISPLAY_COMMAND}")
+      result=$(rudder_api_call "/rules/$REPLY" "POST" "-d '{\"directives\": $DIRECTIVES}'" "${DISPLAY_COMMAND}")
       code=$?
 
       #Looking for old directive
-      old_result=$(filtered_api_call "${API_URL}/api/latest/rules/$REPLY" "${TOKEN}" "GET" "" "${DISPLAY_COMMAND}" | jq ".data.rules[] | select(.directives[] | contains(\"${OLD_DIRECTIVE}\")) | {\"id\":.id, \"displayName\":.displayName, \"directives\":.directives}")
+      old_result=$(rudder_api_call "/rules/$REPLY" "GET" "" "${DISPLAY_COMMAND}" | jq ".data.rules[] | select(.directives[] | contains(\"${OLD_DIRECTIVE}\")) | {\"id\":.id, \"displayName\":.displayName, \"directives\":.directives}")
       if ! [ -z "${old_result}" ];
       then
         printf "${RED} Unexpected old directive found ${old_result}${NORMAL}\n\n"
       fi
 
       #Looking for new directive
-      new_result=$(filtered_api_call "${API_URL}/api/latest/rules/$REPLY" "${TOKEN}" "GET" "" "${DISPLAY_COMMAND}" | jq ".data.rules[] | select(.directives[] | contains(\"${NEW_DIRECTIVE}\")) | {\"id\":.id, \"displayName\":.displayName, \"directives\":.directives}" )
+      new_result=$(rudder_api_call "/rules/$REPLY" "GET" "" "${DISPLAY_COMMAND}" | jq ".data.rules[] | select(.directives[] | contains(\"${NEW_DIRECTIVE}\")) | {\"id\":.id, \"displayName\":.displayName, \"directives\":.directives}" )
       if  $DISPLAY_COMMAND ;
       then
         printf "${GREEN} New directive found ${new_result}${NORMAL}\n\n"

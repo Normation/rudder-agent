@@ -21,10 +21,7 @@
 . "${BASEDIR}/../lib/common.sh"
 . "${BASEDIR}/../lib/api_call.sh"
 
-TECHNIQUES_DIRECTORY="${CONFIGURATION_DIRECTORY}/technique"
 DISPLAY_COMMAND=false
-
-need_jq
 
 # Fancy print for the API call
 # $1 = API answer
@@ -33,7 +30,7 @@ print_result() {
 
   if [ "${STATUS}" == "success" ]
   then
-    NEW_DIRECTIVE_ID=$(filtered_api_call "${API_URL}/api/latest/directives" "${TOKEN}" "GET" "" "${DISPLAY_COMMAND}" | jq -r " .data.directives[] | select(.displayName==\"${DISPLAY_NAME}_migrated\") | .id")
+    NEW_DIRECTIVE_ID=$(rudder_api_call "/directives" "GET" "" "${DISPLAY_COMMAND}" | jq -r " .data.directives[] | select(.displayName==\"${DISPLAY_NAME}_migrated\") | .id")
     printf "[${GREEN}SUCCESS${NORMAL}] Directive created. You can execute the following command to change all occurrence of the old directive to the new one in your rules:\n"
     printf "${WHITE}rudder server directive-replace -o ${OLD_DIRECTIVE_ID} -n ${NEW_DIRECTIVE_ID}${NORMAL}\n"
   elif [ "${STATUS}" == "error" ]
@@ -99,12 +96,12 @@ shift  $((OPTIND-1))
 
 if [ -z ${OLD_DIRECTIVE_ID} ]
 then
-  echo "Usage: rudder server directive-migrate-package [-iIvd] [-c] -o <old-package-directive-id>" 
+  echo "Usage: rudder server directive-migrate-package [-iIvd] [-c] -o <old-package-directive-id>"
   exit 1
 fi
 
 # Get the directive
-DIRECTIVE=$(filtered_api_call "${API_URL}/api/latest/directives/${OLD_DIRECTIVE_ID}" "${TOKEN}" "GET" "" "${DISPLAY_COMMAND}" | jq -r " .data.directives[]")
+DIRECTIVE=$(rudder_api_call "/directives/${OLD_DIRECTIVE_ID}" "GET" "" "${DISPLAY_COMMAND}" | jq -r " .data.directives[]")
 # Get its sections
 DIRECTIVE_SECTIONS=$(echo "${DIRECTIVE}" | jq -r '.parameters[] | .sections')
 
@@ -128,6 +125,6 @@ done
 # ${SECTIONS:1} to remove the starting ','
 _make_new_directive "${DIRECTIVE}" "${SECTIONS:1}" > package_directive.json.temp
 
-RESULT=$(filtered_api_call "${API_URL}/api/latest/directives" "${TOKEN}" "PUT" "-H \"Content-Type: application/json\" -d @package_directive.json.temp" "${DISPLAY_COMMAND}")
+RESULT=$(rudder_api_call "/directives" "PUT" "-d @package_directive.json.temp" "${DISPLAY_COMMAND}")
 
 print_result "${RESULT}"
