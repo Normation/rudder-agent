@@ -30,5 +30,5 @@ action="reload techniques from files"
 curl_opt="--header \"X-API-Token: ${TOKEN}\" --request POST"
 expected='{"action":"reloadTechniques","result":"success","data":{"techniques":"Started"}}'
 
-simple_api_call "http://localhost:8080/rudder/api/latest/system/reload/techniques" "reload techniques from files" "${DISPLAY_COMMAND}" "${expected}" "${curl_opt}"
+simple_api_call "http://127.0.0.1:8080/rudder/api/latest/system/reload/techniques" "reload techniques from files" "${DISPLAY_COMMAND}" "${expected}" "${curl_opt}"
 
