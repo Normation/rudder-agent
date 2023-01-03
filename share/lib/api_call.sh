@@ -1,14 +1,17 @@
 # This file provide helpers to make API call from Rudder commands
 API_URL="http://127.0.0.1:8080/rudder"
-TECHNIQUES_DIRECTORY="${CONFIGURATION_DIRECTORY}/technique"
 
 DOWNLOAD_COMMAND="curl --silent --show-error ${CERTIFICATE_OPTION} --location --proxy '' --globoff"
-HEADER_OPT="--header"
 
-# This functions tests if the API call returns "OK"
-simple_api_call() {
+# This functions tests if the API call return value
+# - url: full url
+# - action_info: text describing action performed
+# - display_command: true for debug info, false otherwise
+# - expected: expected output result
+# - curl_opt: extra curl options
+checked_api_call() {
   url="$1"
-  action="$2"
+  action_info="$2"
   display_command="$3"
   expected="$4"
   curl_opt="$5"
@@ -21,63 +24,25 @@ simple_api_call() {
   code=$?
   if [ ${code} -eq 0 ] && [ "${result}" = "${expected}" ]
   then
-    printf "${GREEN}ok${NORMAL}: ${action}.\n"
+    printf "${GREEN}ok${NORMAL}: ${action_info}.\n"
   else
-    printf "${RED}error${NORMAL}: Could not ${action}\n"
+    printf "${RED}error${NORMAL}: Could not ${action_info}\n"
     echo "${result}"
     exit 1
   fi
 }
 
-# retrieve one entry from ~/.rudder
-_get_conf() {
-  conf="$1"
-  name="$2"
-  conffile=~/.rudder
-  [ -f "${conffile}" ] || return
-  [ -z "${conf}" ] && conf=".*"
-  # extract inifile section | extract value
-  sed -n "/^\\[${conf}\\]$/,/^\\[.*\\]$/p" "${conffile}" | sed -n "/^${name} *= */s/^${name} *= *//p"
-}
-
-# This function calls the api with a token
-full_api_call() {
+# This function makes an API call to the webapp
+# - url: full url
+# - action: http verb (GET, POST ...)
+# - curl_opt: extra curl options
+# - display_command: true for debug info, false otherwise
+rudder_api_call() {
   api="$1"
-  url="$2"
-  conf="$3"
-  token="$4"
-
-  if [ -z "${url}" ]
-  then
-    url=`_get_conf "${conf}" "url"`
-    if [ -z "${url}" ]
-    then
-      host=`cut -d: -f1 ${RUDDER_VAR}/cfengine-community/policy_server.dat 2>/dev/null`
-      [ -z "${host}" ] && host="localhost"
-      url="https://${host}/rudder"
-    fi
-  fi
-
-  [ -z "${token}" ] && token=`_get_conf "${conf}" "token"`
-  if [ -z "${token}" ]
-  then
-    printf "${RED}A token is mandatory to query the server${NORMAL}\n" >&2
-    exit 1
-  fi
-
-  eval ${DOWNLOAD_COMMAND} ${HEADER_OPT} "\"X-API-Token: ${token}\"" ${HEADER_OPT} "\"Content-Type: application/json;charset=utf-8\"" ${HEADER_OPT} "\"X-API-Version: latest\"" \"${url}${api}\"
-
-}
-
-# This function makes an API call and will add the filter param after the bash call to the api. It may be useful when passing extra curl options.
-# Also if display_command is set to "true", the executed command will be printed
-filtered_api_call() {
-  url="$1"
-  token="$2"
-  action="$3"
-  filter="$4"
-  display_command="$5"
-  curl_command="${DOWNLOAD_COMMAND} --header \"X-API-Token: ${token}\" --request ${action} \"${url}\" ${filter}"
+  action="$2"
+  curl_opt="$3"
+  display_command="$4"
+  curl_command="${DOWNLOAD_COMMAND} --header \"X-API-Token: ${TOKEN}\" --header \"Content-Type: application/json\" --request ${action} \"${API_URL}/api/latest${api}\" ${curl_opt}"
   if ${display_command};
   then
     printf "${WHITE}${curl_command}${NORMAL}\n\n" >&2

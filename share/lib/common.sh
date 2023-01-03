@@ -116,15 +116,6 @@ get_hostname() {
   echo "${HOSTNAME}"
 }
 
-# Check for jq presence
-need_jq() {
-  if ! type jq >/dev/null 2>/dev/null
-  then
-    printf "${RED}ERROR: 'jq' must be installed to query hosts from server${NORMAL}\n"
-    exit 2
-  fi
-}
-
 # get a single entry from rudder.json
 rudder_json_value() {
   grep "$1" "${RUDDER_JSON}" | sed 's/.*"'$1'" *: *"\(.*\)",.*/\1/'

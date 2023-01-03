@@ -24,7 +24,6 @@
 # @man *-s --show*: Display the currently defined options
 
 . "${BASEDIR}/../lib/common.sh"
-. "${BASEDIR}/../lib/api_call.sh"
 
 UPGRADE=false
 INITIAL=false
@@ -89,7 +88,7 @@ function show_defined_option()
     echo "Configuration file does not exists, no options set"
   else
     echo "Defined options are"
-    grep --color=never = ${CONFIGURATION_FILE} 
+    grep --color=never = ${CONFIGURATION_FILE}
   fi
 }
 
@@ -125,7 +124,7 @@ LONGOPTS=upgrade,initial,override,force,commit:,autoupdate-technique-library,set
 ! PARSED=$(getopt --options=$OPTIONS --longoptions=$LONGOPTS --name "$0" -- "$@")
 
 if [[ ${PIPESTATUS[0]} -ne 0 ]]; then
-    # Wrong arguments 
+    # Wrong arguments
     echo "Wrong parameters for command rudder server upgrade-techniques"
     usage
     exit 1

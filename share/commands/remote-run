@@ -34,14 +34,6 @@
 # @man +
 # @man *-g*: run the agent on all nodes of the group UUID given in parameter
 # @man +
-# @man *-j*: run this number of jobs in parallel
-# @man +
-# @man *-t*: provide an alternate token for group query (default from ~/.rudder)
-# @man +
-# @man *-u*: provide an alternate url for group query (default from ~/.rudder)
-# @man +
-# @man *-C*: provide an alternate config section in ~/.rudder for group query (default to first found)
-# @man +
 # @man *-e*: exit with an error if there was an error during policy application
 # @man +
 # @man *-E*: exit with an error if there a non compliance
@@ -63,30 +55,34 @@
 
 PORT=$(cut -d: -s -f2 "${RUDDER_VAR}/cfengine-community/policy_server.dat")
 PORT=${PORT:-5309}
-LOOP="xargs -I{}"
 DELIM=""
 MULTIHOST=1
 TIMEOUT="-t 300"
+DISPLAY_COMMAND=false
 
 while getopts "iIvdqwrRcTD:j:g:at:u:C:eE" opt; do
   case $opt in
     i|I)
       DISPLAY_INFO=1
       QUIET=0
+      DISPLAY_COMMAND=true
       ;;
     v)
       VERBOSITY="-v ${VERBOSE_CLASS}"
       DISPLAY_INFO=1
       QUIET=0
+      DISPLAY_COMMAND=true
       ;;
     d)
       VERBOSITY="-d ${DEBUG_CLASS}"
       DISPLAY_INFO=1
       QUIET=0
+      DISPLAY_COMMAND=true
       ;;
     q)
       DISPLAY_INFO=0
       QUIET=1
+      DISPLAY_COMMAND=false
       ;;
     w)
       FULL_STRINGS=1
@@ -107,30 +103,11 @@ while getopts "iIvdqwrRcTD:j:g:at:u:C:eE" opt; do
     D)
       CLASSES="${CLASSES},${OPTARG}"
       ;;
-    j)
-      if ! type parallel >/dev/null 2>/dev/null
-      then
-        echo "ERROR: 'parallel' must be installed to run multiple jobs in parallel" 1>&2
-        exit 2
-      fi
-      LOOP="parallel --jobs ${OPTARG}"
-      ;;
     g)
-      need_jq
       GROUP="${OPTARG}"
       ;;
     a)
-      need_jq
       ALL="true"
-      ;;
-    t)
-      TOKEN="${OPTARG}"
-      ;;
-    u)
-      URL="${OPTARG}"
-      ;;
-    C)
-      CONFID="${OPTARG}"
       ;;
     e)
       ERROR_FAIL=1
@@ -144,41 +121,28 @@ done
 # to read remaining arguments with $*
 shift `expr ${OPTIND} - 1`
 
-# Define node list method 
-if [ -n "${ALL}" ]
-then
-  NODELIST="get_all_hostnames"
-elif [ -n "${GROUP}" ]
-then
-  NODELIST="get_group_hostids ${GROUP}"
-elif [ -z "$1" ]
-then
-  echo "Usage rudder remote run <node_ip_or_name>"
-  exit 1
-else
-  DELIM="-d,"
-  NODELIST="echo -n $*"
-fi
-
-# get all hosts on server
-get_all_hostnames() {
-  full_api_call "/api/nodes" "${URL}" "${CONFID}" "${TOKEN}" | jq '.data.nodes[].hostname' | sed -e 's/"\(.*\)"/\1/'
-}
-
-# get all hosts in a given group
-get_group_hostids() {
-  for id in $(full_api_call "/api/groups/$1" "${URL}" "${CONFID}" "${TOKEN}" | jq '.data.groups[0].nodeIds[]')
-  do
-    full_api_call "/api/nodes/${id}" "${URL}" "${CONFID}" "${TOKEN}" | jq '.data.nodes[0].hostname'
-  done | sed -e 's/"\(.*\)"/\1/'
-}
-
-
 if [ -n "${CLASSES}" ]
 then
   # remove the first comma, yes it's posix
   CLASS="-D ${CLASSES#,}"
 fi
 
-# Aggregate everything
-${NODELIST} | ${LOOP} ${DELIM} "${RUDDER_DIR}/bin/cf-runagent" -H "{}:${PORT}" ${TIMEOUT} ${VERBOSITY} ${COLOR} ${CLASS} | eval ${PRETTY}
+# Define node list method
+if [ -z "${ALL}" ] && [ -z "${GROUP}" ]
+then
+  if [ -z "$1" ]
+  then
+    echo "Usage rudder remote run <node_ip_or_name>"
+    exit 1
+  else
+    echo -n $* | xargs -I{} -d, "${RUDDER_DIR}/bin/cf-runagent" -H "{}:${PORT}" ${TIMEOUT} ${VERBOSITY} ${COLOR} ${CLASS} | eval ${PRETTY}
+  fi
+else
+  if [ -n "${ALL}" ]
+  then
+    rudder_api_call "/nodes/applyPolicy" "POST" "" "${DISPLAY_COMMAND}"
+  else
+    echo "-g Group option not yet supported !"
+    exit 1
+  fi
+fi
