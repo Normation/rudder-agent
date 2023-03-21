@@ -242,7 +242,7 @@ check_and_fix_cfengine_processes() {
   # 11 means 1 cf-execd + 5 cf-execd spawn + 5 cf-agent
   if [ "${NB_CF_PROCESS_RUNNING}" -gt 11 ]; then
     [ "$QUIET" = false ] && printf "${YELLOW}WARNING${NORMAL}: Too many instance of Agent processes running. Killing them, and purging the Agent lock database..."
-    echo "${CF_PROCESS_RUNNING}" | awk 'BEGIN { OFS=" "} {print -$2 }' | xargs kill -9 || true
+    echo "${CF_PROCESS_RUNNING}" | awk 'BEGIN { OFS=" "} {print $2 }' | xargs kill -9 || true
     rudder agent stop ${OPT}
     clean_cf_lock_files
     rudder agent start ${OPT}
