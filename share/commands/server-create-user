@@ -53,7 +53,7 @@ fi
 # bcrypt (12 cost)
 hash=$(htpasswd -n${PASS_OPT}BC 12 "" ${ADMIN_PASSWORD}| tr -d ':\n')
 
-details="<user name=\"${USER}\" password=\"${hash}\" role=\"administrator\" />"
+details="<user name=\"${USER}\" password=\"${hash}\" permissions=\"administrator\" />"
 sed -i "/^[[:space:]]*<\/authentication>/i ${details}" "${USERFILE}"
 
 echo "User '${USER}' added, restarting the Rudder server"
