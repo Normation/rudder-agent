@@ -112,6 +112,11 @@ get_hostname() {
      if [ $? -eq 0 ] && echo "${fqname}" | grep -q '.' 2>/dev/null; then
        HOSTNAME="${fqname}"
     fi
+  elif [ "${OS}" = "Linux" ] && type hostnamectl >/dev/null 2>/dev/null; then
+    fqname=$(hostnamectl hostname)
+    if [ $? -eq 0 ] && echo "${fqname}" | grep -q '.' 2>/dev/null; then
+      HOSTNAME="${fqname}"
+    fi
   fi
   echo "${HOSTNAME}"
 }
