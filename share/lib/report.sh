@@ -65,5 +65,5 @@ compress_and_sign() {
     else
         # Keep the runlog for future upload by the agent
         echo "${yellow}warning${normal}: Could not send ${ready_file} (error ${code}), it will be retried later"
-    fi  
+    fi
 }
