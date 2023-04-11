@@ -61,11 +61,14 @@ fi
 # The awk part is the workaround for update not exiting with a 1 in case of error
 # It will be necessary to remove it once the exit it back in cf-agent
 # It must be changed if the error messages are back to stderr
-"${RUDDER_DIR}/bin/cf-agent" ${VERBOSITY} ${COLOR} -K -f failsafe.cf | awk 'BEGIN{e=0}{print; if(match($0,/rudder-agent could not get an updated configuration|error:/)){e=1}}END{exit e}'
+"${RUDDER_DIR}/bin/cf-agent" ${VERBOSITY} ${COLOR} -K -f failsafe.cf | awk 'BEGIN{e=0}{print; if(match($0,/You must accept this node/)){e=1} else if(match($0,/rudder-agent could not get an updated configuration|error:/)){e=2}}END{exit e}'
 code=$?
 
 if [ $code -eq 0 ]; then
   [ "$QUIET" = false ] && printf "${GREEN}ok${NORMAL}: Rudder agent policies were updated.\n"
+  exit 0
+elif [ $code -eq 1 ]; then
+  printf "${GREEN}ok${NORMAL}: Rudder node waiting to be accepted.\n"
   exit 0
 else
   printf "${RED}error${NORMAL}: Rudder agent policies could not be updated.\n" 1>&2
