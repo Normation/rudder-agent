@@ -67,8 +67,10 @@ OUTPUT_LOG="true"
 # By default, not to mess log file
 COLOR="-Cnever"
 
-# When debugging, reports will be huge, skip HTTP reporting
+# Should we send the report to the server?
+# When debugging, reports will be huge. We can skip HTTP reporting in verbose/debug
 DO_HTTP="true"
+[ "${RUDDER_REPORT_MODE}" = "reports-disabled" ] && DO_HTTP="false"
 
 while getopts "uiIvdqgwrRNcTb:D:feE" opt; do
   case $opt in
