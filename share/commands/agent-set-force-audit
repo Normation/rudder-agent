@@ -1,5 +1,5 @@
 #!/bin/sh
-# @description forbid rudder-agent to be run in non audit mode
+# @description force rudder-agent to run in audit mode
 # @man This is useful when you want to ensure that the agent check compliance only,
 # @man and won't be doing any modification to your system. If agent is run in non
 # @man audit, it will be automatically stopped.

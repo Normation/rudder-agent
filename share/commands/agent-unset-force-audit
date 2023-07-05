@@ -1,5 +1,5 @@
 #!/bin/sh
-# @description authorize rudder-agent to be run in non audit mode
+# @description allow agent to run in enforce mode (default)
 # @man Cancel the change made by rudder agent set-force-audit.
 # @man +
 # @man *Options*:
