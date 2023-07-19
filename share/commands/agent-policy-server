@@ -1,9 +1,13 @@
 #!/bin/sh
 # @description displays or set the policy server
 # @man If called without arguments, displays current policy server.
-# @man Sets the epolicy server to the hostname or IP given.
+# @man Sets the policy server to the hostname or IP given.
 # @man +
 # @man *Arguments*:
+# @man +
+# @man + *-t*: trust provided sha256 server key hash
+# @man +
+# @man + *-p*: server https port (only if not 443, only with -t option)
 # @man +
 # @man *server*: hostname or IP of the policy server to set
 
@@ -14,12 +18,51 @@ SERVER_FILE="${RUDDER_VAR}/cfengine-community/policy_server.dat"
 CURRENT=$(cat ${SERVER_FILE} 2>/dev/null)
 [ $? -ne 0 ] && CURRENT="Not yet configured"
 
+PORT=443
+while getopts "t:p:" opt; do
+  case $opt in
+    t)
+      TRUST_HASH="${OPTARG}"
+      ;;
+    p)
+      PORT="${OPTARG}"
+      ;;
+  esac
+done
+
+shift $(($OPTIND-1))
 SERVER="$1"
 
 [ -z "$SERVER" ] && echo "${CURRENT}" && exit 0
 
 # Let's set the policy server
 [ "${UUID}" = "root" ] && printf "${RED}error${NORMAL}: Cannot change policy server on a root server\n" && exit 1
+
+if [ -n "${TRUST_HASH}" ]
+then
+  SERVER_NAME=$(echo "${SERVER}" | cut -d: -f1)
+
+  cert_file=$(mktemp)
+  echo | openssl s_client -servername "${SERVER_NAME}" -connect "${SERVER_NAME}:${PORT}" -showcerts 2>/dev/null | openssl x509 > "${cert_file}"
+  KEY_HASH_SHA=$(openssl x509 -pubkey -noout -in "${cert_file}" | openssl pkey -pubin -outform der | openssl dgst -sha256 -binary | openssl enc -base64)
+
+  if [ "${TRUST_HASH}" = "sha256//${KEY_HASH_SHA}" ]
+  then
+    # certificate trust
+    mkdir -p /opt/rudder/etc/ssl/
+    cp "${cert_file}" /opt/rudder/etc/ssl/agent.cert
+    echo "${TRUST_HASH}" > /var/rudder/lib/ssl/policy_server_hash
+    # cfengine key trust
+    key_file=$(mktemp)
+    openssl x509 -pubkey -noout -in "${cert_file}" | openssl rsa -pubin -RSAPublicKey_out > "${key_file}"
+    CFE_HASH=$(/opt/rudder/bin/cf-key -p "${key_file}")
+    mv "${key_file}" "/var/rudder/cfengine-community/ppkeys/root-${CFE_HASH}.pub"
+    echo "${CFE_HASH}" > /var/rudder/cfengine-community/ppkeys/policy_server_hash
+  else
+    printf "${RED}error${NORMAL}: Provided key ${TRUST_HASH} doesn't match server key sha256//${KEY_HASH_SHA}\n"
+    exit 1
+  fi
+fi
 
 echo "${SERVER}" > "${SERVER_FILE}"
 RET=$?
