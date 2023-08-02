@@ -34,12 +34,12 @@ while getopts "u:p:" opt; do
 done
 
 # check hash
-if ! grep -qE "^[[:space:]]*<authentication[[:space:]]+hash=\"bcrypt\".*>" "${USERFILE}"
+if ! grep -qE "^[[:space:]]*<authentication.*hash=\"bcrypt\".*>" "${USERFILE}"
 then
   echo "This command can only create users when the 'bcrypt' hash method is used"
   echo "Particularly, for servers upgraded from pre-6.1, it requires resetting all"
   echo "user passwords when changing the hash method."
-  echo "See https://docs.rudder.io/reference/6.0/administration/users.html for details."
+  echo "See https://docs.rudder.io/reference/current/administration/users.html for details."
   exit 1
 fi
 
