@@ -115,7 +115,15 @@ exist_or_restore() {
   file_name=$(basename ${file_path})
   if [ ! -f "${file_path}" ] || [ ! -s "${file_path}" ]; then
     if [ -d "${BACKUP_DIR}" ] && [ "${RESET}" = "false" ]; then
-      last_backup=$(ls -1 ${BACKUP_DIR}${file_name}-* 2> /dev/null | sort | tail -n1 || true)
+      if echo "$file_path" | grep -q "ppkeys"; then
+        # Some files are in a ppkeys-* folder, we need to handle them
+        last_backup=$(ls -1 ${BACKUP_DIR}ppkeys-*/${file_name} 2> /dev/null | sort | tail -n1 || true)
+        mkdir -p "${CFE_DIR}/ppkeys"
+        chmod 700 "${CFE_DIR}/ppkeys"
+      else
+        last_backup=$(ls -1 ${BACKUP_DIR}${file_name}-* 2> /dev/null | sort | tail -n1 || true)
+      fi
+
       if [ "${last_backup}" != "" ]; then
         [ "$QUIET" = false ] && printf "INFO: The file '${file_path}' does not exist. The lastest backup '${last_backup}' will be recovered..."
         ${CP_A} "${last_backup}" "${file_path}" >/dev/null
