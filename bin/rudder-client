@@ -12,6 +12,7 @@ fi
 
 # Always on options
 CURL_OPTS="--tlsv1.2 --location --fail --show-error --connect-timeout 10"
+ERROR_OPT="--show-error"
 CURL_VERBOSITY="--silent"
 EXEC="exec"
 
@@ -22,6 +23,7 @@ do
     echo "Usage $0 -e <endpoint> [-u <user:password>] [-n] [-h] -- <curl_otions>"
     echo "  -e <endpoint>: rudder endpoint, example /inventory-updates"
     echo "  -u <user:password>: force user and password, default is to take it from rudder.json"
+    echo "  -r : do not show any result, just HTTP code"
     echo "  -h : help"
     echo "  -n : do not run, display curl command instead"
     echo "  -v : verbose"
@@ -32,6 +34,9 @@ do
   elif [ "$1" = "-u" ]; then
     AUTH="--user $2"
     shift 2
+  elif [ "$1" = "-r" ]; then
+    ERROR_OPT="--output /dev/null --write-out %{http_code}"
+    shift
   elif [ "$1" = "-n" ]; then
     EXEC="echo"
     shift
@@ -111,7 +116,7 @@ URL="https://${SERVER}${PORT}${ENDPOINT}"
 # - keeps return code
 if [ "${PROXY}" = "system" ]
 then
-  ${EXEC} ${CURL} ${CURL_OPTS} ${CURL_VERBOSITY} ${SECOPTS} ${AUTH} ${URL} "$@"
+  ${EXEC} ${CURL} ${CURL_OPTS} ${CURL_VERBOSITY} ${ERROR_OPT} ${SECOPTS} ${AUTH} ${URL} "$@"
 else
-  ${EXEC} ${CURL} ${CURL_OPTS} ${CURL_VERBOSITY} ${SECOPTS} --proxy "${PROXY}" ${AUTH} ${URL} "$@"
+  ${EXEC} ${CURL} ${CURL_OPTS} ${CURL_VERBOSITY} ${ERROR_OPT} ${SECOPTS} --proxy "${PROXY}" ${AUTH} ${URL} "$@"
 fi
