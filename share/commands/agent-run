@@ -171,13 +171,6 @@ if [ "${UPDATE}" = "true" ]; then
   code1=$?
 fi
 
-# We need to do this after update to see the value used in the followgin run
-if [ -f "${RUDDER_JSON}" ]; then
-  REPORTING_PROTOCOL=$(rudder_json_value 'REPORTING_PROTOCOL')
-else
-  REPORTING_PROTOCOL="SYSLOG"
-fi
-
 # If not launched from cf-execd, we need to take care of logging in outputs
 if [ "${OUTPUT_LOG}" = "true" ]; then
   # keep same name structure as cf-execd
@@ -190,8 +183,8 @@ else
   log_outputs="cat"
 fi
 
-# If reporting in HTTP, we need to take care of timestamped logging
-if [ "${REPORTING_PROTOCOL}" = "HTTPS" ] && [ "${DO_HTTP}" = "true" ]; then
+# If we send the report, we need to take care of timestamped logging
+if [ "${DO_HTTP}" = "true" ]; then
   timestamp="${BASEDIR}/../lib/timestamp"
   report_file_name=$(LANG=C /bin/date -u "+%Y-%m-%dT%T+00:00")@${UUID}.log
   report_file="${TMP_REPORTS_DIR}/${report_file_name}"
@@ -210,7 +203,7 @@ if [ "${OUTPUT_LOG}" = "true" ]; then
   ln -sf ${logdir}/${logfile} ${logdir}/previous
 fi
  
-if [ "${REPORTING_PROTOCOL}" = "HTTPS" ] && [ "${DO_HTTP}" = "true" ]; then
+if [ "${DO_HTTP}" = "true" ]; then
   compress_and_sign "${report_file_name}"
 fi
 
