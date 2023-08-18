@@ -11,7 +11,7 @@ else
 fi
 
 # Always on options
-CURL_OPTS="--tlsv1.2 --location --fail --show-error --connect-timeout 10"
+CURL_OPTS="--tlsv1.2 --location --fail --connect-timeout 10"
 ERROR_OPT="--show-error"
 CURL_VERBOSITY="--silent"
 EXEC="exec"
