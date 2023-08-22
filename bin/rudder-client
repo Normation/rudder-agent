@@ -75,9 +75,6 @@ if [ -f "${SERVER_HASH_FILE}" ]; then
 fi
 
 if [ -f "${RUDDER_JSON}" ]; then
-  # For compatibility with 6.X option
-  VERIFY_CERTIFICATES=$(rudder_json_value 'RUDDER_VERIFY_CERTIFICATES')
-
   # Read hash from policies and update if necessary
   INPUTS_PINNED_HASH=$(rudder_json_value 'POLICY_SERVER_KEY_HASH')
   if [ "${INPUTS_PINNED_HASH}" != "" ]; then
@@ -90,8 +87,6 @@ fi
 
 if [ "${PINNED_HASH}" != "" ]; then
   SECOPTS="--pinnedpubkey ${PINNED_HASH} --insecure"
-elif [ "${VERIFY_CERTIFICATES}" = "true" ]; then
-  SECOPTS=""
 else
   # only allowed in initial policies and with 6.X server
   SECOPTS="--insecure"

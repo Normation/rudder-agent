@@ -1,7 +1,7 @@
 # This file provide helpers to make API call from Rudder commands
 API_URL="http://127.0.0.1:8080/rudder"
 
-DOWNLOAD_COMMAND="curl --silent --show-error ${CERTIFICATE_OPTION} --location --proxy '' --globoff"
+DOWNLOAD_COMMAND="curl --silent --show-error --location --proxy '' --globoff"
 
 # This functions tests if the API call return value
 # - url: full url
