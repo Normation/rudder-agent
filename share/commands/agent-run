@@ -5,7 +5,9 @@
 # @man +
 # @man *Options*:
 # @man +
-# @man *-u*: update policy before running the agent (default is to run existing policy)
+# @man *-u*: update policy before running the agent (this is now the default)
+# @man +
+# @man *-l*: do not update policy before running the agent
 # @man +
 # @man *-i*: run the agent in information mode, prints basic information
 # @man +
@@ -55,7 +57,7 @@
 
 bootstrap_check
 
-UPDATE=false
+UPDATE=true
 UPDATE_OPTIONS=""
 # CLASSES to define
 CLASSES=""
@@ -76,6 +78,9 @@ while getopts "uiIvdqgwrRNcTb:D:feE" opt; do
   case $opt in
     u)
       UPDATE=true
+      ;;
+    l)
+      UPDATE=false
       ;;
     i|I)
       DISPLAY_INFO=1
@@ -202,7 +207,7 @@ code2=$?
 if [ "${OUTPUT_LOG}" = "true" ]; then
   ln -sf ${logdir}/${logfile} ${logdir}/previous
 fi
- 
+
 if [ "${DO_HTTP}" = "true" ]; then
   compress_and_sign "${report_file_name}"
 fi

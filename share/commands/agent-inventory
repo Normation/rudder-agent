@@ -69,5 +69,5 @@ fi
 # Add the class to force inventory if requested
 [ ${FORCE} -eq 1 ] && OPTS="-D ignore_disable_inventory"
 
-${RUDDER_BIN} agent run -N -D force_inventory -b doInventory "$@" ${OPTS}
+${RUDDER_BIN} agent run -l -N -D force_inventory -b doInventory "$@" ${OPTS}
 
