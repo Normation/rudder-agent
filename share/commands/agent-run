@@ -74,7 +74,7 @@ COLOR="-Cnever"
 DO_HTTP="true"
 [ "${RUDDER_REPORT_MODE}" = "reports-disabled" ] && DO_HTTP="false"
 
-while getopts "uiIvdqgwrRNcTb:D:feE" opt; do
+while getopts "uiIvldqgwrRNcTb:D:feE" opt; do
   case $opt in
     u)
       UPDATE=true
