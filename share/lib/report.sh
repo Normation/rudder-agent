@@ -3,6 +3,7 @@
 if [ -f "${RUDDER_JSON}" ]; then
   DAVUSER=$(rudder_json_value 'DAVUSER')
   DAVPW=$(rudder_json_value 'DAVPASSWORD')
+  INITIAL=$(rudder_json_bool_value 'INITIAL')
 fi
 
 SERVER=$(cut -d: -f1 "${RUDDER_VAR}/cfengine-community/policy_server.dat")
@@ -23,6 +24,13 @@ compress_and_sign() {
     file="$1"
     tmp_file="${TMP_REPORTS_DIR}/${file}"
     ready_file="${REPORTS_DIR}/${file}.gz"
+
+    # Do not send report from initial policies
+    if [ "${INITIAL}" = "true" ]; then
+        echo "${blue}info${normal}: initial policies, skipping reporting"
+        rm -f "${tmp_file}"
+        return
+    fi
 
     # Do not send an empty file
     if ! [ -f "${tmp_file}" ] || [ -z "$(cat ${tmp_file})" ]; then
