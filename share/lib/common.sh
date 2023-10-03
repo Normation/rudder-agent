@@ -126,6 +126,10 @@ rudder_json_value() {
   grep "$1" "${RUDDER_JSON}" | sed 's/.*"'$1'" *: *"\(.*\)",.*/\1/'
 }
 
+rudder_json_bool_value() {
+  grep "$1" "${RUDDER_JSON}" | sed 's/.*"'$1'" *: *\(.*\),.*/\1/'
+}
+
 # stat -c %y compatible with other unices
 modification_time() {
   if [ "${OS_FAMILY}" = "AIX" ]; then
