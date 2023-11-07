@@ -65,15 +65,6 @@ INVENTORY_SENT=$(modification_time ${RUDDER_VAR}/tmp/inventory_sent 2> /dev/null
 
 VERSION=`${RUDDER_BIN} agent version | sed 's/Rudder agent //'`
 
-if ! [ -e ${RUDDER_DIR}/etc/disable-agent ]; then
-  if ps cax | grep -q cf-execd; then
-    splay=$(/opt/rudder/share/lib/get-splay.pl)
-    if [ "${splay}" != "" ];then
-      RUN_TIME=$(date -d "+${splay} seconds")
-    fi
-  fi
-fi
-
 printf "\n${WHITE}General${NORMAL}\n"
 echo "           Hostname: $(get_hostname)"
 echo "               UUID: ${UUID}"
@@ -103,10 +94,6 @@ then
   echo "        Report mode: ${RUDDER_REPORT_MODE}"
 fi
 echo "       Run interval: ${AGENT_RUN_INTERVAL} min"
-if [ -n "${RUN_TIME=}" ]
-then
-  echo "        Next run: ${RUN_TIME}"
-fi
 if [ -e ${RUDDER_DIR}/etc/force-audit-agent ]; then
   echo "  Forced audit mode: since $(modification_time ${RUDDER_DIR}/etc/force-audit-agent)"
 else
