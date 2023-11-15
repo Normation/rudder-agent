@@ -181,7 +181,7 @@ fi
 # If not launched from cf-execd, we need to take care of logging in outputs
 if [ "${OUTPUT_LOG}" = "true" ]; then
   # keep same name structure as cf-execd
-  logfile=$(echo "cf_$(get_hostname)__$(LANG=C date +%s)_$(LANG=C date +"%a %b %e %H %M %S %Y")_0" | sed 's/[^a-zA-Z0-9]/_/g')
+  logfile=$(echo "cf_$(get_hostname | tr 'A-Z' 'a-z')__$(LANG=C date +%s)_$(LANG=C date +"%a %b %e %H %M %S %Y")_0" | sed 's/[^a-zA-Z0-9]/_/g')
   logdir=${RUDDER_VAR}/cfengine-community/outputs
   touch "${logdir}/${logfile}"
   chmod 600 "${logdir}/${logfile}"
@@ -209,7 +209,7 @@ code2=$?
 if [ "${OUTPUT_LOG}" = "true" ]; then
   ln -sf ${logdir}/${logfile} ${logdir}/previous
 fi
- 
+
 if [ "${REPORTING_PROTOCOL}" = "HTTPS" ] && [ "${DO_HTTP}" = "true" ]; then
   compress_and_sign "${report_file_name}"
 fi
