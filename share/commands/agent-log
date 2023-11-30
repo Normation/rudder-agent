@@ -86,6 +86,6 @@ fi
 
 endtime=$(perl -e'@a=stat $ARGV[0]; print $a[9]' "${LOGFILE}")
 printf "${VERSION}\nNode uuid: ${UUID}\n"
-printf "Logged at $(date -d @${endtime})\n"
+printf "Logged at $(date -d @${endtime} +"${DATE_FORMAT}")\n"
 
 eval ${PRETTY} < "${LOGFILE}"

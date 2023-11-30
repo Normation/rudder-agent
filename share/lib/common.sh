@@ -11,6 +11,9 @@ DEBUG_CLASS="-D trace"
 VERBOSE_CLASS="-D debug"
 INFO_CLASS="-D info"
 
+# common date format
+DATE_FORMAT="%F %T%z"
+
 # Reset colors
 clear_colors() {
     COLOR=""
@@ -138,7 +141,7 @@ modification_time() {
   elif [ "${OS_FAMILY}" = "Darwin" ]; then
     stat -f "%Sm" "$1"
   else
-    stat -c "%y" "$1"
+    date -d "@$(stat -c "%Y" "$1")" +"${DATE_FORMAT}"
   fi
 }
 

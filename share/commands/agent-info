@@ -34,9 +34,9 @@ else
   PINNING="none"
 fi
 
-CERT_CRE=$(date --date="$(openssl x509 -startdate -noout -in ${RUDDER_DIR}/etc/ssl/agent.cert | cut -d= -f 2)" --iso-8601)
+CERT_CRE=$(date --date="$(openssl x509 -startdate -noout -in ${RUDDER_DIR}/etc/ssl/agent.cert | cut -d= -f 2)" +"${DATE_FORMAT}")
 [ $? -ne 0 ] && CERT_CRE="Not configured"
-CERT_EXP=$(date --date="$(openssl x509 -enddate -noout -in ${RUDDER_DIR}/etc/ssl/agent.cert | cut -d= -f 2)" --iso-8601)
+CERT_EXP=$(date --date="$(openssl x509 -enddate -noout -in ${RUDDER_DIR}/etc/ssl/agent.cert | cut -d= -f 2)" +"${DATE_FORMAT}")
 [ $? -ne 0 ] && CERT_EXP="Not configured"
 CERT_FINGERPRINT=$(openssl x509 -in ${RUDDER_DIR}/etc/ssl/agent.cert -noout -fingerprint -sha1 | cut -d= -f2)
 [ $? -ne 0 ] && CERT_FINGERPRINT="Not configured"
@@ -69,8 +69,8 @@ if ! [ -e ${RUDDER_DIR}/etc/disable-agent ]; then
   if ps cax | grep -q cf-execd; then
     splays=$(/opt/rudder/bin/rudder-perl /opt/rudder/share/lib/get-splay.pl)
     if [ "${splays}" != "" ];then
-      RUN_TIME=$(date -d "+${splays% *} seconds")
-      INVENTORY_TIME=$(date -d "00:00 + ${splays#* } seconds" +"%X %Z")
+      RUN_TIME=$(date -d "+${splays% *} seconds" +"${DATE_FORMAT}")
+      INVENTORY_TIME=$(date -d "$(LANG=C date -I) +${splays#* } seconds" +"${DATE_FORMAT}")
     fi
   fi
 fi

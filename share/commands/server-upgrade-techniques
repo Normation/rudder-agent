@@ -257,7 +257,7 @@ then
       cp -a "${BASE}"/* techniques/
       ${RUDDER_DIR}/bin/rudder-fix-repository-permissions
       git add techniques/
-      git commit -q -m "${TAG_MESSAGE} Standard technique upgrade from version ${package_version} on $(date)"
+      git commit -q -m "${TAG_MESSAGE} Standard technique upgrade from version ${package_version} on $(date +"${DATE_FORMAT}")"
       git checkout master
       git merge "${UPDATE_BRANCH}"
       ${RUDDER_DIR}/bin/rudder-fix-repository-permissions
@@ -319,7 +319,7 @@ then
   ${RUDDER_DIR}/bin/rudder-fix-repository-permissions
   git add techniques/
   git reset HEAD techniques/**/resources/*
-  git commit -q -m "${TAG_MESSAGE} Forced technique upgrade from version ${package_version} on $(date)"
+  git commit -q -m "${TAG_MESSAGE} Forced technique upgrade from version ${package_version} on $(date +"${DATE_FORMAT}")"
   # consider this commit as the common ancestor for futur update
   # TODO: better ?
   if git rev-parse --verify --quiet "${UPDATE_BRANCH}" > /dev/null
