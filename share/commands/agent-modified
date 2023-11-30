@@ -1,0 +1,50 @@
+#!/bin/bash
+# @description list modified files
+# @man List files recently modified by the agent.
+# @man +
+# @man *Options*:
+# @man +
+
+. "${BASEDIR}/../lib/common.sh"
+
+# currently only works with bash
+
+shopt -s extglob
+
+search() {
+  local prefix="$1"
+  local suffix="$2"
+
+  local sx="${suffix/_//}"
+
+  while
+    local prefix="${prefix}${sx%%_*}"
+    local suffix="${sx##*([^_])}"
+
+    if [ -e ${prefix} ]
+    then
+      if [ -z "${suffix}" ]
+      then
+        echo ${prefix}
+	found=1
+      else
+        search "${prefix}" "${suffix}"
+      fi
+    fi
+    local sx="${suffix/_/?}"
+    [ -n "${suffix}" ]
+  do true; done
+}
+
+for name in $(ls -1 /var/rudder/modified-files/)
+do
+  path=${name%_*([^_])_*([^_])_*([^_])_*([^_])_*([^_])_*([^_])_*([^_])_*([^_])_*([^_])_cf*(?)}
+  found=0
+  search "" "${path}"
+  if [ "${found}" -eq 0 ]
+  then
+    path="${path/_//}"
+    echo "${path//_/?}"
+  fi
+done
+
