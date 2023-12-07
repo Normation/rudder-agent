@@ -26,7 +26,7 @@ search() {
       if [ -z "${suffix}" ]
       then
         echo ${prefix}
-	found=1
+        found=1
       else
         search "${prefix}" "${suffix}"
       fi
@@ -36,9 +36,8 @@ search() {
   do true; done
 }
 
-for name in $(ls -1 /var/rudder/modified-files/)
+for path in $(ls -1 /var/rudder/modified-files/ | /opt/rudder/bin/rudder-perl -pe 's/^(_.*)_[^_]*_[^_]*_[^_]*_[^_]*_[^_]*_[^_]*_[^_]*_[^_]*_[^_]*_cf\w+$/$1/; s/_cf\w+$//' | sort -u)
 do
-  path=${name%_*([^_])_*([^_])_*([^_])_*([^_])_*([^_])_*([^_])_*([^_])_*([^_])_*([^_])_cf*(?)}
   found=0
   search "" "${path}"
   if [ "${found}" -eq 0 ]
