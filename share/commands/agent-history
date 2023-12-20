@@ -34,11 +34,11 @@ done
 if [ "${all}" = "yes" ]
 then
   list="cat"
-else 
+else
   list="tail -n ${max}"
 fi
 
-for file in $(ls -1 ${BASE_PATH}/cf* | sort | ${list})
+for file in $(ls -1tr ${BASE_PATH}/cf* | ${list})
 do
   endtime=$(perl -e'@a=stat $ARGV[0]; print $a[9]' "${file}")
   eval ${PRETTY} -v no_report=1 -v short_summary=1 -v endtime=${endtime} < "${file}"
