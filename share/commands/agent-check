@@ -389,39 +389,29 @@ check_varspace_or_exit() {
   if [ "${stop_now}" = 1 ]; then
     rudder agent disable -s ${OPT}
 
-    if [ "${RUDDER_SYSLOG_PROTOCOL}" = 1 ]; then
-      # If syslog is using TCP, we cannot stop postgresql otherwise all infra can go down - but we can stop rudder-jetty and disable rudder agent
-      if [ -f ${RUDDER_SERVER_ROLES}/rudder-jetty ]; then
-        systemctl stop rudder-jetty
-        echo "FATAL: Rudder has been stopped and disabled to prevent data corruption" | logger -s
-      fi
-      exit 1
-    else
-      # In UDP, we can stop everything
-      if [ -f ${RUDDER_SERVER_ROLES}/rudder-server-root ]; then
-        systemctl stop rudder-server
-        echo "FATAL: Rudder has been stopped and disabled to prevent data corruption" | logger -s
-      elif [ -f ${RUDDER_SERVER_ROLES}/rudder-jetty ]; then
-        systemctl stop rudder-jetty
-        echo "FATAL: Rudder Web Interface has been stopped and disabled to prevent data corruption" | logger -s
-      fi
-      if [ -f ${RUDDER_SERVER_ROLES}/rudder-reports ]; then
-        # Try with systemd
-        POSTGRESQL_SERVICE_NAME=$(systemctl list-unit-files --type service | awk -F'.' '{print $1}' | egrep "^postgresql-?[0-9]*$" | tail -n 1)
+    if [ -f ${RUDDER_SERVER_ROLES}/rudder-server-root ]; then
+      systemctl stop rudder-server
+      echo "FATAL: Rudder has been stopped and disabled to prevent data corruption" | logger -s
+    elif [ -f ${RUDDER_SERVER_ROLES}/rudder-jetty ]; then
+      systemctl stop rudder-jetty
+      echo "FATAL: Rudder Web Interface has been stopped and disabled to prevent data corruption" | logger -s
+    fi
+    if [ -f ${RUDDER_SERVER_ROLES}/rudder-reports ]; then
+      # Try with systemd
+      POSTGRESQL_SERVICE_NAME=$(systemctl list-unit-files --type service | awk -F'.' '{print $1}' | egrep "^postgresql-?[0-9]*$" | tail -n 1)
 
-        # If nothing try with chkconfig (sles 12 only: postgresql is properly managed by systemd but cannot be detected with the line above)
-        if [ -z "${POSTGRESQL_SERVICE_NAME}" ] && ! type chkconfig >/dev/null 2>/dev/null ; then
-          POSTGRESQL_SERVICE_NAME=$(chkconfig 2>/dev/null | awk '{ print $1 }' | grep "postgresql" | tail -n 1)
-        fi
-
-        # If nothing try default name (should not happen)
-        if [ -z "${POSTGRESQL_SERVICE_NAME}" ]; then
-          POSTGRESQL_SERVICE_NAME="postgresql"
-        fi
-
-        systemctl stop ${POSTGRESQL_SERVICE_NAME}
-        echo "FATAL: PostgreSQL has been shut down to prevent data corruption" | logger -s
+      # If nothing try with chkconfig (sles 12 only: postgresql is properly managed by systemd but cannot be detected with the line above)
+      if [ -z "${POSTGRESQL_SERVICE_NAME}" ] && ! type chkconfig >/dev/null 2>/dev/null ; then
+        POSTGRESQL_SERVICE_NAME=$(chkconfig 2>/dev/null | awk '{ print $1 }' | grep "postgresql" | tail -n 1)
       fi
+
+      # If nothing try default name (should not happen)
+      if [ -z "${POSTGRESQL_SERVICE_NAME}" ]; then
+        POSTGRESQL_SERVICE_NAME="postgresql"
+      fi
+
+      systemctl stop ${POSTGRESQL_SERVICE_NAME}
+      echo "FATAL: PostgreSQL has been shut down to prevent data corruption" | logger -s
     fi
     [ "$QUIET" = false ] && printf "${RED}ERROR${NORMAL}: Rudder couldn't find enough space to run and stopped services. Please free up space!\n"
     exit 1

@@ -237,7 +237,6 @@ if [ -f "${RUDDER_JSON}" ]; then
   RUDDER_REPORT_MODE=$(rudder_json_value 'RUDDER_REPORT_MODE')
   AGENT_RUN_INTERVAL=$(rudder_json_value 'AGENT_RUN_INTERVAL')
   RUDDER_NODE_CONFIG_ID=$(rudder_json_value 'RUDDER_NODE_CONFIG_ID')
-  RUDDER_SYSLOG_PROTOCOL=$(rudder_json_value 'RUDDER_SYSLOG_PROTOCOL')
   RUDDER_NODE_KIND=$(rudder_json_value 'RUDDER_NODE_KIND')
 fi
 # run interval default value
