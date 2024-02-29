@@ -378,7 +378,7 @@ check_varspace_or_exit() {
 
   if [ -f ${RUDDER_SERVER_ROLES}/rudder-reports ]; then
     # Get the run path of postgresql
-    PG_TABLES_PATH=$(su - postgres -c 'psql -t -c  "show data_directory;"')
+    PG_TABLES_PATH=$(su - postgres -s /bin/sh -c 'psql -t -c  "show data_directory;"')
     if [ -z "${PG_TABLES_PATH}" ]; then
       echo "FATAL: Cannot connect to PostgreSQL - please check its status" | logger -s
     else
