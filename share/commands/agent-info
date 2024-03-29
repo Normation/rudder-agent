@@ -75,12 +75,14 @@ if ! [ -e ${RUDDER_DIR}/etc/disable-agent ]; then
   fi
 fi
 
-if ! systemctl -q is-active "rudder-cf-execd"; then
+if type systemctl > /dev/null; then
+  if ! systemctl -q is-active "rudder-cf-execd"; then
     echo ""
     echo "Warning: the 'rudder-cf-execd' service is stopped so the agent is"
     echo "         not scheduled automatically. Enable and start it with:"
     echo ""
     echo "           systemctl enable -s rudder-cf-execd"
+  fi
 fi
 
 printf "\n${WHITE}General${NORMAL}\n"
