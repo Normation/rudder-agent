@@ -1,12 +1,16 @@
 #!/bin/bash
 # @description run a debug _cf-serverd_ intended for a specific node
 # @man This command targets a specific node and does not affect the running
-# @man infrastructure. It uses _iptables_ to redirect the specific node communications
+# @man infrastructure.
+# @man In *-l* mode, it looks for existing logs for the given node.
+# @man In *-i* mode, it uses _iptables_ to redirect the specific node communications
 # @man to the port the debug server is listening on (5310 by default).
 # @man +
 # @man Use Ctrl+C to stop the debug server.
 # @man +
 # @man *Arguments*:
+# @man +
+# @man *-l*: fetch debug logs for the given node
 # @man +
 # @man *-i*: run a debug server for the given node
 # @man +
@@ -28,17 +32,17 @@ function anomaly_handler() {
   exit 1
 }
 
-trap anomaly_handler ERR INT TERM
-
 # Parameter
 STEP="INIT"
 
-# default: node is the first parameter to match the old behaviour (no other option)
-NODE="$1"
-
-while getopts ":ei:" opt; do
+while getopts "i:l:" opt; do
   case $opt in
     i)
+      MODE=iptables
+      NODE="${OPTARG}"
+      ;;
+    l)
+      MODE=log
       NODE="${OPTARG}"
       ;;
   esac
@@ -46,15 +50,22 @@ done
 
 if [ -z "${NODE}" ]
 then
-  echo "Usage rudder server debug [-e] -i <node_ip>"
+  echo "Usage rudder server debug [-i|-l] <node_ip>"
   exit 1
 fi
 
-STEP="Creating redirect iptables rule"
-iptables -t nat -I PREROUTING -p tcp -s ${NODE} --dport ${SERVER_PORT} -j DNAT --to-destination :${DEBUG_PORT}
+if [ "${MODE}" = "iptables" ]
+then
+  trap anomaly_handler ERR INT TERM
 
-STEP="Running debug server"
-${RUDDER_DIR}/bin/cf-serverd -v --no-fork -D debug_port
+  STEP="Creating redirect iptables rule"
+  iptables -t nat -I PREROUTING -p tcp -s ${NODE} --dport ${SERVER_PORT} -j DNAT --to-destination :${DEBUG_PORT}
 
-STEP="Removing iptables rule"
-iptables -t nat -D PREROUTING -p tcp -s ${NODE} --dport ${SERVER_PORT} -j DNAT --to-destination :${DEBUG_PORT}
+  STEP="Running debug server"
+  ${RUDDER_DIR}/bin/cf-serverd -v --no-fork -D debug_port
+
+  STEP="Removing iptables rule"
+  iptables -t nat -D PREROUTING -p tcp -s ${NODE} --dport ${SERVER_PORT} -j DNAT --to-destination :${DEBUG_PORT}
+else
+  journalctl -f -xe -u rudder-cf-serverd | grep "${NODE}"
+fi
