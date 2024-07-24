@@ -76,7 +76,7 @@ then
   echo "Type no to abort now or yes to continue"
   read yn
   case $yn in
-    [Yy]* ) 
+    [Yy]* )
       # Backup essential files
       [ "$VERBOSE" = true ] && echo "Making a backup copy of essential files into /var/backups/rudder"
       mkdir -p /var/backups/rudder
@@ -108,9 +108,13 @@ then
       rm -rf ${RUDDER_VAR}/tmp/inventory/*
       rm -f  ${RUDDER_VAR}/tmp/inventory_sent
 
+      # - reenable serverd service
+      service_enable rudder-cf-serverd enable
+
       # - check and repair everything missing (keys, uuid, reset, update, inventory ...)
       ${RUDDER_BIN} agent check -f -r ${OPTS}
       ;;
+
     [Nn]* ) echo "Aborting factory reset"; exit 0;;
     * ) echo "Invalid response"; exit 1;;
 esac

@@ -33,6 +33,20 @@ clear_colors() {
 }
 
 # Command used to start/stop/restart a service
+service_enable() {
+  service="$1"
+  action="$2"
+
+  CMD=""
+  if systemctl list-units --type service --all ${service}.service 2>&1 | grep -q '\b1 loaded units listed'; then
+    systemctl ${action} ${service}
+  else
+    # there is no standard way to disable a service in this case
+    return 1
+  fi
+}
+
+# Command used to start/stop/restart a service
 service_action() {
   service="$1"
   action="$2"

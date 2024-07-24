@@ -94,6 +94,8 @@ else
   exit 1
 fi
 
+# Reenable execd service
+service_enable rudder-cf-execd enable
 
 if [ "$QUIET" = false ]; then
   printf "${GREEN}ok${NORMAL}: Rudder agent state has been reset.\n"
