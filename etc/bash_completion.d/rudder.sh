@@ -3,7 +3,7 @@ _global() {
     case ${COMP_WORDS[1]} in
       package)
         if declare -f _rudderpkg > /dev/null; then
-          _rudderpkg
+          _rudderpkg "rudder"
         else
           _rudder
         fi
