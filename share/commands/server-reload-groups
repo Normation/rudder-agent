@@ -26,7 +26,7 @@ while getopts "iIvdc" opt; do
 done
 
 action="reload groups"
-curl_opt="--header \"X-API-Token: ${TOKEN}\" --request POST"
+curl_opt="--header @/var/rudder/run/api-token-header --request POST"
 expected='{"action":"reloadGroups","result":"success","data":{"groups":"Started"}}'
 
 checked_api_call "http://127.0.0.1:8080/rudder/api/latest/system/reload/groups" "reload groups" "${DISPLAY_COMMAND}" "${expected}" "${curl_opt}"

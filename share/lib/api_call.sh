@@ -42,7 +42,7 @@ rudder_api_call() {
   action="$2"
   curl_opt="$3"
   display_command="$4"
-  curl_command="${DOWNLOAD_COMMAND} --header \"X-API-Token: ${TOKEN}\" --header \"Content-Type: application/json\" --request ${action} \"${API_URL}/api/latest${api}\" ${curl_opt}"
+  curl_command="${DOWNLOAD_COMMAND} --header @/var/rudder/run/api-token-header --header \"Content-Type: application/json\" --request ${action} \"${API_URL}/api/latest${api}\" ${curl_opt}"
   if ${display_command};
   then
     printf "${WHITE}${curl_command}${NORMAL}\n\n" >&2

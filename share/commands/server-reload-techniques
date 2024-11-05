@@ -27,7 +27,7 @@ done
 
 # Make call to jetty directly and bypass apache conf so we are sure we have no problem to call reload techniques API
 action="reload techniques from files"
-curl_opt="--header \"X-API-Token: ${TOKEN}\" --request POST"
+curl_opt="--header @/var/rudder/run/api-token-header --request POST"
 expected='{"action":"reloadTechniques","result":"success","data":{"techniques":"Started"}}'
 
 checked_api_call "http://127.0.0.1:8080/rudder/api/latest/system/reload/techniques" "reload techniques from files" "${DISPLAY_COMMAND}" "${expected}" "${curl_opt}"
