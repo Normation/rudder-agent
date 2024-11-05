@@ -37,6 +37,42 @@ QUIET=false
 FORCE=0
 OPTS=""
 
+reset_logic()
+{
+  # Backup essential files
+  [ "$VERBOSE" = true ] && echo "Making a backup copy of essential files into /var/backups/rudder"
+  mkdir -p /var/backups/rudder
+  cp -f ${RUDDER_DIR}/etc/uuid.hive /var/backups/rudder/uuid.hive-$(date +%Y%m%d) 2>/dev/null
+  cp -f ${RUDDER_VAR}/cfengine-community/policy_server.dat /var/backups/rudder/policy_server.dat-$(date +%Y%m%d) 2>/dev/null
+  cp -af ${RUDDER_VAR}/cfengine-community/ppkeys/ /var/backups/rudder/ppkeys-$(date +%Y%m%d) 2>/dev/null
+  cp -f ${RUDDER_DIR}/etc/ssl/agent.cert /var/backups/rudder/agent.cert-$(date +%Y%m%d) 2>/dev/null
+
+  # reset policies
+  ${RUDDER_BIN} agent reset
+
+  # - remove ppkeys (check will recreate them)
+  [ "$VERBOSE" = true ] && echo "Removing the agent keys..."
+  rm -f ${RUDDER_VAR}/cfengine-community/ppkeys/localhost*
+  rm -f ${RUDDER_DIR}/etc/ssl/agent.cert
+
+  # - remove all trust
+  [ "$VERBOSE" = true ] && echo "Untrusting all other systems..."
+  rm -f ${RUDDER_VAR}/cfengine-community/ppkeys/*
+  rm -f "${SERVER_HASH_FILE}"
+
+  # - remove uuid (check will recreate it)
+  [ "$VERBOSE" = true ] && echo "Removing UUID..."
+  rm -f ${RUDDER_DIR}/etc/uuid.hive
+
+  # - remove old inventory
+  [ "$VERBOSE" = true ] && echo "Removing old inventory..."
+  rm -rf ${RUDDER_DIR}/var/fusioninventory/*
+  rm -rf ${RUDDER_VAR}/tmp/inventory/*
+  rm -f  ${RUDDER_VAR}/tmp/inventory_sent
+
+  # - check and repair everything missing (keys, uuid, reset, update, inventory ...)
+  ${RUDDER_BIN} agent check -f -r ${OPTS}
+}
 
 while getopts "iIvdqcTf" opt; do
   case $opt in
@@ -68,54 +104,19 @@ then
   exit 1
 fi
 
+echo "Reinitializing a node removes its UUID, its keys and trusts, and its applied policies!"
+echo "You will need to remove this node from the server and accept it again if it was already accepted."
+
 if [ ${FORCE} -eq 0 ]
 then
-  echo "Reinitializing a node removes its UUID, its keys and trusts, and its applied policies!"
-  echo "You will need to remove this node from the server and accept it again if it was already accepted."
   echo "Do yo really want to do it?"
   echo "Type no to abort now or yes to continue"
   read yn
   case $yn in
-    [Yy]* )
-      # Backup essential files
-      [ "$VERBOSE" = true ] && echo "Making a backup copy of essential files into /var/backups/rudder"
-      mkdir -p /var/backups/rudder
-      cp -f ${RUDDER_DIR}/etc/uuid.hive /var/backups/rudder/uuid.hive-$(date +%Y%m%d) 2>/dev/null
-      cp -f ${RUDDER_VAR}/cfengine-community/policy_server.dat /var/backups/rudder/policy_server.dat-$(date +%Y%m%d) 2>/dev/null
-      cp -af ${RUDDER_VAR}/cfengine-community/ppkeys/ /var/backups/rudder/ppkeys-$(date +%Y%m%d) 2>/dev/null
-      cp -f ${RUDDER_DIR}/etc/ssl/agent.cert /var/backups/rudder/agent.cert-$(date +%Y%m%d) 2>/dev/null
-
-      # reset policies
-      ${RUDDER_BIN} agent reset
-
-      # - remove ppkeys (check will recreate them)
-      [ "$VERBOSE" = true ] && echo "Removing the agent keys..."
-      rm -f ${RUDDER_VAR}/cfengine-community/ppkeys/localhost*
-      rm -f ${RUDDER_DIR}/etc/ssl/agent.cert
-
-      # - remove all trust
-      [ "$VERBOSE" = true ] && echo "Untrusting all other systems..."
-      rm -f ${RUDDER_VAR}/cfengine-community/ppkeys/*
-      rm -f "${SERVER_HASH_FILE}"
-
-      # - remove uuid (check will recreate it)
-      [ "$VERBOSE" = true ] && echo "Removing UUID..."
-      rm -f ${RUDDER_DIR}/etc/uuid.hive
-
-      # - remove old inventory
-      [ "$VERBOSE" = true ] && echo "Removing old inventory..."
-      rm -rf ${RUDDER_DIR}/var/fusioninventory/*
-      rm -rf ${RUDDER_VAR}/tmp/inventory/*
-      rm -f  ${RUDDER_VAR}/tmp/inventory_sent
-
-      # - reenable serverd service
-      service_enable rudder-cf-serverd enable
-
-      # - check and repair everything missing (keys, uuid, reset, update, inventory ...)
-      ${RUDDER_BIN} agent check -f -r ${OPTS}
-      ;;
-
+    [Yy]* ) reset_logic;;
     [Nn]* ) echo "Aborting factory reset"; exit 0;;
     * ) echo "Invalid response"; exit 1;;
-esac
+  esac
+else
+  reset_logic
 fi
