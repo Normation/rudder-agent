@@ -289,7 +289,7 @@ function print_report_singleline() {
     result = "error";
   } else if (state == "result_na") {
     enforce_notapplicable++;
-    if (quiet) {
+    if (!info) {
       next
     }
     result = "n/a";
@@ -318,7 +318,7 @@ function print_report_singleline() {
     result = "error";
   } else if (state == "audit_na") {
     audit_notapplicable++;
-    if (quiet) {
+    if (!info) {
       next
     }
     result = "n/a";
