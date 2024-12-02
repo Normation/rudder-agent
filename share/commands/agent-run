@@ -53,6 +53,7 @@
 
 . "${BASEDIR}/../lib/common.sh"
 . "${BASEDIR}/../lib/cfengine_parsing.sh"
+. "${BASEDIR}/../lib/report.sh"
 
 bootstrap_check
 
@@ -207,7 +208,7 @@ if [ "${OUTPUT_LOG}" = "true" ]; then
   ln -sf ${logdir}/${logfile} ${logdir}/previous
 fi
 
-# Only source now to detect the "post-run" environment
+# Source again to detect the "post-run" environment
 . "${BASEDIR}/../lib/report.sh"
 
 if [ "${DO_HTTP}" = "true" ]; then
