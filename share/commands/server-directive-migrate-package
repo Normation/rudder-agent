@@ -6,7 +6,7 @@
 # @man Not all of the options present in the old package techniques are still available.
 # @man The script will stop and do nothing if one parameter is not translatable.
 # @man +
-# @man If the script succeed, it will create a new directive, without rule assignement
+# @man If the script succeed, it will create a new directive, without rule assignment
 # @man and the old directive will not be changed to ensure human verification on the
 # @man parameters translation.
 # @man +
@@ -16,7 +16,7 @@
 # @man +
 # @man *-c*: raw color mode, all output are non-colored text
 # @man +
-# @man *-i*: verbose mode, display more detailed informations of the execution
+# @man *-i*: verbose mode, display more detailed information of the execution
 
 . "${BASEDIR}/../lib/common.sh"
 . "${BASEDIR}/../lib/api_call.sh"

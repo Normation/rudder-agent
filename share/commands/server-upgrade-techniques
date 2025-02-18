@@ -217,12 +217,12 @@ fi
 
 if [ "${err}" != "" ]
 then
-  echo "To automaticaly upgrade Technique, this command needs exactly one choice. Available choice are:"
+  echo "To automatically upgrade Technique, this command needs exactly one choice. Available choice are:"
   echo " -u: merge updated techniques into the configuration repository"
   echo " -i: create the initial version of the update branch"
   echo " -o: override existing technique without looking for local changes"
   echo ""
-  echo "Additionnal option are :"
+  echo "Additional option are :"
   echo " -f: suppress any warning and run without prompting for input"
   echo " -c COMMITID: use the given commit id as the update branch origin"
 
@@ -320,7 +320,7 @@ then
   git add techniques/
   git reset HEAD techniques/**/resources/*
   git commit -q -m "${TAG_MESSAGE} Forced technique upgrade from version ${package_version} on $(date +"${DATE_FORMAT}")"
-  # consider this commit as the common ancestor for futur update
+  # consider this commit as the common ancestor for future update
   # TODO: better ?
   if git rev-parse --verify --quiet "${UPDATE_BRANCH}" > /dev/null
   then

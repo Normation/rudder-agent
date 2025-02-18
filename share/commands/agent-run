@@ -45,7 +45,7 @@
 # @man +
 # @man *0*: Agent ran normally
 # @man +
-# @man *1*: Agent encountered a critial error and could not run properly
+# @man *1*: Agent encountered a critical error and could not run properly
 # @man +
 # @man *2*: Some policy encountered and error and *-e* parameter was passed
 # @man +

@@ -10,7 +10,7 @@
 # @man +
 # @man *-c*: raw color mode, all output are non-colored text
 # @man +
-# @man *-i*: verbose mode, display more detailed informations of the execution
+# @man *-i*: verbose mode, display more detailed information of the execution
 
 . "${BASEDIR}/../lib/common.sh"
 . "${BASEDIR}/../lib/api_call.sh"
