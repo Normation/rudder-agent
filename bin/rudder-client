@@ -20,7 +20,7 @@ EXEC="exec"
 while [ "$1" != "" ]
 do
   if [ "$1" = "-h" ]; then
-    echo "Usage $0 -e <endpoint> [-u <user:password>] [-n] [-h] -- <curl_otions>"
+    echo "Usage $0 -e <endpoint> [-u <user:password>] [-n] [-h] -- <curl_options>"
     echo "  -e <endpoint>: rudder endpoint, example /inventory-updates"
     echo "  -u <user:password>: force user and password, default is to take it from rudder.json"
     echo "  -r : do not show any result, just HTTP code"

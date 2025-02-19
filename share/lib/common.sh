@@ -150,7 +150,7 @@ rudder_json_bool_value() {
 # stat -c %y compatible with other unices
 modification_time() {
   if [ "${OS_FAMILY}" = "AIX" ]; then
-    # be careful, there is a litteral tab below
+    # be careful, there is a literal tab below
     LANG=C istat "$1" | sed -n '/Last modified/s/Last modified:[ 	]*//p'
   elif [ "${OS_FAMILY}" = "Darwin" ]; then
     stat -f "%Sm" "$1"

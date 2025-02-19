@@ -8,7 +8,13 @@ pipeline {
         stage('Tests') {
             parallel {
                 stage('shell') {
-                    agent { label 'script' }
+                    agent {
+                        dockerfile {
+                            label 'generic-docker'
+                            filename 'ci/common.Dockerfile'
+                            args '-u 0:0'
+                        }
+                    }
                     steps {
                         sh script: 'typos', label: 'check typos'
                         sh script: './qa-test --shell', label: 'shell scripts lint'
@@ -26,7 +32,13 @@ pipeline {
                     }
                 }
                 stage('man') {
-                    agent { label 'script' }
+                    agent {
+                        dockerfile {
+                            label 'generic-docker'
+                            filename 'ci/common.Dockerfile'
+                            args '-u 0:0'
+                        }
+                    }
                     steps {
                         dir("man") {
                             sh script: 'make', label: 'man page'
@@ -38,7 +50,7 @@ pipeline {
                                 new SlackNotifier().notifyResult("shell-team")
                             }
                         }
-                    }                
+                    }
                 }
             }
         }

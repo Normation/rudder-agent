@@ -22,7 +22,7 @@ class Section(object):
         'PACKAGE_STATE': self.state_upgrade,
         'PACKAGE_LIST': (lambda : self.parameter_traduction(['RPM_PACKAGE_REDLIST', 'APT_PACKAGE_DEBLIST']))
       }
-# Acces to the oldMap via apt or rpm
+# Access to the oldMap via apt or rpm
   def parameter_traduction(self, keyList):
     for iKey in keyList:
       if iKey in self.oldMap:
@@ -236,10 +236,10 @@ def main():
       section.unsupported_cases()
       section.upgrade(section.newJson)
       sys.stdout.write( json.dumps(section.newJson['sections'][0], sort_keys=True, indent=4, separators=(',', ': ')))
-    # This is mandatory to exlude section without migration
+    # This is mandatory to exclude section without migration
     except KeyError:
       sys.stdout.write("")
-    
+
 
 if __name__ == "__main__":
     main()
