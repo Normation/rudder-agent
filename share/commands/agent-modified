@@ -37,7 +37,7 @@ search() {
   do true; done
 }
 
-for path in $(ls -1 /var/rudder/modified-files/ | /opt/rudder/bin/rudder-perl -pe 's/^(_.*)_[^_]*_[^_]*_[^_]*_[^_]*_[^_]*_[^_]*_[^_]*_[^_]*_cf\w+$/$1/; s/_cf\w+$//' | sort -u)
+for path in $(ls -1 /var/rudder/modified-files/ | /opt/rudder/bin/rudder-perl -pe 's/^(_.*)_\d+_[^_]*_[^_]*_.._.._.._.._...._cf\w+$/$1/; s/_cf\w+$//' | sort -u)
 do
   found=0
   search "" "${path}"
