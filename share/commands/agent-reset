@@ -11,6 +11,8 @@
 # @man +
 # @man *Options*:
 # @man +
+# @man *-p*: just reset the package cache and nothing else
+# @man +
 # @man *-i*: run the agent in information mode, prints basic information
 # @man +
 # @man *-q*: run the agent in quiet mode (display only error messages)
@@ -23,7 +25,7 @@ VERBOSITY=""
 VERBOSE=false
 QUIET=false
 
-while getopts "iIvdqc" opt; do
+while getopts "iIvdqcp" opt; do
   case $opt in
     i|I)
       VERBOSITY="-I ${INFO_CLASS}"
@@ -48,6 +50,12 @@ while getopts "iIvdqc" opt; do
     c)
       COLOR=""
       clear_colors
+      ;;
+    p)
+      # - remove state
+      [ "$VERBOSE" = true ] && echo "Resetting package cache..."
+      rm -f ${RUDDER_VAR}/cfengine-community/state/package_*
+      exit $?
       ;;
   esac
 done
