@@ -14,7 +14,7 @@ fi
 CURL_OPTS="--tlsv1.3 --location --fail --connect-timeout 10"
 ERROR_OPT="--show-error"
 CURL_VERBOSITY="--silent"
-EXEC="exec"
+EXEC=""
 
 ## Get options
 while [ "$1" != "" ]
@@ -71,25 +71,38 @@ PORT=$(get_https_port)
 
 # Try to read local hash
 if [ -f "${SERVER_HASH_FILE}" ]; then
-  PINNED_HASH=$(cat ${SERVER_HASH_FILE})
+  LOCAL_PINNED_HASH=$(cat ${SERVER_HASH_FILE})
 fi
 
 if [ -f "${RUDDER_JSON}" ]; then
-  # Read hash from policies and update if necessary
+  # Read hash from policies
   INPUTS_PINNED_HASH=$(rudder_json_value 'POLICY_SERVER_KEY_HASH')
-  if [ "${INPUTS_PINNED_HASH}" != "" ]; then
-    if [ "${INPUTS_PINNED_HASH}" != "${PINNED_HASH}" ]; then
-      PINNED_HASH="${INPUTS_PINNED_HASH}"
-      echo "${PINNED_HASH}" > "${SERVER_HASH_FILE}"
-    fi
-  fi
+  INPUTS_PINNED_HASH_ALT=$(rudder_json_value 'ADDITIONAL_POLICY_SERVER_KEY_HASH')
+  POLICY_SERVER_CERT_NAME_VALIDATION=$(rudder_json_value 'POLICY_SERVER_CERT_NAME_VALIDATION')
 fi
 
-if [ "${PINNED_HASH}" != "" ]; then
-  SECOPTS="--pinnedpubkey ${PINNED_HASH} --insecure"
+if [ "${INPUTS_PINNED_HASH}" = "" ]; then
+  PINNED_HASH="${LOCAL_PINNED_HASH}"
 else
-  # only allowed in initial policies and with 6.X server
+  PINNED_HASH="${INPUTS_PINNED_HASH}"
+fi
+
+# for everything but initial policies
+if [ "${PINNED_HASH}" != "" ]; then
+  OPTS="--pinnedpubkey ${PINNED_HASH}"
+fi
+
+if [ "${POLICY_SERVER_CERT_NAME_VALIDATION}" != "true" ]; then
   SECOPTS="--insecure"
+else
+  SECOPTS=""
+fi
+
+# file created by policies
+POLICY_SERVER_CERT_CA="/var/rudder/lib/ssl/policy_server_ca.pem"
+if [ -f "${POLICY_SERVER_CERT_CA}" ]; then
+  # we have to provide --capath so that curl doesn't look in default truststore
+  SECOPTS="${SECOPTS} --capath ${POLICY_SERVER_CERT_CA} --cacert ${POLICY_SERVER_CERT_CA}"
 fi
 
 # get server authentication from rudder.json if available and not overridden
@@ -104,14 +117,32 @@ fi
 ## Create URL
 URL="https://${SERVER}${PORT}${ENDPOINT}"
 
-## Other arguments are curl arguments
-# advantage of exec:
-# - one process less
-# - don't care if there is some code after it
-# - keeps return code
-if [ "${PROXY}" = "system" ]
-then
-  ${EXEC} ${CURL} ${CURL_OPTS} ${CURL_VERBOSITY} ${ERROR_OPT} ${SECOPTS} ${AUTH} ${URL} "$@"
-else
-  ${EXEC} ${CURL} ${CURL_OPTS} ${CURL_VERBOSITY} ${ERROR_OPT} ${SECOPTS} --proxy "${PROXY}" ${AUTH} ${URL} "$@"
-fi
+# retry with alternate pin in case of failure
+for pin in "${PINNED_HASH}" ${INPUTS_PINNED_HASH_ALT}
+do
+  if [ "${pin}" = "" ]; then
+    PIN_OPT=""
+  else
+    PIN_OPT="--pinnedpubkey ${pin}"
+  fi
+  ## Other arguments are curl arguments
+  # we cannot merge the 2 branch because $PROXY can be empty
+  if [ "${PROXY}" = "system" ]
+  then
+    ${EXEC} ${CURL} ${CURL_OPTS} ${CURL_VERBOSITY} ${ERROR_OPT} ${PIN_OPT} ${SECOPTS} ${AUTH} ${URL} "$@"
+  else
+    ${EXEC} ${CURL} ${CURL_OPTS} ${CURL_VERBOSITY} ${ERROR_OPT} ${PIN_OPT} ${SECOPTS} --proxy "${PROXY}" ${AUTH} ${URL} "$@"
+  fi
+  code=$?
+  # retry only if we are in a certificate validation failure case
+  if [ ${code} -eq 90 ]; then
+    continue
+  else
+    # save the proper pin hash if changed
+    if [ "${pin}" != "${LOCAL_PINNED_HASH}" ]; then
+      echo "${pin}" > "${SERVER_HASH_FILE}"
+    fi
+    break
+  fi
+done
+exit ${code}
