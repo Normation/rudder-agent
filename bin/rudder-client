@@ -27,6 +27,25 @@ do
     echo "  -h : help"
     echo "  -n : do not run, display curl command instead"
     echo "  -v : verbose"
+    cat <<EOF
+
+Notes:
+  - rudder-client uses policy_server.dat to find it policy-server
+  - rudder-client uses agent.conf get its proxy parameters
+  - rudder-client uses rudder.json for server validation parameters
+
+Server validation:
+  - when no parameter is present, rudder-client uses the policy_server_hash if it exists to check the server key
+  - when the POLICY_SERVER_KEY_HASH parameter it defined, rudder-client trusts any server having one of these hash
+      POLICY_SERVER_KEY_HASH must be of the form sha256//<hash1>;sha256//<hash2>;...
+  - when POLICY_SERVER_SECURE_VALIDATION is true
+      rudder-client applies POLICY_SERVER_KEY_HASH rules if defined
+      rudder-client checks that the server certificate is signed by a trusted CA
+      rudder-client checks that the server certificate valid and its subject CN matches the URL
+  - when POLICY_SERVER_CERT_CA is defined, the default trust store is replaced by this CA certificate
+      POLICY_SERVER_SECURE_VALIDATION must be true for this option to be useful
+
+EOF
     exit
   elif [ "$1" = "-e" ]; then
     ENDPOINT="$2"
@@ -58,38 +77,50 @@ if [ "${ENDPOINT}" = "" ]; then
 fi
 
 ## Get configuration
-PROXY=$(agent_conf https_proxy)
 
-# get server form configuration
+# proxy options
+PROXY=$(agent_conf https_proxy)
+if [ "${PROXY}" = "" ]; then
+  CURL_OPTS="${CURL_OPTS} --noproxy *"
+elif [ "${PROXY}" != "system" ]; then
+  CURL_OPTS="${CURL_OPTS} --proxy ${PROXY}"
+fi
+
+# Create URL
 SERVER=$(agent_conf server)
 if [ "${SERVER}" = "" ]; then
   # get server from policy_server.dat
   SERVER=$(cut -d: -f1 "${RUDDER_VAR}/cfengine-community/policy_server.dat")
 fi
-
 PORT=$(get_https_port)
+URL="https://${SERVER}${PORT}${ENDPOINT}"
 
-# Try to read local hash
-if [ -f "${SERVER_HASH_FILE}" ]; then
+if [ -f "${RUDDER_JSON}" ]; then
+  # Read hash from policies
+  INPUTS_PINNED_HASHES=$(rudder_json_value 'POLICY_SERVER_KEY_HASH')
+  POLICY_SERVER_SECURE_VALIDATION=$(rudder_json_value 'POLICY_SERVER_SECURE_VALIDATION')
+fi
+
+# Handle pinning
+if [ "${INPUTS_PINNED_HASHES}" != "" ]; then
+  PINNED_HASH="${INPUTS_PINNED_HASHES}"
+elif [ -f "${SERVER_HASH_FILE}" ]; then
   PINNED_HASH=$(cat ${SERVER_HASH_FILE})
 fi
 
-if [ -f "${RUDDER_JSON}" ]; then
-  # Read hash from policies and update if necessary
-  INPUTS_PINNED_HASH=$(rudder_json_value 'POLICY_SERVER_KEY_HASH')
-  if [ "${INPUTS_PINNED_HASH}" != "" ]; then
-    if [ "${INPUTS_PINNED_HASH}" != "${PINNED_HASH}" ]; then
-      PINNED_HASH="${INPUTS_PINNED_HASH}"
-      echo "${PINNED_HASH}" > "${SERVER_HASH_FILE}"
-    fi
-  fi
+if [ "${PINNED_HASH}" != "" ]; then
+  CURL_OPTS="${CURL_OPTS} --pinnedpubkey ${PINNED_HASH}"
 fi
 
-if [ "${PINNED_HASH}" != "" ]; then
-  SECOPTS="--pinnedpubkey ${PINNED_HASH} --insecure"
-else
-  # only allowed in initial policies and with 6.X server
-  SECOPTS="--insecure"
+if [ "${POLICY_SERVER_SECURE_VALIDATION}" != "true" ]; then
+  CURL_OPTS="${CURL_OPTS} --insecure"
+fi
+
+# file created by policies
+POLICY_SERVER_CERT_CA="/var/rudder/lib/ssl/policy_server_ca.pem"
+if [ -f "${POLICY_SERVER_CERT_CA}" ]; then
+  # we have to provide --capath so that curl doesn't look in default truststore
+  CURL_OPTS="${CURL_OPTS} --capath ${POLICY_SERVER_CERT_CA} --cacert ${POLICY_SERVER_CERT_CA}"
 fi
 
 # get server authentication from rudder.json if available and not overridden
@@ -101,17 +132,9 @@ if [ "${AUTH}" = "" ]; then
   fi
 fi
 
-## Create URL
-URL="https://${SERVER}${PORT}${ENDPOINT}"
-
-## Other arguments are curl arguments
 # advantage of exec:
 # - one process less
 # - don't care if there is some code after it
 # - keeps return code
-if [ "${PROXY}" = "system" ]
-then
-  ${EXEC} ${CURL} ${CURL_OPTS} ${CURL_VERBOSITY} ${ERROR_OPT} ${SECOPTS} ${AUTH} ${URL} "$@"
-else
-  ${EXEC} ${CURL} ${CURL_OPTS} ${CURL_VERBOSITY} ${ERROR_OPT} ${SECOPTS} --proxy "${PROXY}" ${AUTH} ${URL} "$@"
-fi
+# Other arguments are curl arguments
+${EXEC} ${CURL} ${CURL_OPTS} ${CURL_VERBOSITY} ${ERROR_OPT} ${AUTH} ${URL} "$@"
