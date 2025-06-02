@@ -30,5 +30,15 @@ action="reload techniques from files"
 curl_opt="--header @/var/rudder/run/api-token-header --request POST"
 expected='{"action":"reloadTechniques","result":"success","data":{"techniques":"Started"}}'
 
-checked_api_call "http://127.0.0.1:8080/rudder/api/latest/system/reload/techniques" "reload techniques from files" "${DISPLAY_COMMAND}" "${expected}" "${curl_opt}"
+# check if the API is available
+api_result=$(rudder_api_call "/system/status" "GET" "" "${DISPLAY_COMMAND}" 2>/dev/null)
+api_code=$?
+
+if [ ${api_code} -eq 0 ]
+then
+  checked_api_call "http://127.0.0.1:8080/rudder/api/latest/system/reload/techniques" "reload techniques from files" "${DISPLAY_COMMAND}" "${expected}" "${curl_opt}"
+else
+  echo "Web interface is down - requested a technique reload at its restart"
+  touch ${RUDDER_DIR}/etc/force_technique_reload
+fi
 
