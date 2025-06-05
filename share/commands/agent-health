@@ -40,7 +40,7 @@ then
 fi
 
 # test policy server value if it's not an ip
-if ! egrep "^[0-9.]+$|^[0-9a-fA-F:]+$" "${CFE_DIR}/policy_server.dat">/dev/null; then
+if ! grep -E "^[0-9.]+$|^[0-9a-fA-F:]+$" "${CFE_DIR}/policy_server.dat">/dev/null; then
   if type getent >/dev/null 2>/dev/null; then
     cut -d: -f1 "${CFE_DIR}/policy_server.dat" | xargs getent hosts > /dev/null
   else
@@ -67,7 +67,7 @@ fi
 # otherwise we are before the first agent run or in bootstrap promises
 if [ -e "${CFE_DIR}/outputs/previous" ]
 then
-  egrep "FATAL:|Fatal :|could not get an updated configuration" "${CFE_DIR}/outputs/previous" > /dev/null
+  grep -E "FATAL:|Fatal :|could not get an updated configuration" "${CFE_DIR}/outputs/previous" > /dev/null
   if [ $? -ne 1 ]
   then
     echo "Connection errors in Rudder agent last run"
