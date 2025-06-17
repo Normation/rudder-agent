@@ -219,6 +219,8 @@ check_policy_server_or_exit() {
 # We accept 6, as it allows for 5 agent running at the same time (historic max)
 # and not too many agents
 check_and_fix_cfengine_processes() {
+  # rudder-cf-execd must be enabled in systemd to be able to start it
+  service_enable rudder-cf-execd enable
 
   # If there are more than one cf-execd process, we must kill them
   # A standard kill won't kill them, so the -9 is necessary to make sure they are stopped
