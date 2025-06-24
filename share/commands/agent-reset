@@ -60,6 +60,8 @@ while getopts "iIvdqcp" opt; do
   esac
 done
 
+# Remove temporary update archives an etags
+rm -rf /var/rudder/tmp/policies*
 # Try to remove everything that can block
 # - restore initial promises
 [ "$VERBOSE" = true ] && echo "Restoring initial policies..."

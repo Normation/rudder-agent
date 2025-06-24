@@ -15,14 +15,19 @@ CURL_OPTS="--tlsv1.3 --location --fail --connect-timeout 10"
 ERROR_OPT="--show-error"
 CURL_VERBOSITY="--silent"
 EXEC="exec"
+TAGFILE=""
+CLIENT_CERT="false"
+
 
 ## Get options
 while [ "$1" != "" ]
 do
   if [ "$1" = "-h" ]; then
-    echo "Usage $0 -e <endpoint> [-u <user:password>] [-n] [-h] -- <curl_options>"
+    echo "Usage $0 -e <endpoint> [-u <user:password>] [-t <tagfile>] [-c] [-n] [-h] -- <curl_options>"
     echo "  -e <endpoint>: rudder endpoint, example /inventory-updates"
     echo "  -u <user:password>: force user and password, default is to take it from rudder.json"
+    echo "  -t <tagfile>: use etag file to avoid redownloading unchanged file"
+    echo "  -c : use agent certificate for client authentication"
     echo "  -r : do not show any result, just HTTP code"
     echo "  -h : help"
     echo "  -n : do not run, display curl command instead"
@@ -53,6 +58,12 @@ EOF
   elif [ "$1" = "-u" ]; then
     AUTH="--user $2"
     shift 2
+  elif [ "$1" = "-t" ]; then
+    TAGFILE="$2"
+    shift 2
+  elif [ "$1" = "-c" ]; then
+    CLIENT_CERT="true"
+    shift
   elif [ "$1" = "-r" ]; then
     ERROR_OPT="--output /dev/null --write-out %{http_code}"
     shift
@@ -124,7 +135,7 @@ if [ -f "${POLICY_SERVER_CERT_CA}" ]; then
 fi
 
 # get server authentication from rudder.json if available and not overridden
-if [ "${AUTH}" = "" ]; then
+if [ "${AUTH}" = "" ] && [ ${CLIENT_CERT} = "false" ]; then
   if [ -f "${RUDDER_JSON}" ]; then
     DAVUSER=$(rudder_json_value 'DAVUSER')
     DAVPW=$(rudder_json_value 'DAVPASSWORD')
@@ -132,6 +143,18 @@ if [ "${AUTH}" = "" ]; then
   fi
 fi
 
+# handle client certificate
+if [ "${CLIENT_CERT}" ]; then
+  AUTH="--cert /opt/rudder/etc/ssl/agent.cert --key /var/rudder/cfengine-community/ppkeys/localhost.priv"
+fi
+
+# handle etags
+if [ "${TAGFILE}" != "" ]; then
+  CURL_OPTS="${CURL_OPTS} --etag-save ${TAGFILE} --etag-compare ${TAGFILE}"
+fi
+
+# disable globbing to avoid * expansion (POSIX)
+set -f
 # advantage of exec:
 # - one process less
 # - don't care if there is some code after it
