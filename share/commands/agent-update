@@ -5,6 +5,10 @@
 # @man +
 # @man *Options*:
 # @man +
+# @man *-C*: update the agent with the CFEngine protocol
+# @man +
+# @man *-H*: update the agent with the HTTPS protocol
+# @man +
 # @man *-i*: run the agent in information mode, prints basic information
 # @man +
 # @man *-v*: run the agent in verbose mode, prints detailed information
@@ -24,9 +28,18 @@ bootstrap_check
 VERBOSITY=""
 FORCE=false
 QUIET=false
+PROTOCOL=cfengine
 
-while getopts "iIvdqcf" opt; do
+while getopts "CHiIvdqcf" opt; do
   case $opt in
+    C)
+      PROTOCOL=cfengine
+      shift
+      ;;
+    H)
+      PROTOCOL=https
+      shift
+      ;;
     i|I)
       QUIET=false
       ;;
@@ -58,11 +71,119 @@ if [ "${FORCE}" = "true" ]; then
   rm -f ${RUDDER_VAR}/ncf/local/ncf_hash_file
 fi
 
-# The awk part is the workaround for update not exiting with a 1 in case of error
-# It will be necessary to remove it once the exit it back in cf-agent
-# It must be changed if the error messages are back to stderr
-"${RUDDER_DIR}/bin/cf-agent" ${VERBOSITY} ${COLOR} -K -f failsafe.cf | awk 'BEGIN{e=0}{print; if(match($0,/You must accept this node/)){e=1} else if(match($0,/rudder-agent could not get an updated configuration|error:/)){e=2}}END{exit e}'
-code=$?
+# download a policy file and extract it in a .new directory
+download_and_extract() {
+  SOURCE="$1"
+  DEST="$2"
+  ARCHIVE="/var/rudder/tmp/$(basename ${SOURCE})"
+
+  # try download if more recent
+  /opt/rudder/bin/rudder-client -c -e "${SOURCE}" -t "${ARCHIVE}.etag" -- -o "${ARCHIVE}"
+  code=$?
+  if [ $code -ne 0 ]; then
+    # in case of error, also cleanup etag to force a re-download
+    rm -f "${ARCHIVE}" "${ARCHIVE}.etag"
+    return $code
+  fi
+
+  # if download happened, extract
+  if [ -f "${ARCHIVE}" ]; then
+    # cleanup old cruft
+    rm -rf "${DEST}.old" "${DEST}.new"
+    # extract in new place
+    tar xf "${ARCHIVE}" -C $(dirname "${DEST}") --transform "s|^\([^/]\+\)|\1.new|"
+    code=$?
+    if [ $code -ne 0 ]; then
+      # in case of error, also cleanup etag to force a re-download
+      rm -rf "${ARCHIVE}" "${ARCHIVE}.etag" "${DEST}.new"
+      return $code
+    fi
+  fi
+}
+
+# replace provided directory with the .new version
+swap_new_dir() {
+  DEST="$1"
+  # if "new" was extracted replace current with new
+  if [ -d "${DEST}.new" ]; then
+    mv "${DEST}" "${DEST}.old" && mv "${DEST}.new" "${DEST}"
+    code=$?
+    if [ $code -ne 0 ]; then
+      return $code
+    fi
+  fi
+}
+
+# in case of error try to rollback to previous policies
+rollback() {
+  NCF_PATH="$1"
+  POL_PATH="$2"
+  if [ -d "${NCF_PATH}.old" ]; then
+    rm -rf "${NCF_PATH}"
+    mv "${NCF_PATH}.old" "${NCF_PATH}"
+  fi
+  if [ -d "${POL_PATH}.old" ]; then
+    rm -rf "${POL_PATH}"
+    mv "${POL_PATH}.old" "${POL_PATH}"
+  fi
+  # final check
+  rudder agent check -f
+  # there was an error, it should be updated before retrying
+  rm -f "${NCF_AR}"
+}
+
+# The whole update process
+update() {
+  NCF_SOURCE="/common/policies-library-linux.tbz2"
+  POL_SOURCE="/policies/${UUID}/policies.tbz2"
+  NCF_PATH="/var/rudder/ncf"
+  POL_PATH="/var/rudder/cfengine-community/inputs"
+
+  # download and extract both ncf and the policy
+  download_and_extract "${NCF_SOURCE}" "${NCF_PATH}" && download_and_extract "${POL_SOURCE}" "${POL_PATH}"
+  if [ $? -ne 0 ]; then
+    # if one has had an error, keep archives, the working one will be reused
+    return 1
+  fi
+
+  # swap both ncf and policy directories
+  swap_new_dir "${NCF_PATH}" && swap_new_dir "${POL_PATH}"
+  if [ $? -ne 0 ]; then
+    # rollback the move
+    rollback "${NCF_PATH}" "${POL_PATH}"
+    return 2
+  fi
+
+  # if we replaced the policy, test its validity
+  if [ -d "${NCF_PATH}.old" ] || [ -d "${POL_PATH}.old" ]; then
+    /opt/rudder/bin/cf-promises
+    # if promises are valid, remove old ones
+    if [ $? -eq 0 ]; then
+      rm -rf "${NCF_PATH}.old" "${POL_PATH}.old"
+    # if they are not, rollback
+    else
+      rollback "${NCF_PATH}" "${POL_PATH}"
+    return 3
+    fi
+  fi
+
+  # always remove archive, it is not useful anymore
+  # and we have the etag file for future updates
+  rm -f "${NCF_AR}"
+  return 0
+}
+
+if [ "${PROTOCOL}" = "https" ]
+then
+  update
+  code=$?
+else
+  # The awk part is the workaround for update not exiting with a 1 in case of error
+  # It will be necessary to remove it once the exit is back in cf-agent
+  # It must be changed if the error messages are back to stderr
+  "${RUDDER_DIR}/bin/cf-agent" ${VERBOSITY} ${COLOR} -K -f failsafe.cf | awk 'BEGIN{e=0}{print; if(match($0,/You must accept this node/)){e=1} else if(match($0,/rudder-agent could not get an updated configuration|error:/)){e=2}}END{exit e}'
+  code=$?
+fi
 
 if [ $code -eq 0 ]; then
   [ "$QUIET" = false ] && printf "${GREEN}ok${NORMAL}: Rudder agent policies were updated.\n"
