@@ -34,7 +34,7 @@ while getopts "u:p:" opt; do
 done
 
 # check hash
-if ! grep -qE "^[[:space:]]*<authentication.*hash=\"bcrypt\".*>" "${USERFILE}"
+if ! grep -qE "^[[:space:]]*<authentication.*hash=\"(bcrypt|argon2id)\".*>" "${USERFILE}"
 then
   echo "This command can only create users when the 'bcrypt' hash method is used"
   echo "Particularly, for servers upgraded from pre-6.1, it requires resetting all"
@@ -50,8 +50,17 @@ then
   exit 1
 fi
 
-# bcrypt (12 cost)
-hash=$(htpasswd -n${PASS_OPT}BC 12 "" ${ADMIN_PASSWORD}| tr -d ':\n')
+if type argon2 >/dev/null 2>/dev/null
+then
+  # argon2id
+  if [ -z "${ADMIN_PASSWORD}" ]; then
+    read -p "Password: " -s ADMIN_PASSWORD
+  fi
+  hash=$(echo -n "${ADMIN_PASSWORD}" |  argon2 $(openssl rand 16) -id -e| tr -d ':\n')
+else
+  # bcrypt (12 cost)
+  hash=$(htpasswd -n${PASS_OPT}BC 12 "" ${ADMIN_PASSWORD}| tr -d ':\n')
+fi
 
 details="<user name=\"${USER}\" password=\"${hash}\" permissions=\"administrator\" />"
 sed -i "/^[[:space:]]*<\/authentication>/i ${details}" "${USERFILE}"
