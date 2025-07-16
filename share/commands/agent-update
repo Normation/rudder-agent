@@ -188,7 +188,7 @@ fi
 if [ $code -eq 0 ]; then
   [ "$QUIET" = false ] && printf "${GREEN}ok${NORMAL}: Rudder agent policies were updated.\n"
   exit 0
-elif [ $code -eq 1 ]; then
+elif [ $code -eq 1 ] && [ "${PROTOCOL}" != "https" ]; then
   printf "${GREEN}ok${NORMAL}: Rudder node waiting to be accepted.\n"
   exit 0
 else
