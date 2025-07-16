@@ -135,17 +135,16 @@ if [ -f "${POLICY_SERVER_CERT_CA}" ]; then
 fi
 
 # get server authentication from rudder.json if available and not overridden
-if [ "${AUTH}" = "" ] && [ ${CLIENT_CERT} = "false" ]; then
+if [ "${CLIENT_CERT}" = "true" ]; then
+  # handle client certificate
+  AUTH="--cert /opt/rudder/etc/ssl/agent.cert --key /var/rudder/cfengine-community/ppkeys/localhost.priv"
+elif [ "${AUTH}" = "" ]; then
+  # handle client password
   if [ -f "${RUDDER_JSON}" ]; then
     DAVUSER=$(rudder_json_value 'DAVUSER')
     DAVPW=$(rudder_json_value 'DAVPASSWORD')
     AUTH="--user ${DAVUSER}:${DAVPW}"
   fi
-fi
-
-# handle client certificate
-if [ "${CLIENT_CERT}" ]; then
-  AUTH="--cert /opt/rudder/etc/ssl/agent.cert --key /var/rudder/cfengine-community/ppkeys/localhost.priv"
 fi
 
 # handle etags
