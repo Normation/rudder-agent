@@ -33,16 +33,6 @@ while getopts "u:p:" opt; do
   esac
 done
 
-# check hash
-if ! grep -qE "^[[:space:]]*<authentication.*hash=\"(bcrypt|argon2id)\".*>" "${USERFILE}"
-then
-  echo "This command can only create users when the 'bcrypt' hash method is used"
-  echo "Particularly, for servers upgraded from pre-6.1, it requires resetting all"
-  echo "user passwords when changing the hash method."
-  echo "See https://docs.rudder.io/reference/current/administration/users.html for details."
-  exit 1
-fi
-
 # check if user is already there
 if grep -qE "name[[:space:]]*=[[:space:]]*\"${USER}\"" "${USERFILE}"
 then
