@@ -134,8 +134,8 @@ rollback() {
 
 # The whole update process
 update() {
-  NCF_SOURCE="/common/policies-library-linux.tbz2"
-  POL_SOURCE="/policies/${UUID}/policies.tbz2"
+  NCF_SOURCE="/common/policies-library-linux.tar.bz2"
+  POL_SOURCE="/policies/${UUID}/rules/rudder.tar.bz2"
   NCF_PATH="/var/rudder/ncf"
   POL_PATH="/var/rudder/cfengine-community/inputs"
 
