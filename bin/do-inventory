@@ -1,0 +1,64 @@
+#!/bin/sh
+
+set -e
+
+if [ -z "$2" ]; then
+  echo "Usage: $0 <first_time> <verbose>"
+  echo "  first_time: 'true' for a new node"
+  echo "  verbose: 'true' for a verbose fusion run"
+  exit 1
+fi
+
+anomaly_handler() {
+  if [ $? -eq 0 ]; then
+    return 0
+  fi
+  echo ""
+  echo "ERROR: An error happened during the step: ${STEP} (l $1)"
+  echo "ERROR: Inventory failed"
+}
+
+trap 'anomaly_handler ${LINENO}' EXIT INT TERM
+
+first_time="$1"
+verbose="$2"
+
+workdir="/var/rudder/cfengine-community/inputs"
+bindir="/opt/rudder/bin"
+date=$(LANG=C /bin/date --utc --iso-8601=seconds)
+uuid=$(cat /opt/rudder/etc/uuid.hive)
+inventory_path="/var/rudder/inventories/${uuid}_${date}.ocs"
+if [ "${verbose}" = "true" ]; then
+  inventory_opts="--debug --debug"
+else
+  inventory_opts=""
+fi
+if [ "${first_time}" = "true" ]; then
+  endpoint="/inventories/"
+else
+  endpoint="/inventory-updates/"
+fi
+
+STEP="Getting rudder-server-uuid.txt"
+${bindir}/rudder-client -e /uuid -- --output "${workdir}/rudder-server-uuid.txt"
+
+STEP="Checking rudder-server-uuid.txt"
+grep '^[a-z0-9-]\+$' "${workdir}/rudder-server-uuid.txt" > /dev/null
+
+STEP="Running fusion inventory"
+perl -I /opt/rudder/lib/perl5 ${bindir}/fusioninventory-agent --config=none --no-task=Deploy --local=${inventory_path} ${inventory_opts}
+
+STEP="Testing inventory"
+perl ${bindir}/test-inventory.pl ${inventory_path}
+
+STEP="Signing inventory"
+${bindir}/rudder-sign ${inventory_path}
+
+STEP="Compressing inventory"
+gzip -fq ${inventory_path}
+
+STEP="Sending inventory"
+${bindir}/rudder-client -e ${endpoint} -- --upload-file ${inventory_path}.gz -o /dev/null
+touch /var/rudder/tmp/inventory_sent
+
+echo "Inventory Done"
