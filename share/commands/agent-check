@@ -452,7 +452,7 @@ then
   # Lock file must too big
   check_and_fix_cf_lock
   [ "${STOP_AT}" = "lock" ] && exit
-  # Inventory must have been sent recently
+  # Inventory must have been sent recently (should be placed before cfengine check when shell based inventory is the norm)
   check_and_fix_inventory
   [ "${STOP_AT}" = "inventory" ] && exit
 fi

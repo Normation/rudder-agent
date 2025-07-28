@@ -19,13 +19,17 @@ CURRENT=$(cat ${SERVER_FILE} 2>/dev/null)
 [ $? -ne 0 ] && CURRENT="Not yet configured"
 
 PORT=443
-while getopts "t:p:" opt; do
+HTTPS="false"
+while getopts "t:p:h" opt; do
   case $opt in
     t)
       TRUST_HASH="${OPTARG}"
       ;;
     p)
       PORT="${OPTARG}"
+      ;;
+    h)
+      HTTPS="true"
       ;;
   esac
 done
@@ -66,6 +70,12 @@ fi
 
 echo "${SERVER}" > "${SERVER_FILE}"
 RET=$?
+
+if [ "${HTTPS}" = "true" ]; then
+  sed -i "/^https_only.*/d" "${AGENT_CONFIGURATION}" 2>/dev/null
+  echo "https_only=true" >> "${AGENT_CONFIGURATION}"
+  rudder agent check
+fi
 
 [ ${RET} -ne 0 ] && printf "${RED}error${NORMAL}: Could not set policy server\n"
 

@@ -28,7 +28,11 @@ bootstrap_check
 VERBOSITY=""
 FORCE=false
 QUIET=false
-PROTOCOL=cfengine
+if is_https_only; then
+  PROTOCOL=https
+else
+  PROTOCOL=cfengine
+fi
 
 while getopts "CHiIvdqcf" opt; do
   case $opt in

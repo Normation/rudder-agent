@@ -31,8 +31,8 @@
 
 bootstrap_check
 
-# We cannot start an inventory in bootstrap policies
-if cmp -s "${RUDDER_VAR}/cfengine-community/inputs/failsafe.cf" "${RUDDER_DIR}/share/bootstrap-promises/failsafe.cf"
+# We cannot start an inventory in bootstrap policies without https
+if ! is_https_only && cmp -s "${RUDDER_VAR}/cfengine-community/inputs/failsafe.cf" "${RUDDER_DIR}/share/bootstrap-promises/failsafe.cf"
 then
   >&2 echo "Agent is currently in bootstrap policies, cannot run an inventory. Please download initial policies from the server with command \"rudder agent update\" first. If problem persists, use \"rudder agent check\" for diagnostic"
   exit 1
@@ -66,8 +66,12 @@ if [ ${FORCE} -eq 0 ] && [ -e ${RUDDER_DIR}/etc/disable-inventory ]; then
   exit 1
 fi
 
-# Add the class to force inventory if requested
-[ ${FORCE} -eq 1 ] && OPTS="-D ignore_disable_inventory"
+if is_https_only; then
+  # TODO verbose, last inventory flag, detect first time
+  do-inventory
+else
+  # Add the class to force inventory if requested
+  [ ${FORCE} -eq 1 ] && OPTS="-D ignore_disable_inventory"
 
-${RUDDER_BIN} agent run -l -N -D force_inventory -b doInventory "$@" ${OPTS}
-
+  ${RUDDER_BIN} agent run -l -N -D force_inventory -b doInventory "$@" ${OPTS}
+fi
