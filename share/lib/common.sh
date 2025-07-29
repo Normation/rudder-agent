@@ -228,7 +228,7 @@ get_https_port() {
 
 is_https_only() {
   # should be extended when the webapp also provides a setting
-  ["$(agent_conf https_only)" = "true" ]
+  [ "$(agent_conf https_only)" = "true" ]
 }
 
 # Colors configuration (enable colors only if stdout is a terminal)
