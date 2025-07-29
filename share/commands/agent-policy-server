@@ -9,7 +9,7 @@
 # @man +
 # @man + *-p*: server https port (only if not 443, only with -t option)
 # @man +
-# @man + *-H*: connect to the server onmy via https (no cfengine protocol)
+# @man + *-H*: connect to the server onmy via https (no CFEngine protocol)
 # @man +
 # @man *server*: hostname or IP of the policy server to set
 
