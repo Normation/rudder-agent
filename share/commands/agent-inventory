@@ -43,16 +43,21 @@ FORCE=0
 OPTS=""
 optmax=0
 err=0
+VERBOSE_INVENTORY="false"
 # err=1 -> we have a parameter with an argument
 # err=2 -> we have reached the end (or we have invalid parameters)
 while [ ${err} -lt 2 ]
 do
-  getopts ":f" opt # ':' -> ignore getopt errors
+  getopts ":fv" opt # ':' -> ignore getopt errors
   res=$?
   [ ${OPTIND} -lt ${optmax} ] && break # OPTIND value has wrapped, we reached the end of parameters
   if [ ${res} -eq 0 ]
   then
     [ "${opt}" = "f" ] && FORCE=1
+    if [ "${opt}" = "v" ]; then
+      OPTS="-v ${OPTS}"
+      VERBOSE_INVENTORY="true"
+    fi
     err=0
   else
     err=$((err+1))
@@ -67,8 +72,13 @@ if [ ${FORCE} -eq 0 ] && [ -e ${RUDDER_DIR}/etc/disable-inventory ]; then
 fi
 
 if is_https_only; then
-  # TODO verbose, last inventory flag, detect first time
-  do-inventory
+  # if this file exists, then we have regular promises, then initial inventory has been already sent
+  if [ -f /var/rudder/cfengine-community/inputs/rudder.json ]; then
+    INITIAL_INVENTORY="false"
+  else
+    INITIAL_INVENTORY="true"
+  fi
+  do-inventory "${INITIAL_INVENTORY}" "${VERBOSE_INVENTORY}"
 else
   # Add the class to force inventory if requested
   [ ${FORCE} -eq 1 ] && OPTS="-D ignore_disable_inventory"
