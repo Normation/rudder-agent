@@ -9,6 +9,8 @@
 # @man +
 # @man + *-p*: server https port (only if not 443, only with -t option)
 # @man +
+# @man + *-H*: connect to the server only via https (no CFEngine protocol)
+# @man +
 # @man *server*: hostname or IP of the policy server to set
 
 . "${BASEDIR}/../lib/common.sh"
@@ -20,7 +22,7 @@ CURRENT=$(cat ${SERVER_FILE} 2>/dev/null)
 
 PORT=443
 HTTPS="false"
-while getopts "t:p:h" opt; do
+while getopts "t:p:H" opt; do
   case $opt in
     t)
       TRUST_HASH="${OPTARG}"
@@ -28,7 +30,7 @@ while getopts "t:p:h" opt; do
     p)
       PORT="${OPTARG}"
       ;;
-    h)
+    H)
       HTTPS="true"
       ;;
   esac
