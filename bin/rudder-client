@@ -16,8 +16,11 @@ ERROR_OPT="--show-error"
 CURL_VERBOSITY="--silent"
 EXEC="exec"
 TAGFILE=""
-CLIENT_CERT="false"
-
+if is_cert_validated; then
+  CLIENT_CERT="true"
+else
+  CLIENT_CERT="false"
+fi
 
 ## Get options
 while [ "$1" != "" ]
@@ -26,12 +29,12 @@ do
     echo "Usage $0 -e <endpoint> [-u <user:password>] [-t <tagfile>] [-c] [-n] [-h] -- <curl_options>"
     echo "  -e <endpoint>: rudder endpoint, example /inventory-updates"
     echo "  -u <user:password>: force user and password, default is to take it from rudder.json"
-    echo "  -t <tagfile>: use etag file to avoid redownloading unchanged file"
-    echo "  -c : use agent certificate for client authentication"
-    echo "  -r : do not show any result, just HTTP code"
-    echo "  -h : help"
-    echo "  -n : do not run, display curl command instead"
-    echo "  -v : verbose"
+    echo "  -t <tagfile>: use ETag file to avoid redownloading unchanged file"
+    echo "  -c: use agent certificate for client authentication"
+    echo "  -r: do not show any result, just HTTP code"
+    echo "  -h: help"
+    echo "  -n: do not run, display curl command instead"
+    echo "  -v: verbose"
     cat <<EOF
 
 Notes:
@@ -41,7 +44,7 @@ Notes:
 
 Server validation:
   - when no parameter is present, rudder-client uses the policy_server_hash if it exists to check the server key
-  - when the POLICY_SERVER_KEY_HASH parameter it defined, rudder-client trusts any server having one of these hash
+  - when the POLICY_SERVER_KEY_HASH parameter is defined, rudder-client only accepts servers having one of these hash
       POLICY_SERVER_KEY_HASH must be of the form sha256//<hash1>;sha256//<hash2>;...
   - when POLICY_SERVER_SECURE_VALIDATION is true
       rudder-client applies POLICY_SERVER_KEY_HASH rules if defined
@@ -103,6 +106,7 @@ if [ "${SERVER}" = "" ]; then
   # get server from policy_server.dat
   SERVER=$(cut -d: -f1 "${RUDDER_VAR}/cfengine-community/policy_server.dat")
 fi
+
 PORT=$(get_https_port)
 URL="https://${SERVER}${PORT}${ENDPOINT}"
 
@@ -119,11 +123,16 @@ elif [ -f "${SERVER_HASH_FILE}" ]; then
   PINNED_HASH=$(cat ${SERVER_HASH_FILE})
 fi
 
-if [ "${PINNED_HASH}" != "" ]; then
-  CURL_OPTS="${CURL_OPTS} --pinnedpubkey ${PINNED_HASH}"
+# We set th root server's policy server to 127.0.0.1
+if [ "${SERVER}" = "127.0.0.1" ]; then
+  CURL_OPTS="${CURL_OPTS} --insecure"
 fi
 
-if [ "${POLICY_SERVER_SECURE_VALIDATION}" != "true" ]; then
+if ! is_cert_validated; then
+  if [ "${PINNED_HASH}" != "" ]; then
+    CURL_OPTS="${CURL_OPTS} --pinnedpubkey ${PINNED_HASH}"
+  fi
+
   CURL_OPTS="${CURL_OPTS} --insecure"
 fi
 

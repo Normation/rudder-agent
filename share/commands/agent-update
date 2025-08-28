@@ -38,11 +38,9 @@ while getopts "CHiIvdqcf" opt; do
   case $opt in
     C)
       PROTOCOL=cfengine
-      shift
       ;;
     H)
       PROTOCOL=https
-      shift
       ;;
     i|I)
       QUIET=false
@@ -73,6 +71,7 @@ if [ "${FORCE}" = "true" ]; then
   rm -f ${RUDDER_VAR}/tools/rudder_tools_updated
   rm -f ${RUDDER_VAR}/ncf/common/ncf_hash_file
   rm -f ${RUDDER_VAR}/ncf/local/ncf_hash_file
+  rm -f ${RUDDER_VAR}/tmp/*.etag
 fi
 
 # download a policy file and extract it in a .new directory
@@ -89,19 +88,25 @@ download_and_extract() {
     rm -f "${ARCHIVE}" "${ARCHIVE}.etag"
     return $code
   fi
+  [ "$QUIET" = false ] && printf "${GREEN}ok${NORMAL}: Checked policies for available updates.\n"
 
   # if download happened, extract
   if [ -f "${ARCHIVE}" ]; then
+    [ "$QUIET" = false ] && printf "${GREEN}ok${NORMAL}: New policies available.\n"
+
     # cleanup old cruft
     rm -rf "${DEST}.old" "${DEST}.new"
     # extract in new place
-    tar xf "${ARCHIVE}" -C $(dirname "${DEST}") --transform "s|^\([^/]\+\)|\1.new|"
+    tar xf "${ARCHIVE}" -C $(dirname "${DEST}") --transform "s|policies_next|inputs|" --transform "s|^\([^/]\+\)|\1.new|"
     code=$?
     if [ $code -ne 0 ]; then
       # in case of error, also cleanup etag to force a re-download
       rm -rf "${ARCHIVE}" "${ARCHIVE}.etag" "${DEST}.new"
       return $code
     fi
+    rm -r "${ARCHIVE}"
+    [ "$QUIET" = false ] && printf "${GREEN}ok${NORMAL}: Policies correctly extracted.\n"
+
   fi
 }
 
@@ -169,6 +174,7 @@ update() {
       rollback "${NCF_PATH}" "${POL_PATH}"
     return 3
     fi
+    [ "$QUIET" = false ] && printf "${GREEN}ok${NORMAL}: New policies enabled.\n"
   fi
 
   # always remove archive, it is not useful anymore

@@ -211,6 +211,19 @@ agent_conf() {
   fi
 }
 
+# add/modify one key of agent.conf, creating the file if needed
+write_agent_conf() {
+  key="$1"
+  value="$2"
+  if grep -qE "^${key} *= *${value}$" "${AGENT_CONFIGURATION}" 2>/dev/null; then
+    :
+  elif grep -qE "^${key} *=" "${AGENT_CONFIGURATION}" 2>/dev/null; then
+    sed -i "s/^${key} *=.*/${key}=${value}/" "${AGENT_CONFIGURATION}"
+  else
+    echo "${key}=${value}" >> "${AGENT_CONFIGURATION}"
+  fi
+}
+
 # get port used to talk https with the server
 get_https_port() {
   # get port from configuration
@@ -218,6 +231,8 @@ get_https_port() {
   # if not trust the server on this
   if [ "${PORT}" = "" ] && [ -f "${RUDDER_JSON}" ]; then
     PORT=$(rudder_json_value 'HTTPS_POLICY_DISTRIBUTION_PORT')
+    # And store it to be able to contact it in case of reset & https only
+    [ "${PORT}" != "443" ] && is_https_only && write_agent_conf 'https_port' "${PORT}"
   fi
   # else default to 443
   if [ "${PORT}" != "" ]; then
@@ -227,8 +242,19 @@ get_https_port() {
 }
 
 is_https_only() {
-  # should be extended when the webapp also provides a setting
-  ["$(agent_conf https_only)" = "true" ]
+  server_config=$(rudder_json_value 'POLICY_SERVER_HTTPS_ONLY')
+  # Persist the value if stricter
+  [ "${server_config}" = "true" ] && write_agent_conf 'https_only' 'true'
+  local_config=$(agent_conf 'https_only')
+  [ "${server_config}" = "true" ] || [ "${local_config}" = "true" ]
+}
+
+is_cert_validated() {
+  server_config=$(rudder_json_value 'POLICY_SERVER_CERT_VALIDATION')
+  # Persist the value if stricter
+  [ "${server_config}" = "true" ] && write_agent_conf 'cert_validation' 'true'
+  local_config=$(agent_conf 'cert_validation')
+  [ "${server_config}" = "true" ] || [ "${local_config}" = "true" ]
 }
 
 # Colors configuration (enable colors only if stdout is a terminal)

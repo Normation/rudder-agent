@@ -135,7 +135,15 @@ echo "     Policy updated: ${POLICY_FETCHED}"
 echo "     Inventory sent: ${INVENTORY_SENT}"
 
 printf "\n${WHITE}Key/Certificate${NORMAL}\n"
+if is_https_only; then
+echo "         HTTPS only: enabled"
+fi
+if is_cert_validated; then
+echo "  Certificate check: enabled"
+fi
+if ! is_https_only; then
 echo "           Key hash: ${KEY_HASH}"
+fi
 echo "           Key hash: sha256//${KEY_HASH_SHA}"
 echo "  Cert. fingerprint: ${CERT_FINGERPRINT}"
 echo "        Key pinning: ${PINNING}"

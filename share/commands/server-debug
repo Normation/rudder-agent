@@ -48,6 +48,11 @@ while getopts "i:l:" opt; do
   esac
 done
 
+if is_https_only; then
+  echo "HTTPS only mode is enabled. This command only handles the CFEngine protocol."
+  exit 1
+fi
+
 if [ -z "${NODE}" ]
 then
   echo "Usage rudder server debug [-i|-l] <node_ip>"
