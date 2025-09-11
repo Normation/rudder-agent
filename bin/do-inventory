@@ -59,6 +59,7 @@ gzip -fq ${inventory_path}
 
 STEP="Sending inventory"
 ${bindir}/rudder-client -e ${endpoint} -- --upload-file ${inventory_path}.gz -o /dev/null
+${bindir}/rudder-client -e ${endpoint} -- --upload-file ${inventory_path}.sign -o /dev/null
 touch /var/rudder/tmp/inventory_sent
 
 echo "Inventory Done"
