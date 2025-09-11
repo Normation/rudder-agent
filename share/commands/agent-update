@@ -183,7 +183,8 @@ update() {
   return 0
 }
 
-if [ "${PROTOCOL}" = "https" ]
+# We use standard failsafe on root as it does local copies and we don't have policy archives for it.
+if [ "${PROTOCOL}" = "https" ] && [ "${UUID}" != 'root' ]
 then
   update
   code=$?
