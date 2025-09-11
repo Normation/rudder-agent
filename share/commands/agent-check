@@ -430,7 +430,10 @@ check_and_fix_rudder_uuid
 if [ "${ONLY_UUID}" != true ]
 then
   # Agent must have a key pair and a correct certificate
-  check_and_fix_keys
+  # Don't mess with user-configured stuff
+  if ! is_cert_validated; then
+    check_and_fix_keys
+  fi
   [ "${STOP_AT}" = "keys" ] && exit
   # Policy server must be declared or next checks are useless
   check_policy_server_or_exit

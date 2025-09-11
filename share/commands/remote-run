@@ -118,6 +118,11 @@ while getopts "iIvdqwrRcTD:j:g:at:u:C:eE" opt; do
   esac
 done
 
+if is_https_only; then
+  echo "Remote run is not supported in HTTPS-only mode"
+  exit 1
+fi
+
 # to read remaining arguments with $*
 shift `expr ${OPTIND} - 1`
 

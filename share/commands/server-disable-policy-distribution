@@ -5,6 +5,11 @@
 
 . "${BASEDIR}/../lib/common.sh"
 
+if is_https_only; then
+  echo "HTTPS-only mode is enabled. This command only handles the CFEngine protocol, doing nothing"
+  exit 1
+fi
+
 # Disable and stop the server
 systemctl stop rudder-cf-serverd
 systemctl disable rudder-cf-serverd
