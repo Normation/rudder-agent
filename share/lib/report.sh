@@ -39,9 +39,14 @@ compress_and_sign() {
         return
     fi
 
-    # We do not include certs as the server already knows them
-    # -passin can be removed once 6.2 compatibility is dropped
-    openssl smime -sign -text -nocerts -signer "${CERT}" -inkey "${PRIVKEY}" -passin "pass:Cfengine passphrase" \
+    # Only include the certs in certificate verification mode
+    if is_cert_validated; then
+      include_certs=""
+    else
+      include_certs="-nocerts"
+    fi
+
+    openssl smime -sign -text ${include_certs} -signer "${CERT}" -inkey "${PRIVKEY}" \
         -in "${tmp_file}" -out "${tmp_file}.signed"
     if [ $? -eq 0 ]; then
         # Move temp file
