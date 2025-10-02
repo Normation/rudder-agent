@@ -146,7 +146,13 @@ fi
 # get server authentication from rudder.json if available and not overridden
 if [ "${CLIENT_CERT}" = "true" ]; then
   # handle client certificate
-  AUTH="--cert /opt/rudder/etc/ssl/agent.cert --key /var/rudder/cfengine-community/ppkeys/localhost.priv"
+  if [ -f "/opt/rudder/etc/ssl/agent-http.cert" ]; then
+    # Use specific key/cert if available
+    AUTH="--cert /opt/rudder/etc/ssl/agent-http.cert --key /opt/rudder/etc/ssl/agent-http.key"
+  else
+    # Use standard paths
+    AUTH="--cert /opt/rudder/etc/ssl/agent.cert --key /var/rudder/cfengine-community/ppkeys/localhost.priv"
+  fi
 elif [ "${AUTH}" = "" ]; then
   # handle client password
   if [ -f "${RUDDER_JSON}" ]; then
