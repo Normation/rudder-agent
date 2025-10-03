@@ -49,7 +49,7 @@ STEP="Running fusion inventory"
 perl -I /opt/rudder/lib/perl5 ${bindir}/fusioninventory-agent --config=none --no-task=Deploy --local=${inventory_path} ${inventory_opts}
 
 STEP="Testing inventory"
-perl ${bindir}/test-inventory.pl ${inventory_path}
+perl -I /opt/rudder/lib/perl5 ${bindir}/test-inventory.pl ${inventory_path}
 
 STEP="Signing inventory"
 ${bindir}/rudder-sign ${inventory_path}
