@@ -39,14 +39,8 @@ compress_and_sign() {
         return
     fi
 
-    # Only include the certs in certificate verification mode
-    if is_cert_validated; then
-      include_certs=""
-    else
-      include_certs="-nocerts"
-    fi
-
-    openssl smime -sign -text ${include_certs} -signer "${CERT}" -inkey "${PRIVKEY}" \
+    # We do not include certs as the server already knows them
+    openssl smime -sign -text -nocerts -signer "${CERT}" -inkey "${PRIVKEY}" \
         -in "${tmp_file}" -out "${tmp_file}.signed"
     if [ $? -eq 0 ]; then
         # Move temp file
