@@ -62,6 +62,8 @@ done
 
 # Remove temporary update archives an etags
 rm -rf /var/rudder/tmp/policies*
+rm -f /var/rudder/tmp/*.etag
+
 # Try to remove everything that can block
 # - restore initial promises
 [ "$VERBOSE" = true ] && echo "Restoring initial policies..."
