@@ -140,11 +140,11 @@ get_hostname() {
 
 # get a single entry from rudder.json
 rudder_json_value() {
-  grep "$1" "${RUDDER_JSON}" | sed 's/.*"'$1'" *: *"\(.*\)",.*/\1/'
+  grep "$1" "${RUDDER_JSON}" 2>/dev/null | sed 's/.*"'$1'" *: *"\(.*\)",.*/\1/'
 }
 
 rudder_json_bool_value() {
-  grep "$1" "${RUDDER_JSON}" | sed 's/.*"'$1'" *: *\(.*\),.*/\1/'
+  grep "$1" "${RUDDER_JSON}" 2>/dev/null | sed 's/.*"'$1'" *: *\(.*\),.*/\1/'
 }
 
 # stat -c %y compatible with other unices
@@ -159,18 +159,44 @@ modification_time() {
   fi
 }
 
-# Check that a bootstrap is necessary
-bootstrap_check() {
+empty_policies() {
+  inputs="${RUDDER_VAR}/cfengine-community/inputs"
+
+  empty="bundle agent main { }"
+  echo "${empty}" > "${inputs}/promises.cf"
+  echo "${empty}" > "${inputs}/failsafe.cf"
+  cp ${RUDDER_DIR}/share/bootstrap-promises/rudder.json "${inputs}/"
+}
+
+# Try to reset to "initial policies" or equivalent
+reset_policies() {
+  inputs="${RUDDER_VAR}/cfengine-community/inputs"
+
   # create folder if it doesn't exist
-  if [ ! -d "${RUDDER_VAR}/cfengine-community/inputs" ]
-  then
-    mkdir -p ${RUDDER_VAR}/cfengine-community/inputs
+  if [ ! -d "${inputs}" ]; then
+      mkdir -p "${inputs}"
   fi
 
-  if [ "$(ls -A ${RUDDER_VAR}/cfengine-community/inputs)" = "" ]
-  then
-    cp ${RUDDER_DIR}/share/bootstrap-promises/* ${RUDDER_VAR}/cfengine-community/inputs/
-    rudder agent update
+  rm -rf "${inputs}/*"
+
+  if is_https_only; then
+    empty_policies
+  else
+    if [ "${UUID}" = "root" ]; then
+      # Initial promises: the update will copy ncf
+      cp -r ${RUDDER_DIR}/share/initial-promises/* "${inputs}/"
+    else
+      cp ${RUDDER_DIR}/share/bootstrap-promises/* "${inputs}/"
+    fi
+    # Only update in CFEngine mode, in HTTPS we are already in "initial policies".
+    rudder agent update "$@"
+  fi
+}
+
+# Setup initial policies if relevant
+bootstrap_check() {
+  if [ ! -f "${RUDDER_VAR}/cfengine-community/inputs/promises.cf" ]; then
+    reset_policies "$@"
   fi
 }
 

@@ -65,9 +65,7 @@ rm -rf /var/rudder/tmp/policies*
 rm -f /var/rudder/tmp/*.etag
 
 # Try to remove everything that can block
-# - restore initial promises
-[ "$VERBOSE" = true ] && echo "Restoring initial policies..."
-rm -rf ${RUDDER_VAR}/cfengine-community/inputs/*
+
 # - remove ncf
 rm -rf ${RUDDER_VAR}/ncf/common/*
 rm -rf ${RUDDER_VAR}/ncf/local/*
@@ -85,22 +83,19 @@ rm -f ${RUDDER_VAR}/cfengine-community/*lock
 [ "$VERBOSE" = true ] && echo "Enabling the agent if needed..."
 rm -f ${RUDDER_DIR}/etc/disable-agent
 
+# - Restore bootstrap/initial policies
 # - bootstrap agent (but not on root server without initial promises)
-if [ -f "${RUDDER_VAR}/cfengine-community/policy_server.dat" ] && [ "${UUID}" != "root" -o -d ${RUDDER_DIR}/share/initial-promises/ ]
+if [ -f "${RUDDER_VAR}/cfengine-community/policy_server.dat" ]
 then
-  if [ "${UUID}" != "root" ]
-  then
-    # Bootstrap promises: the update should do the rest
-    cp ${RUDDER_DIR}/share/bootstrap-promises/* ${RUDDER_VAR}/cfengine-community/inputs/
-
-  else
-    # Initial promises: the update should copy ncf
-    cp -r ${RUDDER_DIR}/share/initial-promises/* ${RUDDER_VAR}/cfengine-community/inputs/
-  fi
   # Update to make sure we have working policies
   [ "$VERBOSE" = true ] && echo "Getting initial policies..."
   # $@ to pass options through
-  rudder agent update "$@"
+  if is_https_only && [ "${UUID}" = "root" ]; then
+    [ "${QUIET}" = false ] && echo "Cannot reset policies on root server in https-only mode"
+    exit 1
+  else
+    reset_policies "$@"
+  fi
 else
   [ "${QUIET}" = false ] && echo "No policy server file, cannot update"
   exit 1
