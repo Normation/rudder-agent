@@ -117,7 +117,7 @@ init_commands() {
   fi
 }
 
-# To be used instead of the hostame command
+# To be used instead of the hostname command
 get_hostname() {
   # Try to mimic CFEngine behavior, at least on Linux
   # Necessary for log files names
