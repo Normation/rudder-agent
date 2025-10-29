@@ -420,6 +420,18 @@ check_varspace_or_exit() {
   fi
 }
 
+check_hooks() {
+  hooks_dir="/var/rudder/system-update/hooks.d"
+  new_dir="/opt/rudder/var/system-update-hooks.d"
+  # check for system update hooks
+  if [ -e "${hooks_dir}" ] && ! [ -L "${hooks_dir}" ]
+  then
+    mkdir -p "${new_dir}"
+    mv "${hooks_dir}"/* "${new_dir}"/
+    rmdir "${hooks_dir}"
+    ln -s "${new_dir}" "${hooks_dir}"
+  fi
+}
 
 #########################
 #### TEST start here ####
@@ -441,6 +453,9 @@ then
   # Check for free space and stop if there is not enough
   check_varspace_or_exit
   [ "${STOP_AT}" = "varspace" ] && exit
+  # check for migrated hooks
+  check_hooks
+  [ "${STOP_AT}" = "hooks" ] && exit
   # Do not go further if the agent is disabled
   [ -f "${CFE_DISABLE_FILE}" ] && exit 0
   # Important CFEngine input files must exist and pass cf-promises test
