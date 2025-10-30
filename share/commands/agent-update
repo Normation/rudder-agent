@@ -188,6 +188,9 @@ if [ "${PROTOCOL}" = "https" ] && [ "${UUID}" != 'root' ]
 then
   update
   code=$?
+  if [ "${code}" = "0" ]; then
+    touch /var/rudder/cfengine-community/last_successful_inputs_update
+  fi
 else
   # The awk part is the workaround for update not exiting with a 1 in case of error
   # It will be necessary to remove it once the exit is back in cf-agent
