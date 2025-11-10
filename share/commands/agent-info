@@ -79,9 +79,16 @@ if type systemctl > /dev/null; then
   if ! systemctl -q is-active "rudder-cf-execd"; then
     echo ""
     echo "Warning: the 'rudder-cf-execd' service is stopped so the agent is"
-    echo "         not scheduled automatically. Enable and start it with:"
+    echo "         not scheduled automatically. Enable it with:"
     echo ""
-    echo "           systemctl enable -s rudder-cf-execd"
+    echo "           systemctl enable rudder-cf-execd"
+  fi
+  if [ "$(systemctl is-enabled rudder-cf-execd)" = "masked" ]; then
+    echo ""
+    echo "Warning: the 'rudder-cf-execd' service is masked the agent is"
+    echo "         not scheduled automatically and invisible . Unmask it with:"
+    echo ""
+    echo "           systemctl unmask rudder-cf-execd"
   fi
 fi
 
