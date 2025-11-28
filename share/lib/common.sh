@@ -180,16 +180,21 @@ reset_policies() {
   rm -rf "${inputs}/*"
 
   if is_https_only; then
+    # No "agent update" in HTTPS as we are already in "initial policies". Just create empty policies
+    # to get out of the reset loop.
     empty_policies
   else
     if [ "${UUID}" = "root" ]; then
-      # Initial promises: the update will copy ncf
-      cp -r ${RUDDER_DIR}/share/initial-promises/* "${inputs}/"
+      # On root, during agent postinstall, initial-promises are not available yet.
+      # Do nothing and let the next agent run handle it.
+      if [ -d "${RUDDER_DIR}/share/initial-promises" ]; then
+        cp -r ${RUDDER_DIR}/share/initial-promises/* "${inputs}/"
+        rudder agent update "$@"
+      fi
     else
       cp ${RUDDER_DIR}/share/bootstrap-promises/* "${inputs}/"
+      rudder agent update "$@"
     fi
-    # Only update in CFEngine mode, in HTTPS we are already in "initial policies".
-    rudder agent update "$@"
   fi
 }
 
