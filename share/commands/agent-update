@@ -97,7 +97,7 @@ download_and_extract() {
     # cleanup old cruft
     rm -rf "${DEST}.old" "${DEST}.new"
     # extract in new place
-    tar xf "${ARCHIVE}" -C $(dirname "${DEST}") --no-same-owner --transform "s|policies_next|inputs|" --transform "s|^\([^/]\+\)|\1.new|"
+    (umask 077 && tar xf "${ARCHIVE}" -C $(dirname "${DEST}") --no-same-owner --no-same-permissions --transform "s|policies_next|inputs|" --transform "s|^\([^/]\+\)|\1.new|")
     code=$?
     if [ $code -ne 0 ]; then
       # in case of error, also cleanup etag to force a re-download
