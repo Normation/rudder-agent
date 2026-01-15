@@ -1,6 +1,6 @@
 #!/bin/sh
 # @description restore a file as it was before Rudder modification
-# @man This command replace the file with is backup and make a new backup for de current version
+# @man This command replace the file with is backup and make a new backup for the current version
 # @man +
 # @man *Options*:
 # @man +
