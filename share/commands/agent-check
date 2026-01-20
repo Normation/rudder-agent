@@ -433,6 +433,19 @@ check_hooks() {
   fi
 }
 
+check_modules() {
+  old_dir="/var/rudder/cfengine-community/modules"
+  new_dir="/opt/rudder/var/modules"
+  # check for cfengine modules
+  if [ -e "${old_dir}" ] && ! [ -L "${old_dir}" ]
+  then
+    mkdir -p "${new_dir}"
+    mv "${old_dir}"/* "${new_dir}"/
+    rmdir "${old_dir}"
+    ln -s "${new_dir}" "${old_dir}"
+  fi
+}
+
 #########################
 #### TEST start here ####
 #########################
@@ -455,6 +468,8 @@ then
   [ "${STOP_AT}" = "varspace" ] && exit
   # check for migrated hooks
   check_hooks
+  # check for migrated modules
+  check_modules
   [ "${STOP_AT}" = "hooks" ] && exit
   # Do not go further if the agent is disabled
   [ -f "${CFE_DISABLE_FILE}" ] && exit 0
