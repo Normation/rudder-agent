@@ -54,7 +54,7 @@ while getopts "iIvdqcp" opt; do
     p)
       # - remove state
       [ "$VERBOSE" = true ] && echo "Resetting package cache..."
-      rm -f ${RUDDER_VAR}/cfengine-community/state/package_*
+      rm -f ${RUDDER_VAR}/cfengine-community/state/packages_*
       exit $?
       ;;
   esac
