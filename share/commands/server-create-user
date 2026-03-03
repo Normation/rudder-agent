@@ -46,7 +46,7 @@ then
   if [ -z "${ADMIN_PASSWORD}" ]; then
     read -p "Password: " -s ADMIN_PASSWORD
   fi
-  hash=$(echo -n "${ADMIN_PASSWORD}" |  argon2 $(openssl rand 16) -id -e| tr -d ':\n')
+  hash=$(echo -n "${ADMIN_PASSWORD}" |  argon2 $(openssl rand -hex 16) -id -e| tr -d ':\n')
 else
   # bcrypt (12 cost)
   hash=$(htpasswd -n${PASS_OPT}BC 12 "" ${ADMIN_PASSWORD}| tr -d ':\n')
