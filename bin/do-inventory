@@ -3,9 +3,10 @@
 set -e
 
 if [ -z "$2" ]; then
-  echo "Usage: $0 <first_time> <verbose>"
+  echo "Usage: $0 <first_time> <verbose> <debug_client>"
   echo "  first_time: 'true' for a new node"
   echo "  verbose: 'true' for a verbose fusion run"
+  echo "  debug_client: 'true' to debug rudder-client"
   exit 1
 fi
 
@@ -22,6 +23,7 @@ trap 'anomaly_handler ${LINENO}' EXIT INT TERM
 
 first_time="$1"
 verbose="$2"
+debug_client="$3"
 
 workdir="/var/rudder/cfengine-community/inputs"
 bindir="/opt/rudder/bin"
@@ -33,8 +35,15 @@ if [ "${verbose}" = "true" ]; then
 else
   inventory_opts=""
 fi
+if [ "${debug_client}" = "true" ]; then
+  client_opts="-v"
+else
+  client_opts=""
+fi
 if [ "${first_time}" = "true" ]; then
   endpoint="/inventories/"
+  # at bootstrap time, there is no rudder.json to provide this information
+  client_opts="${client_ops} -u rudder:rudder"
 else
   endpoint="/inventory-updates/"
 fi
@@ -58,8 +67,8 @@ STEP="Compressing inventory"
 gzip -fq ${inventory_path}
 
 STEP="Sending inventory"
-${bindir}/rudder-client -e ${endpoint} -- --upload-file ${inventory_path}.gz -o /dev/null
-${bindir}/rudder-client -e ${endpoint} -- --upload-file ${inventory_path}.sign -o /dev/null
+${bindir}/rudder-client ${client_opts} -e ${endpoint} -- --upload-file ${inventory_path}.gz -o /dev/null
+${bindir}/rudder-client ${client_opts} -e ${endpoint} -- --upload-file ${inventory_path}.sign -o /dev/null
 touch /var/rudder/tmp/inventory_sent
 
 echo "Inventory Done"
