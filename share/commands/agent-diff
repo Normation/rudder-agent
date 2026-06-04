@@ -51,19 +51,19 @@ if [ "${BASE_NAME}" = "" ]
 then
   if [ "${nth}" != "" ]
   then
-    BASE_NAME=`ls -tr "${BASE_PATH}" | grep "^${CFILE}_.*_cf_before_edit" | tail -n ${OPTARG} | head -n 1`
+    BASE_NAME=`ls -tr "${BASE_PATH}" | grep -E "^${CFILE}_.*_(cf_before_edit|cfsaved)" | tail -n ${OPTARG} | head -n 1`
   elif [ "${timestamp}" != "" ]
   then
-    for file in `ls -tr "${BASE_PATH}" | grep "^${CFILE}_.*_cf_before_edit"`
+    for file in `ls -tr "${BASE_PATH}" | grep -E "^${CFILE}_.*_(cf_before_edit|cfsaved)"`
     do
-      file_ts=`printf ${file} | sed "s/${CFILE}_\\([0-9]*\\)_.*_cf_before_edit/\\1/"`
+      file_ts=`printf ${file} | sed "s/${CFILE}_\\([0-9]*\\)_.*_\\(cf_before_edit\\|cfsaved\\)/\\1/"`
       if [ ${timestamp} -le ${file_ts} ]
       then
         BASE_NAME="${file}"
       fi
     done
   else
-    BASE_NAME=$(ls -tr "${BASE_PATH}" | grep "^${CFILE}_.*_cf_before_edit" | tail -n 1)
+    BASE_NAME=$(ls -tr "${BASE_PATH}" | grep -E "^${CFILE}_.*_(cf_before_edit|cfsaved)" | tail -n 1)
   fi
 fi
 
