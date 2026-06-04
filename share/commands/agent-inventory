@@ -44,11 +44,12 @@ OPTS=""
 optmax=0
 err=0
 VERBOSE_INVENTORY="false"
+DEBUG_CLIENT="false"
 # err=1 -> we have a parameter with an argument
 # err=2 -> we have reached the end (or we have invalid parameters)
 while [ ${err} -lt 2 ]
 do
-  getopts ":fv" opt # ':' -> ignore getopt errors
+  getopts ":fvd" opt # ':' -> ignore getopt errors
   res=$?
   [ ${OPTIND} -lt ${optmax} ] && break # OPTIND value has wrapped, we reached the end of parameters
   if [ ${res} -eq 0 ]
@@ -57,6 +58,10 @@ do
     if [ "${opt}" = "v" ]; then
       OPTS="-v ${OPTS}"
       VERBOSE_INVENTORY="true"
+    fi
+    if [ "${opt}" = "d" ]; then
+      OPTS="-d ${OPTS}"
+      DEBUG_CLIENT="true"
     fi
     err=0
   else
@@ -74,11 +79,15 @@ fi
 if is_https_only; then
   # if this file exists, then we have regular promises, then initial inventory has been already sent
   if [ -f /var/rudder/cfengine-community/inputs/rudder.json ]; then
-    INITIAL_INVENTORY="false"
+    if [ "$(rudder_json_bool_value INITIAL)" = "true" ]; then
+      INITIAL_INVENTORY="true"
+    else
+      INITIAL_INVENTORY="false"
+    fi
   else
     INITIAL_INVENTORY="true"
   fi
-  do-inventory "${INITIAL_INVENTORY}" "${VERBOSE_INVENTORY}"
+  do-inventory "${INITIAL_INVENTORY}" "${VERBOSE_INVENTORY}" "${DEBUG_CLIENT}"
 else
   # Add the class to force inventory if requested
   [ ${FORCE} -eq 1 ] && OPTS="-D ignore_disable_inventory"
