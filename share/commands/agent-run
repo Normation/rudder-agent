@@ -86,6 +86,7 @@ while getopts "uiIvldqgwrRNcTb:D:feE" opt; do
       DISPLAY_INFO=1
       QUIET=0
       UPDATE_OPTIONS="${UPDATE_OPTIONS} -i"
+      FULL_COMPLIANCE=1
       ;;
     v)
       VERBOSITY="-v ${VERBOSE_CLASS}"
