@@ -222,6 +222,18 @@ check_and_fix_cfengine_processes() {
   # rudder-cf-execd must be enabled in systemd to be able to start it
   service_enable rudder-cf-execd enable
 
+  # if cf-agent is running for itoo long, it is dead!
+  # do this first since it might bring down some cf-execd with it
+  ${PS_COMMAND} | grep -E "(${RUDDER_DIR}|${CFE_DIR})/bin/cf-agent" | awk '{print $2}' |
+    while read pid # pid is the 2nd field in all our PS_COMMAND
+    do
+      seconds=$(ps -o etimes --no-headers -p "${pid}")
+      # 3600*24 = 86400 = 1 day
+      if [ "${seconds}" -gt 86400 ]; then
+        kill -9 "${pid}"
+      fi
+    done
+
   # If there are more than one cf-execd process, we must kill them
   # A standard kill won't kill them, so the -9 is necessary to make sure they are stopped
   # They will be restarted by the check below, if the disable file is not set
@@ -240,6 +252,11 @@ check_and_fix_cfengine_processes() {
     rudder agent stop -q ${OPT}
     rudder agent start -q ${OPT}
     [ "$QUIET" = false ] && echo " Done"
+  fi
+
+  # if we are on systemd, systemctl start make sure the service is running without restarting unnecessarily
+  if type systemctl >/dev/null 2>/dev/null; then
+    systemctl start rudder-cf-execd.service
   fi
 
   # List the CFEngine processes running
