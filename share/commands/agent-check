@@ -324,6 +324,29 @@ check_and_fix_rudder_uuid() {
 
 }
 
+# Check the validity of the policies
+check_policies_valid() {
+  # Start with a simple syntax check
+  if ! ${RUDDER_DIR}/bin/cf-promises -f failsafe.cf > /dev/null || ! ${RUDDER_DIR}/bin/cf-promises > /dev/null
+  then
+    return 1
+  fi
+
+  # Now cf-promises does not detect undefined bundles, add a check on previous run output.
+  # But only check if the previous run happened *after* the latest policy reset
+  # to avoid resetting the policies uselessly.
+  previous="${CFE_DIR}/outputs/previous"
+  run_time=$(stat -c %Y "${previous}")
+  # This catches the latest policy reset
+  pol_time=$(stat -c %Y "${CFE_DIR}/inputs/promises.cf")
+  if [ "$run_time" -ge "$pol_time" ]; then
+    if grep -q "Fatal CFEngine error: Aborting due to missing bundle" "${previous}" 2> /dev/null
+    then
+      return 1
+    fi
+  fi
+}
+
 # Important CFEngine input files must exist and pass cf-promises test
 # This can run rudder agent update if necessary which will bootstrap then rerun to update ncf
 check_and_fix_inputs() {
@@ -335,7 +358,7 @@ check_and_fix_inputs() {
     [ "$QUIET" = false ] && echo " Done"
   fi
   if [ ! -f "${CFE_DISABLE_FILE}" ]; then
-    if ! ${RUDDER_DIR}/bin/cf-promises -f failsafe.cf > /dev/null || ! ${RUDDER_DIR}/bin/cf-promises > /dev/null
+    if ! check_policies_valid
     then
       [ "$QUIET" = false ] && printf "${YELLOW}WARNING${NORMAL}: Policies invalid, resetting to initial policies and updating..."
       rudder agent reset ${OPT}
