@@ -94,8 +94,11 @@ then
 fi
 
 # check ldap connection
-if ! ldapsearch -H ldap://${LDAP_SERVER}:${LDAP_PORT}/ -D ${LDAP_USER} -w ${LDAP_PASSWORD} -x -LLL  -b "cn=rudder-configuration" -s base dn | grep "dn: cn=rudder-configuration" > /dev/null
-
+LDAP_PASSWORD_FILE="$(mktemp)"
+chmod 600 "${LDAP_PASSWORD_FILE}"
+trap 'rm -f "${LDAP_PASSWORD_FILE}"' EXIT
+printf '%s' "${LDAP_PASSWORD}" > "${LDAP_PASSWORD_FILE}"
+if ! ldapsearch -H ldap://${LDAP_SERVER}:${LDAP_PORT}/ -D ${LDAP_USER} -y "${LDAP_PASSWORD_FILE}" -x -LLL  -b "cn=rudder-configuration" -s base dn | grep "dn: cn=rudder-configuration" > /dev/null
 then
   echo "Cannot connect to LDAP server"
   exit 2
