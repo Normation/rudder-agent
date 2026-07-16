@@ -39,6 +39,10 @@ then
   checked_api_call "http://127.0.0.1:8080/rudder/api/latest/system/reload/techniques" "reload techniques from files" "${DISPLAY_COMMAND}" "${expected}" "${curl_opt}"
 else
   echo "Web interface is down - requested a technique reload at its restart"
-  touch ${RUDDER_DIR}/etc/force_technique_reload
+  if [ "$(id -un)" = "rudder-webapp" ]; then
+    touch ${RUDDER_VAR}/lib/webapp/force_technique_reload
+  else
+    su -s /bin/sh rudder-webapp -c "touch ${RUDDER_VAR}/lib/webapp/force_technique_reload"
+  fi
 fi
 

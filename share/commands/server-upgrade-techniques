@@ -333,7 +333,11 @@ then
     rudder server reload-techniques
   else
     # webapp is down, so we have to touch file for reloading after reboot
-    touch ${RUDDER_DIR}/etc/force_technique_reload
+    if [ "$(id -un)" = "rudder-webapp" ]; then
+      touch ${RUDDER_VAR}/lib/webapp/force_technique_reload
+    else
+      su -s /bin/sh rudder-webapp -c "touch ${RUDDER_VAR}/lib/webapp/force_technique_reload"
+    fi
   fi
   echo "Techniques have been updated, and update branch set to current state of the Techniques"
 fi
