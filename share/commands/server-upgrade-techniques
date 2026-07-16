@@ -218,14 +218,6 @@ then
   exit 1
 fi
 
-# rudder-fix-repository-permissions needs to run as root, and we drop to
-# rudder-webapp for the git commands, so this command has to be run as root.
-if [ "$(id -u)" -ne 0 ]
-then
-  echo "This command must be run as root"
-  exit 1
-fi
-
 if [ "${AUTO_UPDATE_TECHNIQUE}" = "true" ]
 then
   do_autoupdate_technique_library
