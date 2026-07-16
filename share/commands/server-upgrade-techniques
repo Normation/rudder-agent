@@ -41,6 +41,19 @@ DURING_UPGRADE=false
 # detect if any option has been passed to the script
 ANY_OPTION_DEFINED=false
 
+# The configuration repository is owned by rudder-webapp, so every command
+# touching it (git in particular) has to run as this user.
+function run_as_webapp()
+{
+  su -s /bin/sh rudder-webapp -c "$(printf '%q ' "$@")"
+}
+
+# git wrapper running as rudder-webapp in the configuration repository
+function git_repo()
+{
+  run_as_webapp git -C "${REPO}" "$@"
+}
+
 # Output usage
 function usage()
 {
@@ -249,17 +262,17 @@ cd "${REPO}"
 if [ "${UPGRADE}" = "true" ]
 then
   # Upgrading needs the upgrade branch
-  if git rev-parse --verify --quiet "${UPDATE_BRANCH}" > /dev/null
+  if git_repo rev-parse --verify --quiet "${UPDATE_BRANCH}" > /dev/null
   then
     # Checkout can fail because of unstaged change
-    if git checkout "${UPDATE_BRANCH}"
+    if git_repo checkout "${UPDATE_BRANCH}"
     then
-      cp -a "${BASE}"/* techniques/
+      run_as_webapp cp -a "${BASE}"/* "${REPO}/techniques/"
       ${RUDDER_DIR}/bin/rudder-fix-repository-permissions
-      git add techniques/
-      git commit -q -m "${TAG_MESSAGE} Standard technique upgrade from version ${package_version} on $(date +"${DATE_FORMAT}")"
-      git checkout master
-      git merge "${UPDATE_BRANCH}"
+      git_repo add techniques/
+      git_repo commit -q -m "${TAG_MESSAGE} Standard technique upgrade from version ${package_version} on $(date +"${DATE_FORMAT}")"
+      git_repo checkout master
+      git_repo merge "${UPDATE_BRANCH}"
       ${RUDDER_DIR}/bin/rudder-fix-repository-permissions
       # TODO Now's a good time for a user shell
       rudder server reload-techniques
@@ -280,7 +293,7 @@ fi
 if [ "${INITIAL}" = "true" ]
 then
   echo "Creating initial version of the branch for Techniques update"
-  if git rev-parse --verify --quiet "${UPDATE_BRANCH}" > /dev/null
+  if git_repo rev-parse --verify --quiet "${UPDATE_BRANCH}" > /dev/null
   then
     echo "The upgrade branch '${UPDATE_BRANCH}' already exists, aborting"
     exit 1
@@ -297,9 +310,9 @@ then
       echo "Type ctrl-c to abort now and return to continue."
       read a
     fi
-    PARENT_COMMIT=$(git log --pretty=oneline --no-abbrev-commit -- techniques | tail -1 | awk '{print $1}')
+    PARENT_COMMIT=$(git_repo log --pretty=oneline --no-abbrev-commit -- techniques | tail -1 | awk '{print $1}')
   fi
-  git branch "${UPDATE_BRANCH}" "${PARENT_COMMIT}"
+  git_repo branch "${UPDATE_BRANCH}" "${PARENT_COMMIT}"
   # Fix permissions
   ${RUDDER_DIR}/bin/rudder-fix-repository-permissions
   exit 0
@@ -315,29 +328,25 @@ then
     echo "Type ctrl-c to abort now and return to continue."
     read a
   fi
-  cp -a "${BASE}"/* techniques/
+  run_as_webapp cp -a "${BASE}"/* "${REPO}/techniques/"
   ${RUDDER_DIR}/bin/rudder-fix-repository-permissions
-  git add techniques/
-  git reset HEAD techniques/**/resources/*
-  git commit -q -m "${TAG_MESSAGE} Forced technique upgrade from version ${package_version} on $(date +"${DATE_FORMAT}")"
+  git_repo add techniques/
+  git_repo reset HEAD techniques/**/resources/*
+  git_repo commit -q -m "${TAG_MESSAGE} Forced technique upgrade from version ${package_version} on $(date +"${DATE_FORMAT}")"
   # consider this commit as the common ancestor for future update
   # TODO: better ?
-  if git rev-parse --verify --quiet "${UPDATE_BRANCH}" > /dev/null
+  if git_repo rev-parse --verify --quiet "${UPDATE_BRANCH}" > /dev/null
   then
     # it's easier to remove then create the branch
-    git branch -D "${UPDATE_BRANCH}" > /dev/null
+    git_repo branch -D "${UPDATE_BRANCH}" > /dev/null
   fi
-  git branch "${UPDATE_BRANCH}"
+  git_repo branch "${UPDATE_BRANCH}"
   if [ "${DURING_UPGRADE}" = "false" ]
   then
     rudder server reload-techniques
   else
     # webapp is down, so we have to touch file for reloading after reboot
-    if [ "$(id -un)" = "rudder-webapp" ]; then
-      touch ${RUDDER_VAR}/lib/webapp/force_technique_reload
-    else
-      su -s /bin/sh rudder-webapp -c "touch ${RUDDER_VAR}/lib/webapp/force_technique_reload"
-    fi
+    run_as_webapp touch "${RUDDER_VAR}/lib/webapp/force_technique_reload"
   fi
   echo "Techniques have been updated, and update branch set to current state of the Techniques"
 fi
