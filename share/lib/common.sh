@@ -180,9 +180,9 @@ reset_policies() {
   rm -rf "${inputs}/*"
 
   if is_https_only; then
-    # No "agent update" in HTTPS as we are already in "initial policies". Just create empty policies
-    # to get out of the reset loop.
+    # ensure the files exist even in case of update error to avoid getting in a loop
     empty_policies
+    rudder agent update "$@"
   else
     if [ "${UUID}" = "root" ]; then
       # On root, during agent postinstall, initial-promises are not available yet.
