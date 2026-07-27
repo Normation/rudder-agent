@@ -159,15 +159,6 @@ modification_time() {
   fi
 }
 
-empty_policies() {
-  inputs="${RUDDER_VAR}/cfengine-community/inputs"
-
-  empty="bundle agent main { }"
-  echo "${empty}" > "${inputs}/promises.cf"
-  echo "${empty}" > "${inputs}/failsafe.cf"
-  cp ${RUDDER_DIR}/share/bootstrap-promises/rudder.json "${inputs}/"
-}
-
 # Try to reset to "initial policies" or equivalent
 reset_policies() {
   inputs="${RUDDER_VAR}/cfengine-community/inputs"
@@ -179,22 +170,16 @@ reset_policies() {
 
   rm -rf "${inputs}/*"
 
-  if is_https_only; then
-    # No "agent update" in HTTPS as we are already in "initial policies". Just create empty policies
-    # to get out of the reset loop.
-    empty_policies
-  else
-    if [ "${UUID}" = "root" ]; then
-      # On root, during agent postinstall, initial-promises are not available yet.
-      # Do nothing and let the next agent run handle it.
-      if [ -d "${RUDDER_DIR}/share/initial-promises" ]; then
-        cp -r ${RUDDER_DIR}/share/initial-promises/* "${inputs}/"
-        rudder agent update "$@"
-      fi
-    else
-      cp ${RUDDER_DIR}/share/bootstrap-promises/* "${inputs}/"
+  if [ "${UUID}" = "root" ]; then
+    # On root, during agent postinstall, initial-promises are not available yet.
+    # Do nothing and let the next agent run handle it.
+    if [ -d "${RUDDER_DIR}/share/initial-promises" ]; then
+      cp -r ${RUDDER_DIR}/share/initial-promises/* "${inputs}/"
       rudder agent update "$@"
     fi
+  else
+    cp ${RUDDER_DIR}/share/bootstrap-promises/* "${inputs}/"
+    rudder agent update "$@"
   fi
 }
 
