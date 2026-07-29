@@ -57,19 +57,19 @@ if [ "${BASE_NAME}" = "" ]
 then
   if [ "${nth}" != "" ]
   then
-    BASE_NAME=`ls -tr "${BASE_PATH}" | grep "^${CFILE}_.*_cf_before_edit" | tail -n ${OPTARG} | head -n 1`
+    BASE_NAME=`ls -tr "${BASE_PATH}" | grep -E "^${CFILE}_.*_(cf_before_edit|cfsaved)" | tail -n ${OPTARG} | head -n 1`
   elif [ "${timestamp}" != "" ]
   then
-    for file in `ls -tr "${BASE_PATH}" | grep "^${CFILE}_.*_cf_before_edit"`
+    for file in `ls -tr "${BASE_PATH}" | grep -E "^${CFILE}_.*_(cf_before_edit|cfsaved)"`
     do
-      file_ts=`printf ${file} | sed "s/${CFILE}_\\([0-9]*\\)_.*_cf_before_edit/\\1/"`
+      file_ts=`printf ${file} | sed "s/${CFILE}_\\([0-9]*\\)_.*_\\(cf_before_edit\\|cfsaved\\)/\\1/"`
       if [ ${timestamp} -le ${file_ts} ]
       then
         BASE_NAME="${file}"
       fi
     done
   else
-    BASE_NAME=$(ls -tr "${BASE_PATH}" | grep "^${CFILE}_.*_cf_before_edit" | tail -n 1)
+    BASE_NAME=$(ls -tr "${BASE_PATH}" | grep -E "^${CFILE}_.*_(cf_before_edit|cfsaved)" | tail -n 1)
   fi
 fi
 
@@ -79,7 +79,7 @@ then
   exit 1
 fi
 
-BACKUP_NAME="${CFILE}_`LANG=C date +"%s_%a_%b_%_d_%H_%M_%S_%Y" | sed 's/ /_/'`_cf_before_edit"
+BACKUP_NAME="${CFILE}_`LANG=C date +"%s_%a_%b_%_d_%H_%M_%S_%Y" | sed 's/ /_/'`_`echo "${BASE_NAME}" | sed 's/.*_\(cf_before_edit\|cfsaved\)$/\1/'`"
 cp "${FILE}" "${BASE_PATH}/${BACKUP_NAME}"
 cp ${FORCE} "${BASE_PATH}/${BASE_NAME}" "${FILE}"
 if [ $? -eq 130 ] # user refused to copy
