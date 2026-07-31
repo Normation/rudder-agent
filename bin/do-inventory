@@ -25,7 +25,7 @@ first_time="$1"
 verbose="$2"
 debug_client="$3"
 
-workdir="/var/rudder/cfengine-community/inputs"
+workdir="/var/rudder/cfengine-community"
 bindir="/opt/rudder/bin"
 date=$(LANG=C /bin/date --utc --iso-8601=seconds)
 uuid=$(cat /opt/rudder/etc/uuid.hive)
