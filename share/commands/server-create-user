@@ -15,7 +15,7 @@
 set -o pipefail
 set -e
 
-USERFILE="${RUDDER_DIR}/etc/rudder-users.xml"
+USERFILE="${RUDDER_DIR}/etc/webapp/rudder-users.xml"
 USER="admin"
 PASS_OPT=""
 
