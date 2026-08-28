@@ -241,14 +241,14 @@ check_and_fix_cfengine_processes() {
   CF_EXECD_RUNNING=`${PS_COMMAND} | grep -E "(${RUDDER_DIR}|${CFE_BIN})/cf-execd" | sed -e '/grep/d' | cat`
   NB_CF_EXECD_RUNNING=`echo "${CF_EXECD_RUNNING}" | sed -e '/^$/d' | wc -l`
   if [ ${NB_CF_EXECD_RUNNING} -gt 6 ]; then
-    [ "$QUIET" = false ] && printf "${YELLOW}WARNING${NORMAL}: Too many instance of Rudder cf-execd processes running. Killing them..."
+    printf "${YELLOW}WARNING${NORMAL}: Too many instance of Rudder cf-execd processes running. Killing them..."
     echo "${CF_EXECD_RUNNING}" | awk 'BEGIN { OFS=" "} {print $2 }' | xargs kill -9 || true
     [ "$QUIET" = false ] && echo " Done"
   fi
 
   # If no disable file AND no process of cf-execd, then relaunch the service
   if [ ! -f "${CFE_DISABLE_FILE}" ] && [ "${NB_CF_EXECD_RUNNING}" -eq 0 ]; then
-    [ "$QUIET" = false ] && printf "INFO: No disable file detected and no agent executor process either. Restarting agent service..."
+    printf "INFO: No disable file detected and no agent executor process either. Restarting agent service..."
     rudder agent stop -q ${OPT}
     rudder agent start -q ${OPT}
     [ "$QUIET" = false ] && echo " Done"
@@ -268,7 +268,7 @@ check_and_fix_cfengine_processes() {
   # If there are more than 11 agent/executor processes, we should kill them, and purge the lock database
   # 11 means 1 cf-execd + 5 cf-execd spawn + 5 cf-agent
   if [ "${NB_CF_PROCESS_RUNNING}" -gt 11 ]; then
-    [ "$QUIET" = false ] && printf "${YELLOW}WARNING${NORMAL}: Too many instance of Agent processes running. Killing them, and purging the Agent lock database..."
+    printf "${YELLOW}WARNING${NORMAL}: Too many instance of Agent processes running. Killing them, and purging the Agent lock database..."
     echo "${CF_PROCESS_RUNNING}" | awk 'BEGIN { OFS=" "} {print $2 }' | xargs kill -9 || true
     rudder agent stop ${OPT}
     clean_cf_lock_files
@@ -291,7 +291,7 @@ check_and_fix_last_update() {
     # In both case, do nothing
     :
   elif test `find ${LAST_UPDATE_FILE} -mmin +${CHECK_INTERVAL}`; then
-    [ "$QUIET" = false ] && printf "${YELLOW}WARNING${NORMAL}: The file ${LAST_UPDATE_FILE} is older than twice ${CHECK_INTERVAL} minutes, the agent is probably stuck. Purging the CFEngine lock database..."
+    printf "${YELLOW}WARNING${NORMAL}: The file ${LAST_UPDATE_FILE} is older than twice ${CHECK_INTERVAL} minutes, the agent is probably stuck. Purging the CFEngine lock database..."
     clean_cf_lock_files
     [ "$QUIET" = false ] && echo " Done";
   fi
@@ -304,7 +304,7 @@ check_and_fix_cf_lock() {
     CF_LOCK_SIZE=$(perl -e'@a=stat $ARGV[0]; print $a[7]' "${CFE_DIR}/state/cf_lock.lmdb")
 
     if [ "${CF_LOCK_SIZE}" -ge "${MAX_CF_LOCK_SIZE}" ]; then
-      [ "$QUIET" = false ] && printf "${YELLOW}WARNING${NORMAL}: The file ${CFE_DIR}/state/cf_lock.lmdb is too big (${CF_LOCK_SIZE} bytes), purging it..."
+      printf "${YELLOW}WARNING${NORMAL}: The file ${CFE_DIR}/state/cf_lock.lmdb is too big (${CF_LOCK_SIZE} bytes), purging it..."
       clean_cf_lock_files
       [ "$QUIET" = false ] && echo " Done"
     fi
@@ -330,7 +330,7 @@ check_and_fix_rudder_uuid() {
   CHECK_UUID=`grep -E "^$REGEX|^root" ${UUID_FILE} | wc -l`
   # If the UUID is not valid, regenerate it
   if [ ${CHECK_UUID} -ne 1 ]; then
-    [ "$QUIET" = false ] && printf "${YELLOW}WARNING${NORMAL}: Creating a new UUID for Rudder as the existing one is invalid..."
+    printf "${YELLOW}WARNING${NORMAL}: Creating a new UUID for Rudder as the existing one is invalid..."
     # Keep a backup of UUID even if it is not valid
     mkdir -p "${BACKUP_DIR}"
     cp -f ${RUDDER_DIR}/etc/uuid.hive ${BACKUP_DIR}/uuid-`date +%Y%m%d`.hive
@@ -377,7 +377,7 @@ check_and_fix_inputs() {
   if [ ! -f "${CFE_DISABLE_FILE}" ]; then
     if ! check_policies_valid
     then
-      [ "$QUIET" = false ] && printf "${YELLOW}WARNING${NORMAL}: Policies invalid, resetting to initial policies and updating..."
+      printf "${YELLOW}WARNING${NORMAL}: Policies invalid, resetting to initial policies and updating..."
       rudder agent reset ${OPT}
       [ "$QUIET" = false ] && echo " Done"
     fi
@@ -455,7 +455,7 @@ check_varspace_or_exit() {
       systemctl stop ${POSTGRESQL_SERVICE_NAME}
       echo "FATAL: PostgreSQL has been shut down to prevent data corruption" | logger -s
     fi
-    [ "$QUIET" = false ] && printf "${RED}ERROR${NORMAL}: Rudder couldn't find enough space to run and stopped services. Please free up space!\n"
+    printf "${RED}ERROR${NORMAL}: Rudder couldn't find enough space to run and stopped services. Please free up space!\n"
     exit 1
   fi
 }
