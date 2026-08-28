@@ -28,7 +28,6 @@ SLEEP=true
 ONLY_UUID=false
 OPT=""
 RESET=false
-DATE=false
 STOP_AT=""
 
 while getopts "qcfurs:" opt; do
