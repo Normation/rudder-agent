@@ -145,7 +145,8 @@ fi
 # some commands need to be called from rudder-relayd
 if [ "$(id -u)" != "0" ] && [ "$(id -un)" != "rudder-relayd" ]
 then
-  echo "WARNING: Not running as root, this may cause problem"
+  echo "WARNING: Not running as root. Aborting!"
+  exit 1
 fi
 
 # OK GO !
