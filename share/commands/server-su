@@ -1,0 +1,25 @@
+#!/bin/bash
+# @description Open an interactive shell to edit the configuration-repository
+# @man This command opens an interactive shell as the rudder-webapp user in the
+# @man configuration-repository directory, allowing you to inspect and edit its
+# @man contents with the appropriate user permissions.
+
+. "${BASEDIR}/../lib/common.sh"
+
+set -o pipefail
+set -e
+
+if [ "$(id -u)" -ne 0 ]; then
+    echo "Warning: this script must be run as root." >&2
+    exit 1
+fi
+
+su -s /bin/bash rudder-webapp -c '
+    cd /var/rudder/configuration-repository
+
+    if command -v script > /dev/null; then
+        exec script -q -c "/bin/bash -i" /dev/null
+    else
+        exec /bin/bash -i
+    fi
+'
